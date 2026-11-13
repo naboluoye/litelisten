@@ -96,6 +96,10 @@ fun SourcesScreen(
                         onClick = { menuExpanded = false; onNavigate(Routes.addWebdav()) },
                     )
                     DropdownMenuItem(
+                        text = { Text(stringResource(R.string.sources_add_jellyfin)) },
+                        onClick = { menuExpanded = false; onNavigate(Routes.addJellyfin()) },
+                    )
+                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.sources_scan_lan)) },
                         onClick = { menuExpanded = false; viewModel.discover() },
                     )
@@ -210,6 +214,9 @@ fun SourcesScreen(
                 TextButton(onClick = { onNavigate(Routes.addWebdav()) }) {
                     Text(stringResource(R.string.sources_add_shortcut_webdav))
                 }
+                TextButton(onClick = { onNavigate(Routes.addJellyfin()) }) {
+                    Text(stringResource(R.string.sources_add_shortcut_jellyfin))
+                }
             }
         } else {
             devices.forEach { device ->
@@ -225,6 +232,8 @@ fun SourcesScreen(
                                     device.port == null -> stringResource(R.string.sources_device_dlna)
                                     device.type == com.litelisten.player.core.model.SourceType.SMB ->
                                         stringResource(R.string.sources_device_smb, device.detail)
+                                    device.type == com.litelisten.player.core.model.SourceType.JELLYFIN ->
+                                        stringResource(R.string.sources_device_jellyfin, device.detail)
                                     else -> stringResource(R.string.sources_device_webdav, device.detail)
                                 },
                                 style = MaterialTheme.typography.bodySmall,

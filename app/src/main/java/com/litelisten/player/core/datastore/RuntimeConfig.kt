@@ -6,6 +6,7 @@ import com.litelisten.player.core.datastore.SettingsKeys.CACHE_LIMIT_MB_KEY
 import com.litelisten.player.core.datastore.SettingsKeys.CONNECT_TIMEOUT_S_KEY
 import com.litelisten.player.core.datastore.SettingsKeys.FADE_ENABLED_KEY
 import com.litelisten.player.core.datastore.SettingsKeys.HEADSET_UNPLUG_PAUSE_KEY
+import com.litelisten.player.core.datastore.SettingsKeys.HIFI_OUTPUT_KEY
 import com.litelisten.player.core.datastore.SettingsKeys.WIFI_ONLY_KEY
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +40,10 @@ class RuntimeConfig @Inject constructor(
     @Volatile var autoPlayOnStart: Boolean = false
         private set
 
+    /** 32-bit 浮点输出：24 bit / 96 kHz 及以上音频避免被降到 16 bit PCM。 */
+    @Volatile var hifiOutput: Boolean = true
+        private set
+
     init {
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             settings.all.collect { prefs ->
@@ -49,6 +54,7 @@ class RuntimeConfig @Inject constructor(
                 pauseOnHeadsetUnplug = prefs[HEADSET_UNPLUG_PAUSE_KEY] ?: true
                 fadeEnabled = prefs[FADE_ENABLED_KEY] ?: true
                 autoPlayOnStart = prefs[AUTO_PLAY_ON_START_KEY] ?: false
+                hifiOutput = prefs[HIFI_OUTPUT_KEY] ?: true
             }
         }
     }

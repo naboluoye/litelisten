@@ -29,6 +29,7 @@ object SettingsKeys {
     const val QUEUE_SNAPSHOT = "queue_snapshot"
     const val LAST_SCAN_AT = "last_scan_at"
     const val ONBOARDING_DONE = "onboarding_done"
+    const val HIFI_OUTPUT = "hifi_output"
 
     val THEME_MODE_KEY = stringPreferencesKey(THEME_MODE)
     val DYNAMIC_COLOR_KEY = booleanPreferencesKey(DYNAMIC_COLOR)
@@ -51,4 +52,5 @@ object SettingsKeys {
     val QUEUE_SNAPSHOT_KEY = stringPreferencesKey(QUEUE_SNAPSHOT)
     val LAST_SCAN_AT_KEY = longPreferencesKey(LAST_SCAN_AT)
     val ONBOARDING_DONE_KEY = booleanPreferencesKey(ONBOARDING_DONE)
+    val HIFI_OUTPUT_KEY = booleanPreferencesKey(HIFI_OUTPUT)
 }

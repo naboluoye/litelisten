@@ -1,3 +1,5 @@
+@file:androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
+
 package com.litelisten.player.core.player
 
 import android.content.ComponentName
@@ -6,10 +8,12 @@ import android.net.Uri
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import androidx.media3.common.C
+import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.litelisten.player.core.datastore.QueueSnapshot
@@ -17,6 +21,7 @@ import com.litelisten.player.core.datastore.QueueStore
 import com.litelisten.player.core.datastore.RuntimeConfig
 import com.litelisten.player.core.datastore.SettingsKeys
 import com.litelisten.player.core.datastore.SettingsRepository
+import com.litelisten.player.core.model.AudioFormatInfo
 import com.litelisten.player.core.model.PlaybackController
 import com.litelisten.player.core.model.PlaybackError
 import com.litelisten.player.core.model.PlayerUiState
@@ -87,6 +92,7 @@ class PlaybackControllerImpl @Inject constructor(
 
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) = updateState()
+        override fun onTracksChanged(tracks: Tracks) = updateAudioFormat(tracks)
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             updateState()
             if (isPlaying) startTicker() else stopTicker()
@@ -298,11 +304,45 @@ class PlaybackControllerImpl @Inject constructor(
             .setIsBrowsable(false)
             .setIsPlayable(true)
             .build()
-        return MediaItem.Builder()
+        val builder = MediaItem.Builder()
             .setMediaId(track.id)
             .setUri(Uri.parse(track.uri))
             .setMediaMetadata(metadata)
-            .build()
+        // Jellyfin / DLNA 的原始流地址没有文件名后缀，显式给 MIME 类型，
+        // 播放器才不会把 FLAC 当成未知容器反复嗅探。其余来源保持既有行为。
+        if (track.sourceType == SourceType.JELLYFIN || track.sourceType == SourceType.DLNA) {
+            track.mimeType?.let { builder.setMimeType(it) }
+        }
+        return builder.build()
+    }
+
+    /** 从实际选中的音轨读取真实音质规格；压缩音频缺的字段用来源元数据补齐。 */
+    private fun updateAudioFormat(tracks: Tracks) {
+        val group = tracks.groups.firstOrNull {
+            it.type == C.TRACK_TYPE_AUDIO && it.isSelected
+        } ?: return
+        val format = runCatching { group.getTrackFormat(0) }.getOrNull() ?: return
+        val current = _state.value.current
+        _state.value = _state.value.copy(
+            audioFormat = AudioFormatInfo(
+                mimeType = format.sampleMimeType ?: current?.mimeType,
+                sampleRateHz = format.sampleRate.takeIf { it != Format.NO_VALUE }
+                    ?: current?.sampleRateHz,
+                bitDepth = bitDepthOf(format) ?: current?.bitDepth,
+                channelCount = format.channelCount.takeIf { it != Format.NO_VALUE }
+                    ?: current?.channels,
+                bitrateKbps = (format.bitrate.takeIf { it != Format.NO_VALUE }?.let { it / 1000 })
+                    ?: current?.bitrateKbps,
+                floatOutput = runtime.hifiOutput,
+            ),
+        )
+    }
+
+    private fun bitDepthOf(format: Format): Int? = when (format.pcmEncoding) {
+        C.ENCODING_PCM_8BIT -> 8
+        C.ENCODING_PCM_16BIT -> 16
+        C.ENCODING_PCM_FLOAT -> 32
+        else -> null
     }
 
     private fun updateState() {

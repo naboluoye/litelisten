@@ -9,6 +9,7 @@ import androidx.media3.common.util.Util
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.litelisten.player.core.datastore.RuntimeConfig
@@ -33,9 +34,16 @@ class PlayerFactory @Inject constructor(
             DefaultDataSource.Factory(context, http),
             smbPool,
         )
-        val bufferMs = runtime.bufferSeconds * 1_000
+        // 24 bit / 96 kHz 及以上音频用 32-bit 浮点输出，避免被量化到 16 bit PCM；
+        // 解码回退让没有硬件 FLAC 解码器的机型改用软件解码而不是直接报「格式不支持」。
+        val renderersFactory = DefaultRenderersFactory(context)
+            .setEnableAudioFloatOutput(runtime.hifiOutput)
+            .setEnableDecoderFallback(true)
+        // 无损码率远高于 MP3，高保真模式下抬高预读下限，减少弱网/慢盘卡顿。
+        val bufferMs = (runtime.bufferSeconds * 1_000)
+            .let { if (runtime.hifiOutput) it.coerceAtLeast(20_000) else it }
         val sessionId = Util.generateAudioSessionIdV21(context)
-        val player = ExoPlayer.Builder(context)
+        val player = ExoPlayer.Builder(context, renderersFactory)
             .setMediaSourceFactory(DefaultMediaSourceFactory(upstream))
             .setAudioAttributes(
                 AudioAttributes.Builder()

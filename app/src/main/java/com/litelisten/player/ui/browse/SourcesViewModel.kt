@@ -77,10 +77,11 @@ class SourcesViewModel @Inject constructor(
      * SSDP 发现的 DLNA 设备自带 controlUrl，可以像以前一样直接保存并打开。
      */
     fun addDevice(device: DiscoveredDevice, onNavigate: (String) -> Unit) {
-        if (device.id.startsWith(LAN_PREFIX)) {
+        if (device.id.startsWith(LAN_PREFIX) || device.id.startsWith(JF_PREFIX)) {
             val route = when (device.type) {
                 SourceType.SMB -> Routes.addSmb(device.address, device.port ?: 445)
                 SourceType.WEBDAV -> Routes.addWebdav(device.address, device.port ?: 80)
+                SourceType.JELLYFIN -> Routes.addJellyfin(device.address, device.port ?: 8096)
                 else -> return
             }
             onNavigate(route)
@@ -102,5 +103,6 @@ class SourcesViewModel @Inject constructor(
 
     private companion object {
         const val LAN_PREFIX = "lan-"
+        const val JF_PREFIX = "jf-"
     }
 }

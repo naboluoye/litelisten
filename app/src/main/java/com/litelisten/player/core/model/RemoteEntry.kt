@@ -1,6 +1,6 @@
 package com.litelisten.player.core.model
 
-/** 浏览网络目录时的一条记录（尚未入库）。 */
+/** 浏览网络目录时的一条记录（尚未入库）。媒体服务器会额外带标签与音质元数据。 */
 data class RemoteEntry(
     val name: String,
     val path: String,
@@ -9,6 +9,14 @@ data class RemoteEntry(
     val lastModified: Long? = null,
     val mimeType: String? = null,
     val playableUri: String? = null,
+    val artist: String? = null,
+    val album: String? = null,
+    val durationMs: Long? = null,
+    val sampleRateHz: Int? = null,
+    val bitDepth: Int? = null,
+    val channels: Int? = null,
+    val bitrateKbps: Int? = null,
+    val artworkUri: String? = null,
 )
 
 data class ShareInfo(val name: String, val comment: String? = null)

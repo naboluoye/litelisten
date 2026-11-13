@@ -101,7 +101,8 @@ fun FileBrowserScreen(
         }
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(state.entries, key = { it.path }) { entry ->
-                val supported = entry.isDirectory || MimeTypes.isSupported(entry.name)
+                val supported = entry.isDirectory ||
+                    MimeTypes.isSupported(entry.name) || entry.playableUri != null
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

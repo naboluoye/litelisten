@@ -50,9 +50,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.litelisten.player.R
+import com.litelisten.player.core.common.MimeTypes
 import com.litelisten.player.core.common.TimeFormat
 import com.litelisten.player.core.designsystem.component.TrackArtwork
 import com.litelisten.player.core.designsystem.theme.LocalSpacing
+import com.litelisten.player.core.model.AudioFormatInfo
 import com.litelisten.player.core.model.PlaybackError
 import com.litelisten.player.core.model.RepeatMode
 import com.litelisten.player.ui.navigation.Routes
@@ -117,6 +119,7 @@ fun NowPlayingScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
+                state.audioFormat?.let { info -> AudioQualityLine(info) }
             }
             IconButton(onClick = { track?.let { viewModel.toggleFavorite(it) } }, enabled = track != null) {
                 Icon(
@@ -294,5 +297,50 @@ fun NowPlayingScreen(
             },
             confirmButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.action_close)) } },
         )
+    }
+}
+
+/** 播放页音质行：显示解码器实际读到的规格，而不是靠文件名猜。 */
+@Composable
+private fun AudioQualityLine(info: AudioFormatInfo) {
+    val label = MimeTypes.shortLabel(info.mimeType)
+        ?: info.mimeType?.substringAfter('/')?.uppercase()
+        ?: stringResource(R.string.player_quality_unknown)
+    val rate = info.sampleRateHz?.takeIf { it > 0 }
+    val depth = info.bitDepth?.takeIf { it > 0 }
+    val channels = info.channelCount?.takeIf { it > 0 }
+    val spec = when {
+        rate != null && depth != null && channels != null ->
+            stringResource(R.string.player_quality_spec_full, label, rate / 1000f, depth, channels)
+        rate != null && channels != null ->
+            stringResource(R.string.player_quality_spec_basic, label, rate / 1000f, channels)
+        else -> label
+    }
+    val hiresText = stringResource(R.string.player_quality_hires)
+    val losslessText = stringResource(R.string.player_quality_lossless)
+    val floatText = stringResource(R.string.player_quality_float)
+    val tag = listOfNotNull(
+        when {
+            MimeTypes.isHiRes(rate, depth) -> hiresText
+            MimeTypes.isLossless(info.mimeType) -> losslessText
+            else -> null
+        },
+        floatText.takeIf { info.floatOutput },
+    ).joinToString(" · ")
+    Column(modifier = Modifier.padding(top = 2.dp)) {
+        Text(
+            text = spec,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+        )
+        if (tag.isNotBlank()) {
+            Text(
+                text = tag,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
     }
 }

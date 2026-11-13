@@ -54,4 +54,22 @@ class LanScanPlanTest {
         assertEquals(SourceType.WEBDAV, LanScanPlan.typeOf(5000))
         assertEquals(SourceType.WEBDAV, LanScanPlan.typeOf(8080))
     }
+
+    @Test
+    fun `jellyfin ports are recognised and probed before generic web ports`() {
+        assertEquals(SourceType.JELLYFIN, LanScanPlan.typeOf(8096))
+        assertEquals(SourceType.JELLYFIN, LanScanPlan.typeOf(8920))
+        assertTrue(LanScanPlan.isJellyfinPort(8096))
+        assertFalse(LanScanPlan.isJellyfinPort(8080))
+        val ports = LanScanPlan.PROBE_PORTS
+        assertTrue(ports.indexOf(8096) < ports.indexOf(80))
+        assertTrue(ports.indexOf(8920) < ports.indexOf(443))
+    }
+
+    @Test
+    fun `scheme follows the jellyfin tls port`() {
+        assertEquals("http", LanScanPlan.schemeOf(8096))
+        assertEquals("https", LanScanPlan.schemeOf(8920))
+        assertEquals("https", LanScanPlan.schemeOf(443))
+    }
 }

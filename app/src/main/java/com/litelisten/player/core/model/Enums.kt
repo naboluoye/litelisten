@@ -1,6 +1,6 @@
 package com.litelisten.player.core.model
 
-enum class SourceType { LOCAL, SAF, SMB, WEBDAV, DLNA }
+enum class SourceType { LOCAL, SAF, SMB, WEBDAV, DLNA, JELLYFIN }
 
 enum class SortKey { TITLE, ARTIST, ALBUM, DURATION, DATE_ADDED, LAST_PLAYED }
 

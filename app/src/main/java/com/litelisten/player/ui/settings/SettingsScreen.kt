@@ -39,6 +39,7 @@ import com.litelisten.player.R
 import com.litelisten.player.core.datastore.SettingsKeys
 import com.litelisten.player.core.designsystem.component.LiteListenTopBar
 import com.litelisten.player.core.designsystem.component.SectionHeader
+import com.litelisten.player.core.designsystem.theme.LocalSpacing
 import com.litelisten.player.core.model.ThemeMode
 import com.litelisten.player.ui.navigation.Routes
 
@@ -50,6 +51,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val spacing = LocalSpacing.current
     val prefs by viewModel.prefs.collectAsStateWithLifecycle()
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     var dialog by remember { mutableStateOf<String?>(null) }
@@ -128,6 +130,16 @@ fun SettingsScreen(
         ) { dialog = "speed" }
 
         SectionHeader(title = stringResource(R.string.settings_group_audio))
+        SwitchRow(
+            stringResource(R.string.settings_hifi_output),
+            prefs[SettingsKeys.HIFI_OUTPUT_KEY] ?: true,
+        ) { viewModel.set(SettingsKeys.HIFI_OUTPUT_KEY, it) }
+        Text(
+            stringResource(R.string.settings_hifi_notice),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+        )
         ValueRow(stringResource(R.string.settings_equalizer), "") { onNavigate(Routes.EQUALIZER) }
 
         SectionHeader(title = stringResource(R.string.settings_group_library))

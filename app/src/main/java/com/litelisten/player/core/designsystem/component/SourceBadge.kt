@@ -22,6 +22,7 @@ fun SourceBadge(type: SourceType, modifier: Modifier = Modifier) {
             SourceType.SMB -> R.string.badge_smb
             SourceType.WEBDAV -> R.string.badge_webdav
             SourceType.DLNA -> R.string.badge_dlna
+            SourceType.JELLYFIN -> R.string.badge_jellyfin
         }
     )
     Text(

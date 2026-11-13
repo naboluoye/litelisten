@@ -2,6 +2,7 @@ package com.litelisten.player.di
 
 import com.litelisten.player.core.source.api.SourceRegistry
 import com.litelisten.player.core.source.dlna.DlnaSourceProvider
+import com.litelisten.player.core.source.jellyfin.JellyfinSourceProvider
 import com.litelisten.player.core.source.smb.SmbSourceProvider
 import com.litelisten.player.core.source.webdav.WebDavSourceProvider
 import dagger.Module
@@ -19,9 +20,11 @@ object SourceModule {
         smb: SmbSourceProvider,
         webDav: WebDavSourceProvider,
         dlna: DlnaSourceProvider,
+        jellyfin: JellyfinSourceProvider,
     ): SourceRegistry = SourceRegistry().apply {
         register(smb)
         register(webDav)
         register(dlna)
+        register(jellyfin)
     }
 }

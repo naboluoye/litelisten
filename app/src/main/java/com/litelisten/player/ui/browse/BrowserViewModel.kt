@@ -60,7 +60,7 @@ class BrowserViewModel @Inject constructor(
     fun play(entry: RemoteEntry) {
         viewModelScope.launch {
             val playable = _state.value.entries.filter {
-                !it.isDirectory && MimeTypes.isSupported(it.name)
+                !it.isDirectory && (MimeTypes.isSupported(it.name) || it.playableUri != null)
             }
             val tracks = repository.playableTracks(sourceId, playable)
             val target = tracks.firstOrNull { it.path == entry.path } ?: return@launch

@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -52,28 +53,15 @@ fun AddSourceScreen(
     val detectingShares by viewModel.detectingShares.collectAsStateWithLifecycle()
     val shareSearchDone by viewModel.shareSearchDone.collectAsStateWithLifecycle()
     var form by remember {
-        mutableStateOf(
-            ServerForm(
-                host = initialHost,
-                url = initialUrl,
-                port = (initialPort ?: if (type == SourceType.SMB) 445 else 80).toString(),
-            ),
-        )
+        mutableStateOf(ServerFormFactory.initial(type, initialHost, initialUrl, initialPort))
     }
     var showPassword by remember { mutableStateOf(false) }
     var validation by remember { mutableStateOf<Int?>(null) }
     // id 在页面生命周期内固定，避免测试与保存生成两套凭据。
     val stableId = remember { viewModel.newConfig(type, ServerForm()).id }
     fun currentConfig(): SourceConfig = viewModel.newConfig(type, form).copy(id = stableId)
-
-    fun validate(): Int? = when {
-        type == SourceType.SMB && form.host.isBlank() -> R.string.validation_host_empty
-        type == SourceType.SMB && (form.port.toIntOrNull() ?: 0) !in 1..65535 -> R.string.validation_port_invalid
-        type == SourceType.SMB && form.share.isBlank() -> R.string.validation_share_empty
-        type == SourceType.WEBDAV && !form.url.startsWith("http", true) -> R.string.validation_url_invalid
-        !form.anonymous && form.username.isBlank() && type == SourceType.SMB -> R.string.validation_username_empty
-        else -> null
-    }
+    // Jellyfin 必须登录换取访问令牌，不提供匿名选项。
+    val needLogin = type == SourceType.JELLYFIN || !form.anonymous
 
     LaunchedEffect(status) {
         if (status is AddStatus.Saved) {
@@ -90,21 +78,76 @@ fun AddSourceScreen(
     ) {
         LiteListenTopBar(
             title = stringResource(
-                if (type == SourceType.SMB) R.string.add_smb_title else R.string.add_webdav_title,
+                when (type) {
+                    SourceType.SMB -> R.string.add_smb_title
+                    SourceType.JELLYFIN -> R.string.add_jellyfin_title
+                    else -> R.string.add_webdav_title
+                },
             ),
             onNavigateUp = onBack,
         )
         Field(stringResource(R.string.field_name), form.name) { form = form.copy(name = it) }
-        if (type == SourceType.SMB) {
+
+        if (type == SourceType.SMB || type == SourceType.JELLYFIN) {
             Field(stringResource(R.string.field_host), form.host) { form = form.copy(host = it) }
             Field(stringResource(R.string.field_port), form.port) { form = form.copy(port = it) }
+        } else {
+            Field(stringResource(R.string.field_url), form.url) { form = form.copy(url = it) }
+            Text(
+                stringResource(R.string.webdav_https_notice),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (type == SourceType.JELLYFIN) {
+            Text(
+                stringResource(R.string.add_jellyfin_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = spacing.m))
+        Text(stringResource(R.string.add_credentials_title), style = MaterialTheme.typography.titleMedium)
+        Text(
+            stringResource(R.string.add_credentials_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = spacing.s),
+        )
+        if (type != SourceType.JELLYFIN) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = form.anonymous, onCheckedChange = { form = form.copy(anonymous = it) })
+                Text(stringResource(R.string.field_anonymous))
+            }
+        }
+        if (needLogin) {
+            Field(stringResource(R.string.field_username), form.username) {
+                form = form.copy(username = it)
+            }
+            OutlinedTextField(
+                value = form.password,
+                onValueChange = { form = form.copy(password = it) },
+                label = { Text(stringResource(R.string.field_password)) },
+                singleLine = true,
+                visualTransformation = if (showPassword) VisualTransformation.None
+                else PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s),
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = showPassword, onCheckedChange = { showPassword = it })
+                Text(stringResource(R.string.field_show_password))
+            }
+        }
+
+        if (type == SourceType.SMB) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = spacing.m))
             Field(stringResource(R.string.field_share), form.share) { form = form.copy(share = it) }
             OutlinedButton(
                 onClick = {
-                    if (form.host.isBlank()) {
-                        validation = R.string.validation_host_empty
-                    } else {
-                        validation = null
+                    validation = ServerFormFactory.validate(type, form.copy(share = "placeholder"))
+                        ?.takeIf { it != R.string.validation_share_empty }
+                    if (validation == null) {
                         viewModel.detectShares(currentConfig(), form)
                     }
                 },
@@ -134,34 +177,10 @@ fun AddSourceScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Field(stringResource(R.string.field_base_path), form.basePath) { form = form.copy(basePath = it) }
-            Field(stringResource(R.string.field_domain), form.domain) { form = form.copy(domain = it) }
-        } else {
-            Field(stringResource(R.string.field_url), form.url) { form = form.copy(url = it) }
-            Text(
-                stringResource(R.string.webdav_https_notice),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = form.anonymous, onCheckedChange = { form = form.copy(anonymous = it) })
-            Text(stringResource(R.string.field_anonymous))
-        }
-        if (!form.anonymous) {
-            Field(stringResource(R.string.field_username), form.username) { form = form.copy(username = it) }
-            OutlinedTextField(
-                value = form.password,
-                onValueChange = { form = form.copy(password = it) },
-                label = { Text(stringResource(R.string.field_password)) },
-                singleLine = true,
-                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth().padding(vertical = spacing.s),
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(checked = showPassword, onCheckedChange = { showPassword = it })
-                Text(stringResource(R.string.field_show_password))
+            Field(stringResource(R.string.field_base_path), form.basePath) {
+                form = form.copy(basePath = it)
             }
+            Field(stringResource(R.string.field_domain), form.domain) { form = form.copy(domain = it) }
         }
 
         validation?.let { res ->
@@ -192,7 +211,7 @@ fun AddSourceScreen(
         Row(modifier = Modifier.padding(vertical = spacing.l)) {
             OutlinedButton(
                 onClick = {
-                    validation = validate()
+                    validation = ServerFormFactory.validate(type, form)
                     if (validation == null) viewModel.test(currentConfig(), form)
                 },
                 modifier = Modifier.weight(1f).padding(end = spacing.s),
@@ -200,7 +219,7 @@ fun AddSourceScreen(
             ) { Text(stringResource(R.string.action_test_connection)) }
             Button(
                 onClick = {
-                    validation = validate()
+                    validation = ServerFormFactory.validate(type, form)
                     if (validation == null) viewModel.save(currentConfig(), form)
                 },
                 modifier = Modifier.weight(1f),

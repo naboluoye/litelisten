@@ -6,6 +6,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import com.litelisten.player.core.common.LanAddress
 import com.litelisten.player.core.model.DiscoveredDevice
+import com.litelisten.player.core.model.SourceType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,11 +43,13 @@ class LanHostScanner @Inject constructor(
         val hosts = LanScanPlan.hosts(subnet.self, subnet.prefix)
         val pool = Executors.newFixedThreadPool(48)
         try {
-            val futures = hosts.map { ip -> pool.submit<DiscoveredDevice?> { probe(ip, network) } }
-            // 253 台主机 / 48 线程 ≈ 6 轮，每轮最坏 2.2s；超时必须覆盖最后一轮，
-            // 否则排在队尾的主机结果会被静默丢弃。
-            futures.mapNotNull { future ->
-                runCatching { future.get(30, TimeUnit.SECONDS) }.getOrNull()
+            val futures = hosts.map { ip ->
+                pool.submit<List<DiscoveredDevice>> { probe(ip, network) }
+            }
+            // 一台机器上可能同时跑着文件共享和 Jellyfin，探测全部端口再汇总；
+            // 253 台 / 48 线程 ≈ 6 轮，超时必须覆盖最后一轮。
+            futures.flatMap { future ->
+                runCatching { future.get(40, TimeUnit.SECONDS) }.getOrDefault(emptyList())
             }
         } finally {
             pool.shutdownNow()
@@ -62,21 +65,88 @@ class LanHostScanner @Inject constructor(
         return LanScanPlan.intToIp(network) + "/" + bits
     }
 
-    private fun probe(ip: String, network: Network?): DiscoveredDevice? {
-        if (!LanAddress.isPrivateHost(ip)) return null
+    /**
+     * 同一台机器可能既开文件共享又跑 Jellyfin，所以不再「命中即停」：
+     * 收集 SMB 与 Jellyfin 两类，Web 端口只作为没有前两者时的兜底候选。
+     */
+    private fun probe(ip: String, network: Network?): List<DiscoveredDevice> {
+        if (!LanAddress.isPrivateHost(ip)) return emptyList()
+        val found = ArrayList<DiscoveredDevice>()
+        var smbPort: Int? = null
+        var webPort: Int? = null
         for (port in LanScanPlan.PROBE_PORTS) {
             if (!isOpen(ip, port, network)) continue
-            val name = netBiosName(ip, network) ?: ip
-            return DiscoveredDevice(
-                id = "lan-$ip-$port",
-                name = name,
-                type = LanScanPlan.typeOf(port),
-                address = ip,
-                detail = port.toString(),
-                port = port,
+            when {
+                LanScanPlan.isJellyfinPort(port) -> {
+                    // 端口被别的服务占用时不误报，继续探测后面的端口。
+                    val serverName = jellyfinName(ip, port, network) ?: continue
+                    found.add(
+                        DiscoveredDevice(
+                            id = "jf-$ip-$port",
+                            name = serverName,
+                            type = SourceType.JELLYFIN,
+                            address = ip,
+                            detail = port.toString(),
+                            port = port,
+                        ),
+                    )
+                }
+                LanScanPlan.typeOf(port) == SourceType.SMB -> {
+                    if (smbPort == null) smbPort = port
+                }
+                webPort == null -> webPort = port
+            }
+        }
+        if (found.isEmpty() && smbPort == null && webPort == null) return emptyList()
+        val name = netBiosName(ip, network) ?: ip
+        smbPort?.let { port ->
+            found.add(
+                DiscoveredDevice("lan-$ip-$port", name, SourceType.SMB, ip, port.toString(), port),
             )
         }
-        return null
+        if (found.isEmpty()) {
+            webPort?.let { port ->
+                found.add(
+                    DiscoveredDevice("lan-$ip-$port", name, SourceType.WEBDAV, ip, port.toString(), port),
+                )
+            }
+        }
+        return found
+    }
+
+    /**
+     * 端口开放不等于就是 Jellyfin：再读一次免登录的 /System/Info/Public，
+     * 拿到 ServerName 才认。HTTPS 端口用裸 socket 读不了，先按 IP 登记，
+     * 由添加向导里的测试连接去确认。
+     */
+    private fun jellyfinName(ip: String, port: Int, network: Network?): String? {
+        if (port == LanScanPlan.JELLYFIN_TLS_PORT) return ip
+        val socket = runCatching { network?.socketFactory?.createSocket() ?: Socket() }
+            .getOrElse { return null }
+        return try {
+            socket.soTimeout = 800
+            socket.connect(InetSocketAddress(ip, port), LanScanPlan.CONNECT_TIMEOUT_MS)
+            val request = "GET /System/Info/Public HTTP/1.1\r\n" +
+                "Host: $ip:$port\r\nConnection: close\r\nAccept: application/json\r\n\r\n"
+            val output = socket.getOutputStream()
+            output.write(request.toByteArray(Charsets.US_ASCII))
+            output.flush()
+            val input = socket.getInputStream()
+            val buffer = ByteArray(4096)
+            val text = StringBuilder()
+            for (attempt in 0 until 4) {
+                if (text.contains("ServerName")) break
+                val read = runCatching { input.read(buffer) }.getOrDefault(-1)
+                if (read <= 0) break
+                text.append(String(buffer, 0, read, Charsets.UTF_8))
+            }
+            if (!text.startsWith("HTTP/1.") || !text.contains(" 200")) return null
+            SERVER_NAME.find(text)?.groupValues?.get(1)?.takeIf { it.isNotBlank() } ?: ip
+        } catch (error: Exception) {
+            null
+        } finally {
+            runCatching { socket.close() }
+        }
     }
 
     private fun isOpen(ip: String, port: Int, network: Network?): Boolean {
@@ -209,5 +279,6 @@ class LanHostScanner @Inject constructor(
 
     private companion object {
         val WILDCARD_NAME = "CK" + "CA".repeat(15)
+        val SERVER_NAME = Regex("\"ServerName\"\\s*:\\s*\"([^\"]+)\"")
     }
 }

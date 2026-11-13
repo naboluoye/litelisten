@@ -21,8 +21,19 @@ interface PlaybackController {
     fun stop()
 }
 
+/** 播放链路实际解码出的音轨规格；压缩格式未必提供 bitDepth，允许为 null。 */
+data class AudioFormatInfo(
+    val mimeType: String? = null,
+    val sampleRateHz: Int? = null,
+    val bitDepth: Int? = null,
+    val channelCount: Int? = null,
+    val bitrateKbps: Int? = null,
+    val floatOutput: Boolean = false,
+)
+
 data class PlayerUiState(
     val current: Track? = null,
+    val audioFormat: AudioFormatInfo? = null,
     val isPlaying: Boolean = false,
     val isBuffering: Boolean = false,
     val positionMs: Long = 0,

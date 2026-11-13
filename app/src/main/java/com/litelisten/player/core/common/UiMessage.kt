@@ -49,6 +49,8 @@ object UiMessage {
         detail == "NO_DIDL_RESULT" -> R.string.error_dlna_no_result
         detail == "EMPTY_RESPONSE" -> R.string.error_empty_response
         detail == "NOT_WEBDAV" || detail == "NOT_MULTISTATUS" -> R.string.error_not_webdav
+        detail == "NOT_JELLYFIN" -> R.string.error_not_jellyfin
+        detail == "AUTH_NO_TOKEN" -> R.string.error_jellyfin_auth
         detail == "LIST_SHARES_FAILED" -> R.string.error_shares_unavailable
         detail == "HTTP_401" || detail == "HTTP_403" -> R.string.error_auth_failed
         detail == "HTTP_404" || detail == "HTTP_410" -> R.string.error_path_not_found

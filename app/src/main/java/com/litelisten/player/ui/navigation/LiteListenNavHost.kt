@@ -120,6 +120,19 @@ fun LiteListenNavHost(
                 initialUrl = entry.arguments?.getString("url").orEmpty(),
             )
         }
+        composable(
+            route = Routes.ADD_JELLYFIN,
+            arguments = listOf(
+                navArgument("url") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            AddSourceScreen(
+                type = com.litelisten.player.core.model.SourceType.JELLYFIN,
+                onBack = onBack,
+                onSaved = { id -> onNavigate(Routes.browser(id)) },
+                initialUrl = entry.arguments?.getString("url").orEmpty(),
+            )
+        }
         composable(Routes.QUEUE) { QueueScreen(onBack = onBack, onMessage = onMessage) }
         composable(Routes.LYRICS) { LyricsScreen(onBack = onBack, onMessage = onMessage) }
         composable(Routes.EQUALIZER) { EqualizerScreen(onBack = onBack) }

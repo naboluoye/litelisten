@@ -90,7 +90,7 @@
     <string name="sources_empty_server">还没有添加服务器</string>
     <string name="sources_discovering">正在搜索局域网设备…</string>
     <string name="sources_no_device">没有发现设备，可手动添加服务器</string>
-    <string name="sources_discovery_hint">自动搜索当前 Wi-Fi 网段里的文件共享、WebDAV 和 DLNA 媒体服务器。扫描只在本机局域网内进行。</string>
+    <string name="sources_discovery_hint">自动搜索当前 Wi-Fi 网段里的电脑共享、WebDAV、DLNA 和 Jellyfin 媒体服务器。扫描只在本机局域网内进行。</string>
     <string name="sources_scan_range">扫描范围：%1$s</string>
     <string name="sources_device_smb">文件共享 · 端口 %1$s</string>
     <string name="sources_device_webdav">WebDAV · 端口 %1$s</string>
@@ -99,7 +99,7 @@
     <string name="sources_add_shortcut_smb">手动添加 SMB</string>
     <string name="sources_add_shortcut_webdav">手动添加 WebDAV</string>
     <string name="sources_scan_no_wifi">没连上 Wi-Fi，无法扫描局域网。请先连接 Wi-Fi，或手动添加服务器。</string>
-    <string name="sources_scan_no_host">扫描完成，没找到开了文件共享的设备。请确认电脑和手机在同一 Wi-Fi、电脑已开启共享；也可手动添加服务器。</string>
+    <string name="sources_scan_no_host">扫描完成，没找到开着共享或媒体服务的设备。请确认手机和电脑在同一 Wi-Fi、服务已启动；Jellyfin 可直接点右上角「+」手动添加。</string>
     <string name="action_add_device">添加</string>
     <string name="action_scan_now">立即扫描</string>
     <string name="action_connect">连接</string>
@@ -127,7 +127,7 @@
     <string name="field_domain">域（可选）</string>
     <string name="field_base_path">起始路径</string>
     <string name="field_url">服务器地址（完整 URL）</string>
-    <string name="field_anonymous">匿名登录</string>
+    <string name="field_anonymous">这台服务器不需要登录（匿名）</string>
     <string name="field_advanced">高级选项</string>
     <string name="field_show_password">显示密码</string>
     <string name="action_query_shares">查询共享</string>
@@ -136,7 +136,7 @@
     <string name="test_failed">连接失败：%1$s</string>
     <string name="validation_host_empty">请填写服务器地址</string>
     <string name="validation_port_invalid">端口需为 1 到 65535</string>
-    <string name="validation_username_empty">请填写用户名，或勾选匿名登录</string>
+    <string name="validation_username_empty">请填写用户名，或勾选「这台服务器不需要登录」</string>
     <string name="validation_url_invalid">请填写完整的 http:// 或 https:// 地址</string>
     <string name="validation_share_empty">请填写共享名，或点下面的「自动查找共享」</string>
     <string name="action_detect_shares">自动查找共享</string>
@@ -294,7 +294,7 @@
     <string name="onboarding_2_title">需要读取音频的权限</string>
     <string name="onboarding_2_desc">扫描本机音乐时会申请读取音频权限。你随时可以在系统设置里关闭它。</string>
     <string name="onboarding_3_title">连上家里的 NAS</string>
-    <string name="onboarding_3_desc">在「来源」页添加 SMB 或 WebDAV 服务器，就能直接播放电脑和 NAS 上的歌，不用先下载到手机。</string>
+    <string name="onboarding_3_desc">在「来源」页添加 SMB、WebDAV 或 Jellyfin 服务器，就能直接播放电脑和 NAS 上的歌，不用先下载到手机。</string>
 
     <!-- 徽标 / contentDescription -->
     <string name="badge_local">本机</string>
@@ -338,6 +338,30 @@
     <string name="error_host_unresolved">解析不了这个设备名，请改填局域网 IP（例如 192.168.1.10）。</string>
     <string name="error_smb_status">服务器拒绝了访问（%1$s）。请检查共享名、账号和访问权限。</string>
     <string name="error_browse_failed">读取目录失败（%1$s）。请检查地址、共享名和访问权限后重试。</string>
+
+    <!-- v2.0.3：Jellyfin 媒体服务器 -->
+    <string name="sources_add_jellyfin">添加 Jellyfin 媒体服务器</string>
+    <string name="sources_add_shortcut_jellyfin">添加 Jellyfin</string>
+    <string name="sources_device_jellyfin">Jellyfin 媒体服务器 · 端口 %1$s</string>
+    <string name="add_jellyfin_title">添加 Jellyfin 服务器</string>
+    <string name="add_jellyfin_hint">Jellyfin 默认端口是 8096（HTTPS 是 8920）。需要用服务器上的账号登录，账号密码只保存在手机里。歌曲按服务器上的原文件播放，不会被转成低音质。</string>
+    <string name="badge_jellyfin">JELLYFIN</string>
+    <string name="add_credentials_title">登录账号</string>
+    <string name="add_credentials_hint">大多数 NAS 和媒体服务器都要账号密码，就是你在电脑或服务器后台设置的那个。先填好账号，再测试连接或查找共享。</string>
+    <string name="validation_jellyfin_login">Jellyfin 需要用账号登录，请填写用户名</string>
+    <string name="validation_password_empty">请填写密码，或勾选「这台服务器不需要登录」</string>
+    <string name="error_not_jellyfin">这个地址不是 Jellyfin 服务器。请确认端口填的是 8096（HTTPS 用 8920），别填成 NAS 的网页首页。</string>
+    <string name="error_jellyfin_auth">Jellyfin 没有返回登录信息，请确认账号密码正确、且这个账号允许登录。</string>
+
+    <!-- v2.0.3：高保真输出 -->
+    <string name="settings_hifi_output">高保真输出</string>
+    <string name="settings_hifi_notice">以 32 位浮点输出声音，FLAC / WAV 等 24 bit、96 kHz 以上的无损音乐不会被压成 16 bit；切换后下次播放生效。开启均衡器或变速时声音仍会被重新处理，追求原音质时请关闭音效。</string>
+    <string name="player_quality_unknown">音频</string>
+    <string name="player_quality_spec_full">%1$s · %2$.1f kHz · %3$d bit · %4$d 声道</string>
+    <string name="player_quality_spec_basic">%1$s · %2$.1f kHz · %3$d 声道</string>
+    <string name="player_quality_hires">Hi-Res 高解析</string>
+    <string name="player_quality_lossless">无损原音质</string>
+    <string name="player_quality_float">高精度浮点输出</string>
 
     <!-- 其它 -->
     <string name="browser_size_kb">%1$d KB</string>

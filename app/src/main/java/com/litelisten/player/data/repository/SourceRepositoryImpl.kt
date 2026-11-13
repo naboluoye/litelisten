@@ -23,6 +23,7 @@ import com.litelisten.player.core.source.api.CredentialStore
 import com.litelisten.player.core.source.api.SourceRegistry
 import com.litelisten.player.core.source.discovery.LanHostScanner
 import com.litelisten.player.core.source.dlna.DlnaDiscovery
+import com.litelisten.player.core.source.jellyfin.JellyfinClient
 import com.litelisten.player.core.source.smb.SmbConnectionPool
 import com.litelisten.player.core.source.webdav.WebDavClient
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,7 @@ class SourceRepositoryImpl @Inject constructor(
     private val dlnaDiscovery: DlnaDiscovery,
     private val lanHostScanner: LanHostScanner,
     private val libraryScanner: LibraryScanner,
+    private val jellyfin: JellyfinClient,
 ) : SourceRepository {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -80,7 +82,9 @@ class SourceRepositoryImpl @Inject constructor(
      */
     suspend fun hydrate(): Int = withContext(Dispatchers.IO) {
         val all = configs()
-        all.forEach { cfg -> runCatching { prepare(cfg, credentialStore.get(cfg.id)) } }
+        for (cfg in all) {
+            runCatching { prepare(cfg, credentialStore.get(cfg.id)) }
+        }
         all.size
     }
 
@@ -121,6 +125,7 @@ class SourceRepositoryImpl @Inject constructor(
                 auth.clear(host, portOf(cfg))
             }
         }
+        jellyfin.close(sourceId)
         credentialStore.remove(sourceId)
         trackDao.deleteBySource(sourceId)
         sourceDao.delete(sourceId)
@@ -214,7 +219,8 @@ class SourceRepositoryImpl @Inject constructor(
         children.forEach { entry ->
             if (entry.isDirectory) {
                 walk(provider, config, entry.path, depth + 1, out)
-            } else if (MimeTypes.isSupported(entry.name)) {
+            } else if (MimeTypes.isSupported(entry.name) || entry.playableUri != null) {
+                // 媒体服务器的歌名来自标签，不一定带扩展名；有明确播放地址就应入库。
                 out.add(entry)
             }
         }
@@ -237,6 +243,11 @@ class SourceRepositoryImpl @Inject constructor(
                 entry.playableUri ?: return null,
                 SourceType.DLNA,
             )
+            SourceType.JELLYFIN -> Triple(
+                "jellyfin:${config.id}:${entry.path}",
+                entry.playableUri ?: return null,
+                SourceType.JELLYFIN,
+            )
             else -> return null
         }
         return TrackEntity(
@@ -247,21 +258,21 @@ class SourceRepositoryImpl @Inject constructor(
             path = entry.path,
             title = title,
             titleNorm = Pinyin.normalize(title),
-            artist = null,
-            artistNorm = null,
-            album = null,
-            albumNorm = null,
-            albumArtist = null,
+            artist = entry.artist,
+            artistNorm = entry.artist?.let { Pinyin.normalize(it) },
+            album = entry.album,
+            albumNorm = entry.album?.let { Pinyin.normalize(it) },
+            albumArtist = entry.artist,
             trackNo = null,
             discNo = null,
-            durationMs = 0L,
+            durationMs = entry.durationMs ?: 0L,
             year = null,
             genre = null,
             mimeType = entry.mimeType ?: MimeTypes.fromPath(entry.name),
-            bitrateKbps = null,
-            sampleRateHz = null,
-            channels = null,
-            bitDepth = null,
+            bitrateKbps = entry.bitrateKbps,
+            sampleRateHz = entry.sampleRateHz,
+            channels = entry.channels,
+            bitDepth = entry.bitDepth,
             sizeBytes = entry.sizeBytes,
             lastModified = entry.lastModified,
             artworkKey = null,
@@ -269,10 +280,11 @@ class SourceRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun prepare(config: SourceConfig, credentials: Credentials?) {
+    private suspend fun prepare(config: SourceConfig, credentials: Credentials?) {
         when (config.type) {
             SourceType.SMB -> smbPool.configure(config, credentials?.username, credentials?.password)
             SourceType.WEBDAV -> webDav.prepare(config, credentials?.username, credentials?.password)
+            SourceType.JELLYFIN -> jellyfin.prepare(config, credentials)
             SourceType.DLNA -> {
                 val url = runCatching { Uri.parse(config.controlUrl.orEmpty()) }.getOrNull()
                 url?.host?.let { host ->
@@ -294,6 +306,7 @@ class SourceRepositoryImpl @Inject constructor(
     /** 与 WebDavClient.prepare / DLNA registerHeaders 使用同一套默认端口，避免清不掉认证头。 */
     private fun portOf(config: SourceConfig): Int {
         if (config.type == SourceType.SMB) return config.port ?: 445
+        if (config.type == SourceType.JELLYFIN) return config.port ?: 8096
         val url = runCatching { Uri.parse(config.url.orEmpty()) }.getOrNull() ?: return 80
         if (url.port > 0) return url.port
         return if (url.scheme.equals("https", true)) 443 else 80
@@ -301,7 +314,7 @@ class SourceRepositoryImpl @Inject constructor(
 
     private fun describe(config: SourceConfig?): String = when (config?.type) {
         SourceType.SMB -> "${config.host.orEmpty()}/${config.share.orEmpty()}"
-        SourceType.WEBDAV, SourceType.DLNA -> config.url.orEmpty()
+        SourceType.WEBDAV, SourceType.DLNA, SourceType.JELLYFIN -> config.url.orEmpty()
         else -> ""
     }
 

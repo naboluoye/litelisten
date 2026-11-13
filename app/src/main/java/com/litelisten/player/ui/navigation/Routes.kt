@@ -15,6 +15,7 @@ object Routes {
     const val BROWSER = "browser/{sourceId}?path={path}"
     const val ADD_SMB = "add_smb?host={host}&port={port}"
     const val ADD_WEBDAV = "add_webdav?url={url}"
+    const val ADD_JELLYFIN = "add_jellyfin?url={url}"
     const val QUEUE = "queue"
     const val LYRICS = "lyrics"
     const val EQUALIZER = "equalizer"
@@ -33,6 +34,12 @@ object Routes {
         "add_webdav?url=" + Uri.encode(
             if (host.isBlank()) "" else "http://$host:$port/",
         )
+
+    fun addJellyfin(host: String = "", port: Int = 8096): String {
+        if (host.isBlank()) return "add_jellyfin?url="
+        val scheme = if (port == 8920 || port == 443) "https" else "http"
+        return "add_jellyfin?url=" + Uri.encode("$scheme://$host:$port/")
+    }
 
     val TOP_LEVEL = setOf(LIBRARY, SOURCES, SEARCH, SETTINGS)
 }
