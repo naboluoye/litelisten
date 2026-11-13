@@ -60,8 +60,13 @@ fun AddSourceScreen(
     // id 在页面生命周期内固定，避免测试与保存生成两套凭据。
     val stableId = remember { viewModel.newConfig(type, ServerForm()).id }
     fun currentConfig(): SourceConfig = viewModel.newConfig(type, form).copy(id = stableId)
-    // Jellyfin 必须登录换取访问令牌，不提供匿名选项。
-    val needLogin = type == SourceType.JELLYFIN || !form.anonymous
+    // Jellyfin 必须登录换取访问令牌；DLNA/UPnP 是匿名协议，不需要也不支持账号密码；
+    // 其余协议默认需要登录，勾选「匿名登录」后才跳过凭据。
+    val needLogin = when (type) {
+        SourceType.JELLYFIN -> true
+        SourceType.DLNA -> false
+        else -> !form.anonymous
+    }
 
     LaunchedEffect(status) {
         if (status is AddStatus.Saved) {
@@ -81,6 +86,7 @@ fun AddSourceScreen(
                 when (type) {
                     SourceType.SMB -> R.string.add_smb_title
                     SourceType.JELLYFIN -> R.string.add_jellyfin_title
+                    SourceType.DLNA -> R.string.add_dlna_title
                     else -> R.string.add_webdav_title
                 },
             ),
@@ -93,11 +99,19 @@ fun AddSourceScreen(
             Field(stringResource(R.string.field_port), form.port) { form = form.copy(port = it) }
         } else {
             Field(stringResource(R.string.field_url), form.url) { form = form.copy(url = it) }
-            Text(
-                stringResource(R.string.webdav_https_notice),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (type == SourceType.WEBDAV) {
+                Text(
+                    stringResource(R.string.webdav_https_notice),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Text(
+                    stringResource(R.string.add_dlna_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         if (type == SourceType.JELLYFIN) {
             Text(
@@ -115,7 +129,7 @@ fun AddSourceScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(vertical = spacing.s),
         )
-        if (type != SourceType.JELLYFIN) {
+        if (type == SourceType.SMB || type == SourceType.WEBDAV) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = form.anonymous, onCheckedChange = { form = form.copy(anonymous = it) })
                 Text(stringResource(R.string.field_anonymous))

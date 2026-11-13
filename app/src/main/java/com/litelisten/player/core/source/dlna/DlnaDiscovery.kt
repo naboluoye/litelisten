@@ -2,12 +2,14 @@ package com.litelisten.player.core.source.dlna
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiManager
 import com.litelisten.player.core.model.DiscoveredDevice
 import com.litelisten.player.core.model.SourceConfig
 import com.litelisten.player.core.model.SourceType
+import com.litelisten.player.core.network.LocalNetworkHolder
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -30,19 +32,28 @@ data class DlnaDevice(
 @Singleton
 class DlnaDiscovery @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val client: OkHttpClient,
+    private val base: OkHttpClient,
+    private val networkHolder: LocalNetworkHolder,
 ) {
+    /** 设备描述（LOCATION）与控制请求都强制走局域网 Network，避免被系统默认路由甩到蜂窝。 */
+    private val client: OkHttpClient
+        get() = networkHolder.network?.socketFactory?.let { sf ->
+            base.newBuilder().socketFactory(sf).build()
+        } ?: base
+
     suspend fun discover(): List<DiscoveredDevice> = withContext(Dispatchers.IO) {
         val lock = runCatching {
             val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
             wifi.createMulticastLock("litelisten-ssdp").apply { setReferenceCounted(true); acquire() }
         }.getOrNull()
         try {
+            // 先把真正的局域网 Network 记下来，后续 SSDP / 设备描述 / 控制请求都绑它。
+            val network = resolveLocalNetwork().also { networkHolder.set(it) }
             val locations = LinkedHashSet<String>()
             DatagramSocket(0).use { socket ->
                 // 蜂窝 + Wi-Fi 并存时，系统可能把组播发到蜂窝接口上；
                 // 显式绑定到 Wi-Fi / 以太网 Network，否则同一个网络里也搜不到设备。
-                bindToLocalNetwork(socket)
+                bindToLocalNetwork(socket, network)
                 socket.soTimeout = 350
                 val target = InetAddress.getByName(SSDP_ADDRESS)
                 repeat(2) {
@@ -94,10 +105,21 @@ class DlnaDiscovery @Inject constructor(
     }
 
     @Suppress("DEPRECATION")
-    private fun bindToLocalNetwork(socket: DatagramSocket) {
+    private fun bindToLocalNetwork(socket: DatagramSocket, network: Network?) {
+        if (network == null) return
+        runCatching { network.bindSocket(socket) }
+    }
+
+    /**
+     * 找到真正连着局域网的那张 Network（Wi-Fi / 以太网）。
+     * 手机在「Wi-Fi 无互联网 + 开着蜂窝数据」时，系统默认网络是蜂窝，
+     * 不显式选出局域网 Network 并绑定，内网 NAS 的控制地址就全部不可达。
+     */
+    @Suppress("DEPRECATION")
+    private fun resolveLocalNetwork(): Network? {
         val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-            ?: return
-        val network = runCatching {
+            ?: return null
+        return runCatching {
             manager.allNetworks.firstOrNull { candidate ->
                 val caps = runCatching { manager.getNetworkCapabilities(candidate) }.getOrNull()
                 caps != null && (
@@ -105,8 +127,7 @@ class DlnaDiscovery @Inject constructor(
                         caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
                     )
             } ?: manager.activeNetwork
-        }.getOrNull() ?: return
-        runCatching { network.bindSocket(socket) }
+        }.getOrNull()
     }
 
     /** 用容错正则提取设备描述：命名空间前缀、标签大小写、缺失字段各家实现都不一样。 */

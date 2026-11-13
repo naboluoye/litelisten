@@ -11,6 +11,7 @@ import com.litelisten.player.core.model.SourceError
 import com.litelisten.player.core.model.SourceInfo
 import com.litelisten.player.core.model.SourceType
 import com.litelisten.player.core.model.Track
+import com.litelisten.player.core.network.LocalNetworkHolder
 import com.litelisten.player.core.source.api.SourceProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,8 +28,18 @@ import javax.inject.Singleton
 /** DLNA/UPnP ContentDirectory Browse；DIDL-Lite 里的资源 URL 直接交给播放器。 */
 @Singleton
 class DlnaSourceProvider @Inject constructor(
-    private val client: OkHttpClient,
+    private val base: OkHttpClient,
+    private val networkHolder: LocalNetworkHolder,
 ) : SourceProvider {
+    /**
+     * DLNA 的 SSDP 探测能找到设备，但控制请求（SOAP Browse）默认走系统「默认网络」。
+     * 手机在「Wi-Fi 无互联网 + 开着蜂窝数据」时默认网络是蜂窝，192.168.x.x 的控制地址
+     * 全部不可达，结果设备搜得到却连不上。改用局域网 Network 的 socketFactory 强制绑定。
+     */
+    private val client: OkHttpClient
+        get() = networkHolder.current()?.socketFactory?.let { sf ->
+            base.newBuilder().socketFactory(sf).build()
+        } ?: base
     override val type: SourceType = SourceType.DLNA
 
     override suspend fun testConnection(config: SourceConfig): Result<SourceInfo> = withContext(Dispatchers.IO) {
@@ -80,6 +91,8 @@ class DlnaSourceProvider @Inject constructor(
             .url(controlUrl)
             .header("SOAPACTION", "\"urn:schemas-upnp-org:service:ContentDirectory:1#Browse\"")
             .header("User-Agent", "LiteListen/1.0 UPnP/1.1 DLNADOC/1.50")
+            .header("Accept", "*/*")
+            .header("Connection", "close")
             .post(envelope.toRequestBody("text/xml; charset=utf-8".toMediaType()))
             .build()
         val response = runCatching { client.newCall(request).execute() }.getOrElse {

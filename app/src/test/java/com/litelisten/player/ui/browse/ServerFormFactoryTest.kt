@@ -86,4 +86,12 @@ class ServerFormFactoryTest {
         assertThat(ServerFormFactory.defaultPort(SourceType.JELLYFIN)).isEqualTo(8096)
         assertThat(ServerFormFactory.defaultPort(SourceType.WEBDAV)).isEqualTo(80)
     }
+
+    @Test
+    fun dlnaDoesNotRequireCredentials() {
+        // DLNA/UPnP 是匿名协议：不应要求用户名密码，也不应发送任何凭据。
+        val form = ServerForm(url = "http://192.168.1.9:50001/MediaServer/ContentDirectory/Control")
+        assertThat(ServerFormFactory.validate(SourceType.DLNA, form)).isNull()
+        assertThat(ServerFormFactory.credentials(SourceType.DLNA, form)).isNull()
+    }
 }

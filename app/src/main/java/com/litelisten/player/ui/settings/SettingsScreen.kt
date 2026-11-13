@@ -179,6 +179,12 @@ fun SettingsScreen(
         ) { dialog = "buffer" }
 
         SectionHeader(title = stringResource(R.string.settings_group_about))
+        Text(
+            stringResource(R.string.about_credit),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+        )
         ValueRow(stringResource(R.string.app_name), stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME)) {}
         ValueRow(stringResource(R.string.settings_open_licenses), "") { dialog = "licenses" }
         ValueRow(stringResource(R.string.settings_battery_settings), "") {

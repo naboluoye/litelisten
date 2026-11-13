@@ -107,6 +107,42 @@ class JellyfinClient @Inject constructor(
             .take(200)
     }
 
+    /**
+     * 扫描曲库用：一次性递归取出用户可访问的全部音频，不受媒体库层级
+     * （Views / 艺术家分组 / UserView）影响。某些账号配置下 `/Users/{id}/Views`
+     * 或层级 `Items?ParentId=` 查询会返回空，导致扫描到 0 首；直接
+     * `Recursive=true&IncludeItemTypes=Audio` 最稳。分页拉取，封顶 20000 首。
+     */
+    suspend fun recursiveAudio(config: SourceConfig): List<RemoteEntry> = withContext(Dispatchers.IO) {
+        val session = sessions[config.id] ?: throw SourceError.AuthFailed()
+        val userId = Uri.encode(session.userId)
+        val collator = Collator.getInstance(Locale.CHINA)
+        val out = ArrayList<RemoteEntry>()
+        var start = 0
+        val pageSize = 500
+        while (start < 20_000) {
+            val url = "${session.baseUrl}/Users/$userId/Items" +
+                "?Recursive=true" +
+                "&IncludeItemTypes=Audio" +
+                "&Fields=MediaSources,Path,ImageTags,Artists,AlbumArtist,Album" +
+                "&SortBy=SortName&SortOrder=Ascending" +
+                "&Limit=$pageSize&StartIndex=$start"
+            val raw = execute(Request.Builder().url(url).build())
+            val items = JellyfinJson.parseItems(raw)
+            if (items.isEmpty()) break
+            items.asSequence()
+                .map { toEntry(config, session, it) }
+                .filter { !it.isDirectory && it.playableUri != null }
+                .forEach { out.add(it) }
+            if (items.size < pageSize) break
+            start += pageSize
+        }
+        out.sortedWith(
+            compareByDescending<RemoteEntry> { it.isDirectory }
+                .thenComparator { a, b -> collator.compare(a.name, b.name) },
+        )
+    }
+
     /** 原文件直传，Jellyfin 不会转码；认证头由 AuthInterceptor 注入。 */
     fun playbackUrl(config: SourceConfig, itemId: String): String =
         baseUrl(config) + JellyfinJson.playbackPath(Uri.encode(itemId))

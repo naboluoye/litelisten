@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import com.litelisten.player.core.common.LanAddress
 import com.litelisten.player.core.model.DiscoveredDevice
 import com.litelisten.player.core.model.SourceType
+import com.litelisten.player.core.network.LocalNetworkHolder
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -34,6 +35,7 @@ import javax.inject.Singleton
 @Singleton
 class LanHostScanner @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val networkHolder: LocalNetworkHolder,
 ) {
     private data class Subnet(val self: Int, val prefix: Int)
 
@@ -239,7 +241,10 @@ class LanHostScanner @Inject constructor(
                     )
             }
         }.getOrNull()
-        return wifi ?: runCatching { manager.activeNetwork }.getOrNull()
+        val result = wifi ?: runCatching { manager.activeNetwork }.getOrNull()
+        // 记录下来供 DLNA 控制请求绑定，避免被系统默认路由甩到蜂窝。
+        result?.let { networkHolder.set(it) }
+        return result
     }
 
     private fun connectivity(): ConnectivityManager? =

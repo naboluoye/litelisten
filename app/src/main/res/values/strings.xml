@@ -252,6 +252,7 @@
     <string name="settings_group_library">曲库</string>
     <string name="settings_group_network">网络</string>
     <string name="settings_group_about">关于</string>
+    <string name="about_credit">本软件由风起时出品，功能是为解决手机本地音频的播放，免费无广告，如有需要敬请使用</string>
     <string name="settings_theme">主题</string>
     <string name="settings_dynamic_color">动态取色</string>
     <string name="settings_theme_system">跟随系统</string>
@@ -345,6 +346,8 @@
     <string name="sources_device_jellyfin">Jellyfin 媒体服务器 · 端口 %1$s</string>
     <string name="add_jellyfin_title">添加 Jellyfin 服务器</string>
     <string name="add_jellyfin_hint">Jellyfin 默认端口是 8096（HTTPS 是 8920）。需要用服务器上的账号登录，账号密码只保存在手机里。歌曲按服务器上的原文件播放，不会被转成低音质。</string>
+    <string name="add_dlna_title">添加 DLNA 媒体服务器</string>
+    <string name="add_dlna_hint">DLNA 媒体服务器免登录，直接点「测试连接」即可。若连接失败，请确认手机与服务器在同一 Wi-Fi、路由器未开启 AP 隔离；也可手动填写设备控制地址（形如 http://192.168.x.x:端口/…/Control）。</string>
     <string name="badge_jellyfin">JELLYFIN</string>
     <string name="add_credentials_title">登录账号</string>
     <string name="add_credentials_hint">大多数 NAS 和媒体服务器都要账号密码，就是你在电脑或服务器后台设置的那个。先填好账号，再测试连接或查找共享。</string>

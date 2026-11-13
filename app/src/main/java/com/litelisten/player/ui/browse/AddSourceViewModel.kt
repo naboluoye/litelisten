@@ -85,9 +85,12 @@ object ServerFormFactory {
     }
 
     fun credentials(type: SourceType, form: ServerForm): Credentials? =
-        if (type == SourceType.JELLYFIN || !form.anonymous) {
-            Credentials(form.username, form.password)
-        } else null
+        when (type) {
+            // DLNA/UPnP 是匿名协议，不发送任何凭据。
+            SourceType.DLNA -> null
+            SourceType.JELLYFIN -> Credentials(form.username, form.password)
+            else -> if (!form.anonymous) Credentials(form.username, form.password) else null
+        }
 
     fun validate(type: SourceType, form: ServerForm): Int? = when {
         type == SourceType.SMB && form.host.isBlank() -> R.string.validation_host_empty
@@ -103,8 +106,11 @@ object ServerFormFactory {
             R.string.validation_jellyfin_login
         type == SourceType.JELLYFIN && form.password.isBlank() ->
             R.string.validation_password_empty
-        !form.anonymous && form.username.isBlank() -> R.string.validation_username_empty
-        !form.anonymous && form.password.isBlank() -> R.string.validation_password_empty
+        // DLNA 是匿名协议，跳过账号密码校验。
+        type != SourceType.DLNA && !form.anonymous && form.username.isBlank() ->
+            R.string.validation_username_empty
+        type != SourceType.DLNA && !form.anonymous && form.password.isBlank() ->
+            R.string.validation_password_empty
         // 共享名放最后：用户先被引导填账号，再查共享，才不会卡在匿名连接失败上。
         type == SourceType.SMB && form.share.isBlank() -> R.string.validation_share_empty
         else -> null

@@ -177,9 +177,14 @@ class SourceRepositoryImpl @Inject constructor(
             val config = config(sourceId) ?: throw SourceError.NotFound()
             prepare(config, credentialStore.get(sourceId))
             val provider = registry.get(config.type) ?: throw SourceError.Unsupported(config.type.name)
-            val files = ArrayList<RemoteEntry>()
-            walk(provider, config, path, 0, files)
-            val tracks = files.mapNotNull { entry -> buildTrack(config, entry) }
+            // Jellyfin 直接递归拉全部音频，绕开 Views / 层级结构，避免某些账号配置下扫到 0 首。
+            val tracks = if (config.type == SourceType.JELLYFIN) {
+                jellyfin.recursiveAudio(config).mapNotNull { buildTrack(config, it) }
+            } else {
+                val files = ArrayList<RemoteEntry>()
+                walk(provider, config, path, 0, files)
+                files.mapNotNull { entry -> buildTrack(config, entry) }
+            }
             val count = libraryScanner.importTracks(tracks)
             sourceDao.updateSync(sourceId, count, System.currentTimeMillis())
             count
