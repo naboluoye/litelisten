@@ -1,6 +1,7 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> 当前交付：**M0 / P0 工程骨架** + **完整 CI/CD 上线路径**。
+> 仓库：**https://github.com/naboluoye/litelisten** ｜ 首个正式版：[v1.0.0 Release](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> 当前交付：**M0 / P0 工程骨架** + **完整 CI/CD 上线路径**（云端流水线已实跑通过）。
 > 包名 `com.litelisten.player` ｜ minSdk 26 / targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3。
 > 零账号、零广告、零遥测、零外网请求；网络访问只允许局域网私网地址。
 
@@ -18,8 +19,12 @@
 | `apksigner verify --verbose` | ✅ v2 + v3 签名有效 |
 | `aapt dump badging` | ✅ versionCode 1 / versionName 1.0.0 / minSdk 26 / targetSdk 35 / 应用名「轻听」 |
 | `ci_guard.py --check all` | ✅ PASS（含 1 条已知中文兜底告警） |
+| GitHub Actions `CI`（云端） | ✅ **success**，6m19s：红线守卫 → assembleDebug → 单测 → Lint |
+| GitHub Actions `Release`（云端） | ✅ **success**，4m48s：强制签名 → 验签 → 包体/权限审计 → 发布 GitHub Release |
+| Release APK 下载与验签 | ✅ `LiteListen-v1.0.0.apk`（8,350,386 B）+ SHA-256 校验通过；v2/v3 验签通过 |
+| 签名证书一致性 | ✅ APK 证书 SHA-256 `cc7b03e7…e7ac` 与正式 `litelisten.jks` 完全一致 |
 
-验证用的是**一次性测试密钥**（`.workbuddy/tmp/ci-validation.jks`，不在工程目录、不入库）；你的正式密钥仍须按 §3 自行生成并保管。`app/build/outputs/.../*.apk` 是验证产物，**不要分发、不要当正式版装到主力机**，否则以后换了正式密钥就无法覆盖升级。
+本机表格里的构建验证用的是临时 SDK（JDK 21）与**一次性测试密钥**；云端 Release 用的是已配置好的**正式密钥**（见 §3）。`app/build/outputs/.../*.apk` 是本机验证产物，**不要分发**；正式安装包请从 GitHub Release 下载。
 
 ---
 
@@ -95,7 +100,14 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 
 分发目标：**GitHub Release 自分发 APK**（手机直接下载安装），不接 Google Play / 国内商店。
 
-### 首次配置（一次性，约 10 分钟）
+### 首次配置（✅ 已完成，2026-11-13）
+
+以下步骤已全部执行完毕，保留在此作为**密钥轮换 / 换机复现**的参考：
+
+- GitHub 账号 `naboluoye`，公开仓库 `litelisten`，默认分支 `main`。
+- 正式密钥 `litelisten.jks`（RSA 4096 / 有效期 10000 天 / 别名 `litelisten`）放在**工程目录之外**，未进入 Git；口令请从离线备份取回。
+- 4 个 Secrets 已写入仓库：`ANDROID_KEYSTORE_BASE64`、`LITELISTEN_KEYSTORE_PASSWORD`、`LITELISTEN_KEY_ALIAS`、`LITELISTEN_KEY_PASSWORD`。
+- `v1.0.0` tag 已推送，`Release` 工作流已完成并发布 APK。
 
 **① 生成签名密钥（在你自己的电脑上，密码自己保管，绝不入库）**
 
@@ -126,7 +138,14 @@ base64 -i litelisten.jks | pbcopy
 
 **③ 本地 Release 构建（可选）**：复制 `keystore.properties.example` 为 `keystore.properties`，填入真实值，运行 `./gradlew :app:assembleRelease`。该文件已在 `.gitignore`。
 
-**④ 推送仓库**：`git init && git add . && git commit -m "P0 skeleton + CI/CD" && git remote add origin <你的仓库> && git push -u origin main`。
+**④ 推送仓库**：已完成。本地仓库已关联 `origin`，`main` 分支与 `v1.0.0` tag 均已推送。
+
+#### 云端流水线踩坑记录（已修复，勿回退）
+
+| 现象 | 原因 | 修法 |
+|---|---|---|
+| `setup-android@v3` 20 秒失败：`Failed to find package 'tools'` | 该 action 会去装 Google 已下架的旧 SDK 包，与新版 GitHub runner 的 cmdline-tools 16.0 不兼容 | 两个 workflow 都改为**直接用 runner 预装 Android SDK**，显式设 `ANDROID_HOME` 并动态定位 `sdkmanager` |
+| `./gradlew: Permission denied`（exit 126） | Windows 提交时不保留可执行位，`gradlew` 以 `100644` 入库 | `git update-index --chmod=+x gradlew`，并新增 `.gitattributes` 固定 `gradlew text eol=lf` |
 
 ### 每次发版 SOP
 
@@ -196,6 +215,7 @@ Fastlane 只作为**本地一键加速**（`bundle install && bundle exec fastla
 ```
 litelisten/
 ├─ .github/workflows/{ci.yml, release.yml}     CI 门禁 / 签名发版
+├─ .gitattributes                              gradlew 可执行位与 LF 换行（Linux runner 必需）
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ fastlane/{Fastfile, Appfile} + Gemfile      本地一键构建（可选）
 ├─ gradle/libs.versions.toml                   唯一版本源；gradle/wrapper/ 齐全
@@ -218,8 +238,8 @@ litelisten/
 ## 7. 已知限制 / 下一步
 
 - **未在真机安装验证**：本机没有可连接的 Android 设备，冷启动 ≤ 2s、4 Tab 切换、大字体 1.3×、旋转/分屏等 §2 自测项仍需你在小米 14 Pro 上逐条勾 `16_验收清单与测试矩阵.md`。
-- 构建验证用的是临时 SDK（JDK 21）与一次性测试密钥；正式签名密钥丢失会导致已装用户**无法覆盖升级**，请离线备份。
+- 本机验证用的是临时 SDK（JDK 21）；云端 Release 已改用正式密钥。**正式签名密钥与口令丢失会导致已装用户无法覆盖升级**，请务必离线备份（文件在工程目录之外，未入库）。
 - `LanAddress` 目前按字符串判断私网，不做 DNS 解析：SMB / WebDAV 主机请填 **IP** 或 `.local` 名称。P3 会补「解析后校验 IP」的变体。
 - `connectedDebugAndroidTest`、P7 的 7 个测试类、真机全流程回归矩阵属于后续阶段，CI 当前只跑单测 + Lint + 产物审计。
-- GitHub Actions 尚未实跑：需先建仓库、配好 4 个 Secrets、推送 `v1.0.0` tag；本地已按同一套 Gradle 命令验证通过。
+- GitHub Actions 已实跑通过：每次 push `main` 自动跑 `CI`，每次推 `v*` tag 自动跑 `Release` 并发布到 GitHub Release。首次上线的两次失败及修复见 §3 踩坑记录。
 - 建议下一阶段：按 `08_提示词_P1_本地曲库.md` 推进，并在合并前确认 `ci.yml` 全绿。
