@@ -22,3 +22,7 @@ fastlane/report.xml
 fastlane/README.md
 *.apk
 *.aab
+
+# Python cache
+__pycache__/
+*.pyc
