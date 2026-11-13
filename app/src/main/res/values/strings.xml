@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文案按 P0-P7 一次性备齐，部分键要到后续阶段才被引用；抑制整库的 UnusedResources 噪音。 -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UnusedResources">
+    <string name="app_name">轻听</string>
+
+    <!-- 底部导航 -->
+    <string name="tab_library">音乐库</string>
+    <string name="tab_sources">来源</string>
+    <string name="tab_search">搜索</string>
+    <string name="tab_settings">设置</string>
+
+    <!-- 音乐库 -->
+    <string name="library_title">音乐库</string>
+    <string name="library_tab_songs">歌曲</string>
+    <string name="library_tab_albums">专辑</string>
+    <string name="library_tab_artists">艺术家</string>
+    <string name="library_tab_folders">文件夹</string>
+    <string name="empty_library_title">还没有音乐</string>
+    <string name="empty_library_desc">扫描手机里的歌，或连接家里的 NAS</string>
+    <string name="action_scan_local">扫描本机音乐</string>
+    <string name="action_add_server">添加服务器</string>
+
+    <!-- 来源 -->
+    <string name="sources_title">来源</string>
+    <string name="sources_group_local">本机存储</string>
+    <string name="sources_group_servers">我的服务器</string>
+    <string name="sources_group_discovered">发现的设备</string>
+    <string name="sources_local_card">本机音乐</string>
+    <string name="sources_local_card_sub">尚未扫描</string>
+    <string name="sources_placeholder_desc">等待 P3 / P4 接入</string>
+    <string name="sources_add_smb">添加 SMB 服务器</string>
+    <string name="sources_add_webdav">添加 WebDAV</string>
+    <string name="sources_scan_dlna">扫描 DLNA 设备</string>
+
+    <!-- 搜索 -->
+    <string name="search_title">搜索</string>
+    <string name="search_hint">搜索歌曲、专辑、艺术家、文件名</string>
+    <string name="search_recent">最近搜索</string>
+    <string name="search_clear">清空</string>
+    <string name="search_empty_title">还没有搜过</string>
+    <string name="search_empty_desc">试试歌名、艺术家，或者拼音首字母</string>
+
+    <!-- 设置 -->
+    <string name="settings_title">设置</string>
+    <string name="settings_group_appearance">外观</string>
+    <string name="settings_group_playback">播放</string>
+    <string name="settings_group_audio">音效</string>
+    <string name="settings_group_library">曲库</string>
+    <string name="settings_group_network">网络</string>
+    <string name="settings_group_about">关于</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_dynamic_color">动态取色</string>
+    <string name="settings_value_default">默认</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色</string>
+    <string name="settings_theme_dark">深色</string>
+    <string name="settings_theme_black">纯黑</string>
+    <string name="theme_dialog_title">选择主题</string>
+
+    <!-- 播放页 / MiniPlayer -->
+    <string name="nav_back">返回</string>
+    <string name="nav_close">收起</string>
+    <string name="nav_more">更多</string>
+    <string name="player_not_playing">未在播放</string>
+    <string name="player_unknown_artist">未知艺术家</string>
+    <string name="player_previous">上一首</string>
+    <string name="player_play">播放</string>
+    <string name="player_pause">暂停</string>
+    <string name="player_next">下一首</string>
+    <string name="player_queue">队列</string>
+    <string name="player_lyrics">歌词</string>
+    <string name="player_equalizer">音效</string>
+    <string name="player_sleep_timer">定时</string>
+    <string name="player_more">更多</string>
+
+    <!-- 来源徽标 -->
+    <string name="badge_local">本机</string>
+    <string name="badge_saf">文件夹</string>
+    <string name="badge_smb">SMB</string>
+    <string name="badge_webdav">WEBDAV</string>
+    <string name="badge_dlna">DLNA</string>
+
+    <!-- contentDescription -->
+    <string name="cd_search">搜索</string>
+    <string name="cd_settings">设置</string>
+    <string name="cd_add">添加</string>
+    <string name="cd_cover">封面</string>
+    <string name="cd_mini_player">打开正在播放页</string>
+    <string name="cd_navigate_up">返回上一页</string>
+
+    <!-- 占位反馈 -->
+    <string name="snack_p1_pending">P1 实现</string>
+    <string name="snack_p3_pending">P3 实现</string>
+    <string name="snack_p4_pending">P4 实现</string>
+    <string name="snack_p5_pending">P5 实现</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_confirm">确定</string>
+
+    <!-- 子路由占位 -->
+    <string name="stub_album">专辑详情</string>
+    <string name="stub_artist">艺术家详情</string>
+    <string name="stub_browser">文件浏览</string>
+    <string name="stub_add_smb">添加 SMB</string>
+    <string name="stub_add_webdav">添加 WebDAV</string>
+    <string name="stub_queue">播放队列</string>
+    <string name="stub_lyrics">歌词</string>
+    <string name="stub_equalizer">均衡器</string>
+    <string name="stub_screen_desc">该页面将在后续阶段接入数据</string>
+
+    <!-- 错误文案（SourceError -> 用户可读） -->
+    <string name="error_network_unreachable">连不上 %1$s。检查设备是否开机、是否在同一 Wi-Fi。</string>
+    <string name="error_auth_failed">用户名或密码不对，重新输入试试。</string>
+    <string name="error_share_not_found">找不到共享「%1$s」，可能已被重命名。</string>
+    <string name="error_path_not_found">这个文件夹不存在了，可能被移动或删除。</string>
+    <string name="error_timeout">连接超时。网络可能较慢，稍后重试。</string>
+    <string name="error_protocol">服务器返回了无法识别的内容（%1$s）。</string>
+    <string name="error_unsupported">这个文件格式暂不支持。</string>
+    <string name="error_not_found">文件已不存在，已跳到下一首。</string>
+    <string name="error_unknown">出了点问题，已记录日志。重试或查看诊断。</string>
+</resources>

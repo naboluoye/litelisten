@@ -1,0 +1,2 @@
+package_name("com.litelisten.player")
+json_key_file("") # 本项目不上传 Google Play，留空即可

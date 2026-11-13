@@ -1,0 +1,24 @@
+*.iml
+.gradle/
+.idea/
+.kotlin/
+local.properties
+build/
+*/build/
+captures/
+.DS_Store
+
+# 签名资产：绝不入库
+*.jks
+*.keystore
+keystore.properties
+signing/
+*.pepk
+*.pem
+*.pk8
+
+# CI / Fastlane 产物
+fastlane/report.xml
+fastlane/README.md
+*.apk
+*.aab

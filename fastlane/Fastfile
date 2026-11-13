@@ -1,0 +1,32 @@
+fastlane_version "2.219.0"
+
+default_platform(:android)
+
+platform :android do
+  desc "单元测试"
+  lane :test do
+    gradle(task: ":app:testDebugUnitTest")
+  end
+
+  desc "Lint"
+  lane :lint do
+    gradle(task: ":app:lintDebug")
+  end
+
+  desc "组装 Debug APK（装到小米 14 Pro 自测）"
+  lane :debug do
+    gradle(task: ":app:assembleDebug")
+  end
+
+  desc "红线静态检查"
+  lane :guard do
+    sh("python3", "scripts/ci_guard.py", "--check", "all")
+  end
+
+  desc "构建签名 Release APK（不上传任何商店）"
+  lane :release do
+    # 签名走环境变量或本地 keystore.properties，与 CI 完全一致；此处绝不写死密码。
+    gradle(task: "clean")
+    gradle(task: ":app:assembleRelease")
+  end
+end
