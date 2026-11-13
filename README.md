@@ -28,6 +28,17 @@
 
 ---
 
+## 扫码下载正式版（v1.0.0）
+
+![轻听 v1.0.0 扫码下载](docs/qr-download.png)
+
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v1.0.0/LiteListen-v1.0.0.apk>
+- 版本说明与 SHA-256 校验文件：[GitHub Release v1.0.0](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+- 可直接转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
+- 适用 Android 8.0 及以上；下载后需在系统里允许「安装未知来源」。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别。
+
+---
+
 ## 1. 这次交付了什么
 
 | 层 | 内容 |
@@ -216,6 +227,7 @@ Fastlane 只作为**本地一键加速**（`bundle install && bundle exec fastla
 litelisten/
 ├─ .github/workflows/{ci.yml, release.yml}     CI 门禁 / 签名发版
 ├─ .gitattributes                              gradlew 可执行位与 LF 换行（Linux runner 必需）
+├─ docs/{qr-download.png, qr-download-card.png}  v1.0.0 扫码下载图
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ fastlane/{Fastfile, Appfile} + Gemfile      本地一键构建（可选）
 ├─ gradle/libs.versions.toml                   唯一版本源；gradle/wrapper/ 齐全
