@@ -2,12 +2,11 @@ package com.litelisten.player.core.source.api
 
 import com.litelisten.player.core.model.SourceType
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 import javax.inject.Singleton
 
-/** P3/P4 由 SourceModule 注入各协议实现；P0 保持空注册表，不抛异常占位。 */
+/** 由 SourceModule 统一注册三个协议实现，避免重复绑定。 */
 @Singleton
-class SourceRegistry @Inject constructor() {
+class SourceRegistry {
     private val providers = ConcurrentHashMap<SourceType, SourceProvider>()
 
     fun register(provider: SourceProvider) {

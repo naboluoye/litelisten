@@ -1,10 +1,27 @@
 package com.litelisten.player.di
 
+import com.litelisten.player.core.source.api.SourceRegistry
+import com.litelisten.player.core.source.dlna.DlnaSourceProvider
+import com.litelisten.player.core.source.smb.SmbSourceProvider
+import com.litelisten.player.core.source.webdav.WebDavSourceProvider
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
-/** P3/P4：把 Local / SMB / WebDAV / DLNA 实现注册进 SourceRegistry。 */
 @Module
 @InstallIn(SingletonComponent::class)
-object SourceModule
+object SourceModule {
+    @Provides
+    @Singleton
+    fun provideSourceRegistry(
+        smb: SmbSourceProvider,
+        webDav: WebDavSourceProvider,
+        dlna: DlnaSourceProvider,
+    ): SourceRegistry = SourceRegistry().apply {
+        register(smb)
+        register(webDav)
+        register(dlna)
+    }
+}

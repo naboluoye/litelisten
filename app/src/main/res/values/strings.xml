@@ -1,14 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 文案按 P0-P7 一次性备齐，部分键要到后续阶段才被引用；抑制整库的 UnusedResources 噪音。 -->
-<resources xmlns:tools="http://schemas.android.com/tools"
-    tools:ignore="UnusedResources">
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
     <string name="app_name">轻听</string>
 
-    <!-- 底部导航 -->
+    <!-- 导航 -->
     <string name="tab_library">音乐库</string>
     <string name="tab_sources">来源</string>
     <string name="tab_search">搜索</string>
     <string name="tab_settings">设置</string>
+    <string name="nav_back">返回</string>
+    <string name="nav_close">收起</string>
+    <string name="nav_more">更多</string>
+
+    <!-- 通用动作 -->
+    <string name="action_cancel">取消</string>
+    <string name="action_confirm">确定</string>
+    <string name="action_ok">知道了</string>
+    <string name="action_retry">重试</string>
+    <string name="action_refresh">刷新</string>
+    <string name="action_close">关闭</string>
+    <string name="action_save">保存</string>
+    <string name="action_delete">删除</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_skip">跳过</string>
+    <string name="action_next">下一步</string>
+    <string name="action_start">开始使用</string>
+    <string name="action_undo">撤销</string>
+    <string name="action_loading">加载中</string>
+    <string name="action_yes">是</string>
+    <string name="action_no">否</string>
+    <string name="settings_value_on">已开启</string>
+    <string name="settings_value_off">已关闭</string>
+    <string name="settings_value_default">默认</string>
 
     <!-- 音乐库 -->
     <string name="library_title">音乐库</string>
@@ -20,6 +42,39 @@
     <string name="empty_library_desc">扫描手机里的歌，或连接家里的 NAS</string>
     <string name="action_scan_local">扫描本机音乐</string>
     <string name="action_add_server">添加服务器</string>
+    <string name="action_add_folder">添加文件夹</string>
+    <string name="action_sort">排序</string>
+    <string name="action_play_all">播放全部</string>
+    <string name="action_favorite">收藏</string>
+    <string name="action_unfavorite">取消收藏</string>
+    <string name="action_play_next">下一首播放</string>
+    <string name="action_add_to_queue">加入队列</string>
+    <string name="action_track_info">查看信息</string>
+    <string name="action_remove_from_library">从曲库移除</string>
+    <string name="sort_title">标题</string>
+    <string name="sort_artist">艺术家</string>
+    <string name="sort_album">专辑</string>
+    <string name="sort_duration">时长</string>
+    <string name="sort_date_added">添加时间</string>
+    <string name="sort_last_played">最近播放</string>
+    <string name="sort_asc">升序</string>
+    <string name="sort_desc">降序</string>
+    <string name="filter_all">全部</string>
+    <string name="library_scan_start">开始扫描</string>
+    <string name="library_scanning">正在扫描 %1$d 首</string>
+    <string name="library_scan_done">扫描完成，共 %1$d 首</string>
+    <string name="library_scan_failed">扫描失败，请检查读取音频的权限后重试</string>
+    <string name="cd_rescan">重新扫描本机音乐</string>
+    <string name="library_songs_count">%1$d 首</string>
+    <string name="album_count">%1$d 张专辑 · %2$d 首歌</string>
+    <string name="track_count">%1$d 首歌</string>
+    <string name="folder_empty">这个文件夹里没有音乐</string>
+    <string name="permission_needed_title">需要读取音频的权限</string>
+    <string name="permission_needed_desc">轻听只读取手机里的音乐文件，不会上传任何内容。</string>
+    <string name="action_grant">授予权限</string>
+    <string name="action_open_settings">去设置开启</string>
+    <string name="permission_denied">没有读取音频的权限，无法扫描本机音乐</string>
+    <string name="library_reindex_done">正在清空并重新扫描曲库…</string>
 
     <!-- 来源 -->
     <string name="sources_title">来源</string>
@@ -27,11 +82,62 @@
     <string name="sources_group_servers">我的服务器</string>
     <string name="sources_group_discovered">发现的设备</string>
     <string name="sources_local_card">本机音乐</string>
-    <string name="sources_local_card_sub">尚未扫描</string>
-    <string name="sources_placeholder_desc">连接家里 NAS / 网络服务器的功能还在开发中</string>
+    <string name="sources_local_card_sub">%1$d 首</string>
+    <string name="sources_placeholder_desc">连接 NAS 或电脑上的共享文件夹</string>
     <string name="sources_add_smb">添加 SMB 服务器</string>
     <string name="sources_add_webdav">添加 WebDAV</string>
-    <string name="sources_scan_dlna">扫描 DLNA 设备</string>
+    <string name="sources_scan_dlna">扫描局域网设备</string>
+    <string name="sources_empty_server">还没有添加服务器</string>
+    <string name="sources_discovering">正在搜索局域网设备…</string>
+    <string name="sources_no_device">没有发现设备，可手动添加服务器</string>
+    <string name="action_scan_now">立即扫描</string>
+    <string name="action_connect">连接</string>
+    <string name="action_browse">浏览文件</string>
+    <string name="action_add_to_library">加入曲库</string>
+    <string name="action_remove_from_library_source">移出曲库</string>
+    <string name="action_delete_source">删除服务器</string>
+    <string name="confirm_delete_source">删除「%1$s」？只会移除索引和保存的配置，不会删除服务器上的文件。</string>
+    <string name="source_saved">已保存，正在打开…</string>
+    <string name="source_scan_result">已加入曲库 %1$d 首</string>
+    <string name="source_tracks">%1$d 首</string>
+    <string name="source_status_connected">已连接</string>
+    <string name="source_status_idle">未连接</string>
+    <string name="source_not_in_library">未加入曲库</string>
+
+    <!-- 添加服务器向导 -->
+    <string name="add_smb_title">添加 SMB 服务器</string>
+    <string name="add_webdav_title">添加 WebDAV 服务器</string>
+    <string name="field_name">名称</string>
+    <string name="field_host">地址（IP 或设备名）</string>
+    <string name="field_port">端口</string>
+    <string name="field_share">共享名</string>
+    <string name="field_username">用户名</string>
+    <string name="field_password">密码</string>
+    <string name="field_domain">域（可选）</string>
+    <string name="field_base_path">起始路径</string>
+    <string name="field_url">服务器地址（完整 URL）</string>
+    <string name="field_anonymous">匿名登录</string>
+    <string name="field_advanced">高级选项</string>
+    <string name="field_show_password">显示密码</string>
+    <string name="action_query_shares">查询共享</string>
+    <string name="action_test_connection">测试连接</string>
+    <string name="test_success">连接成功：%1$s</string>
+    <string name="test_failed">连接失败：%1$s</string>
+    <string name="validation_host_empty">请填写服务器地址</string>
+    <string name="validation_port_invalid">端口需为 1 到 65535</string>
+    <string name="validation_username_empty">请填写用户名，或勾选匿名登录</string>
+    <string name="validation_url_invalid">请填写完整的 http:// 或 https:// 地址</string>
+    <string name="validation_share_empty">请填写共享名</string>
+    <string name="webdav_https_notice">自签名 HTTPS 证书不受支持，请使用有效证书或局域网 HTTP 地址。</string>
+    <string name="digest_not_supported">暂不支持 Digest 认证，请使用 Basic 认证。</string>
+
+    <!-- 文件浏览 -->
+    <string name="browser_title">文件浏览</string>
+    <string name="browser_empty">这个文件夹是空的</string>
+    <string name="browser_unsupported">不支持</string>
+    <string name="browser_root">根目录</string>
+    <string name="browser_loading">正在读取目录…</string>
+    <string name="browser_added_to_library">已加入曲库</string>
 
     <!-- 搜索 -->
     <string name="search_title">搜索</string>
@@ -40,28 +146,17 @@
     <string name="search_clear">清空</string>
     <string name="search_empty_title">还没有搜过</string>
     <string name="search_empty_desc">试试歌名、艺术家，或者拼音首字母</string>
-
-    <!-- 设置 -->
-    <string name="settings_title">设置</string>
-    <string name="settings_group_appearance">外观</string>
-    <string name="settings_group_playback">播放</string>
-    <string name="settings_group_audio">音效</string>
-    <string name="settings_group_library">曲库</string>
-    <string name="settings_group_network">网络</string>
-    <string name="settings_group_about">关于</string>
-    <string name="settings_theme">主题</string>
-    <string name="settings_dynamic_color">动态取色</string>
-    <string name="settings_value_default">默认</string>
-    <string name="settings_theme_system">跟随系统</string>
-    <string name="settings_theme_light">浅色</string>
-    <string name="settings_theme_dark">深色</string>
-    <string name="settings_theme_black">纯黑</string>
-    <string name="theme_dialog_title">选择主题</string>
+    <string name="search_no_result">没有找到「%1$s」</string>
+    <string name="search_group_songs">歌曲</string>
+    <string name="search_group_albums">专辑</string>
+    <string name="search_group_artists">艺术家</string>
+    <string name="search_group_folders">文件夹</string>
+    <string name="search_group_network">网络结果</string>
+    <string name="search_network_pending">正在搜索 %1$s…</string>
+    <string name="search_network_error">%1$s 未响应</string>
+    <string name="search_hint_example">试试搜索：专辑名 / 歌手 / 文件名</string>
 
     <!-- 播放页 / MiniPlayer -->
-    <string name="nav_back">返回</string>
-    <string name="nav_close">收起</string>
-    <string name="nav_more">更多</string>
     <string name="player_not_playing">未在播放</string>
     <string name="player_unknown_artist">未知艺术家</string>
     <string name="player_previous">上一首</string>
@@ -73,42 +168,138 @@
     <string name="player_equalizer">音效</string>
     <string name="player_sleep_timer">定时</string>
     <string name="player_more">更多</string>
+    <string name="player_shuffle">随机播放</string>
+    <string name="player_repeat">循环模式</string>
+    <string name="player_repeat_off">顺序播放</string>
+    <string name="player_repeat_one">单曲循环</string>
+    <string name="player_repeat_all">列表循环</string>
+    <string name="player_speed">播放速度</string>
+    <string name="player_speed_value">%1$.2f 倍速</string>
+    <string name="player_sleep_title">睡眠定时</string>
+    <string name="player_sleep_15">15 分钟</string>
+    <string name="player_sleep_30">30 分钟</string>
+    <string name="player_sleep_45">45 分钟</string>
+    <string name="player_sleep_60">60 分钟</string>
+    <string name="player_sleep_90">90 分钟</string>
+    <string name="player_sleep_end_of_track">播完当前曲目</string>
+    <string name="player_sleep_cancel">取消定时</string>
+    <string name="player_sleep_remaining">%1$d′</string>
+    <string name="player_error_retry">重试</string>
+    <string name="player_error_unsupported">这个文件格式暂不支持</string>
+    <string name="player_error_missing">文件已不存在</string>
+    <string name="player_error_network">网络断开，请检查连接</string>
+    <string name="player_error_auth">用户名或密码不对</string>
+    <string name="player_error_other">播放出错：%1$s</string>
+    <string name="player_buffering">正在缓冲…</string>
+    <string name="player_track_info">曲目信息</string>
+    <string name="player_track_info_path">路径：%1$s</string>
+    <string name="player_track_info_format">格式：%1$s</string>
+    <string name="player_track_info_duration">时长：%1$s</string>
+    <string name="player_track_info_size">大小：%1$s</string>
 
-    <!-- 来源徽标 -->
+    <!-- 队列 -->
+    <string name="queue_title">播放队列</string>
+    <string name="queue_now_playing">正在播放</string>
+    <string name="queue_next">接下来 %1$d 首</string>
+    <string name="queue_empty">队列是空的</string>
+    <string name="action_clear_queue">清空队列</string>
+    <string name="action_shuffle_queue">随机打乱</string>
+    <string name="queue_removed">已移除 · 撤销</string>
+    <string name="confirm_clear_queue">清空播放队列？不会删除任何音乐文件。</string>
+
+    <!-- 歌词 -->
+    <string name="lyrics_none">暂无歌词</string>
+    <string name="lyrics_none_desc">没有找到同名 .lrc 歌词。可以手动选择一个歌词文件。</string>
+    <string name="lyrics_pick">选择 .lrc 歌词文件</string>
+    <string name="lyrics_pick_failed">歌词文件读取失败</string>
+    <string name="lyrics_back_to_current">回到当前</string>
+
+    <!-- 均衡器 -->
+    <string name="equalizer_title">均衡器</string>
+    <string name="equalizer_unsupported">当前设备不支持音效</string>
+    <string name="equalizer_enable">开启音效</string>
+    <string name="equalizer_preset">预设</string>
+    <string name="equalizer_bass">低音增强</string>
+    <string name="equalizer_bluetooth_notice">部分蓝牙设备不支持音效</string>
+    <string name="equalizer_band_label">%1$d Hz · %2$.1f dB</string>
+    <string name="equalizer_preset_flat">标准</string>
+    <string name="equalizer_preset_rock">摇滚</string>
+    <string name="equalizer_preset_pop">流行</string>
+    <string name="equalizer_preset_jazz">爵士</string>
+    <string name="equalizer_preset_classical">古典</string>
+    <string name="equalizer_preset_custom">自定义</string>
+
+    <!-- 设置 -->
+    <string name="settings_title">设置</string>
+    <string name="settings_group_appearance">外观</string>
+    <string name="settings_group_playback">播放</string>
+    <string name="settings_group_audio">音效</string>
+    <string name="settings_group_library">曲库</string>
+    <string name="settings_group_network">网络</string>
+    <string name="settings_group_about">关于</string>
+    <string name="settings_theme">主题</string>
+    <string name="settings_dynamic_color">动态取色</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色</string>
+    <string name="settings_theme_dark">深色</string>
+    <string name="settings_theme_black">纯黑</string>
+    <string name="theme_dialog_title">选择主题</string>
+    <string name="settings_headset_unplug">耳机拔出暂停</string>
+    <string name="settings_resume_on_start">启动时恢复队列</string>
+    <string name="settings_auto_play_on_start">启动时自动播放</string>
+    <string name="settings_skip_on_error">失败自动下一首</string>
+    <string name="settings_fade_enabled">淡入淡出</string>
+    <string name="settings_playback_speed">播放速度</string>
+    <string name="settings_equalizer">均衡器</string>
+    <string name="settings_scan_now">立即扫描本机音乐</string>
+    <string name="settings_manage_folders">管理文件夹</string>
+    <string name="settings_rebuild_index">重建曲库索引</string>
+    <string name="settings_clear_artwork_cache">清理封面缓存</string>
+    <string name="settings_show_short_audio">显示短音频</string>
+    <string name="settings_wifi_only">仅 Wi-Fi 播放</string>
+    <string name="settings_connect_timeout">连接超时</string>
+    <string name="settings_cache_limit">缓存上限</string>
+    <string name="settings_buffer_seconds">预读时长</string>
+    <string name="settings_about_version">版本 %1$s</string>
+    <string name="settings_open_licenses">开源许可</string>
+    <string name="settings_export_diagnostics">导出诊断日志</string>
+    <string name="settings_battery_settings">后台运行设置</string>
+    <string name="settings_notifications_off">通知已关闭，去开启</string>
+    <string name="confirm_rebuild_index">会清空曲库索引，不会删除音乐文件。确定继续吗？</string>
+    <string name="settings_cache_cleared">封面缓存已清理：%1$s</string>
+    <string name="settings_timeout_seconds">%1$d 秒</string>
+    <string name="settings_cache_mb">%1$d MB</string>
+    <string name="settings_buffer_value">%1$d 秒</string>
+    <string name="licenses_title">开源许可</string>
+    <string name="licenses_body">Media3 / OkHttp / smbj / jmdns / Coil / TinyPinyin 等组件均采用 Apache-2.0 或 MIT 许可证。</string>
+
+    <!-- 引导 -->
+    <string name="onboarding_1_title">把音乐放回自己手里</string>
+    <string name="onboarding_1_desc">轻听只播放手机里的音乐和家里局域网 NAS 上的音乐，不需要账号，也不会联网上传任何内容。</string>
+    <string name="onboarding_2_title">需要读取音频的权限</string>
+    <string name="onboarding_2_desc">扫描本机音乐时会申请读取音频权限。你随时可以在系统设置里关闭它。</string>
+    <string name="onboarding_3_title">连上家里的 NAS</string>
+    <string name="onboarding_3_desc">在「来源」页添加 SMB 或 WebDAV 服务器，就能直接播放电脑和 NAS 上的歌，不用先下载到手机。</string>
+
+    <!-- 徽标 / contentDescription -->
     <string name="badge_local">本机</string>
     <string name="badge_saf">文件夹</string>
     <string name="badge_smb">SMB</string>
     <string name="badge_webdav">WEBDAV</string>
     <string name="badge_dlna">DLNA</string>
-
-    <!-- contentDescription -->
     <string name="cd_search">搜索</string>
     <string name="cd_settings">设置</string>
     <string name="cd_add">添加</string>
     <string name="cd_cover">封面</string>
     <string name="cd_mini_player">打开正在播放页</string>
     <string name="cd_navigate_up">返回上一页</string>
+    <string name="cd_more">更多操作</string>
+    <string name="cd_sort">排序</string>
+    <string name="cd_folder">文件夹</string>
+    <string name="cd_audio_file">音频文件</string>
+    <string name="cd_favorite">收藏</string>
 
-    <!-- 占位反馈：面向用户说人话，不暴露内部阶段编号 -->
-    <string name="snack_p1_pending">扫描手机里的音乐：还在开发中，下一版加入</string>
-    <string name="snack_p3_pending">连接 SMB 网络服务器：还在开发中</string>
-    <string name="snack_p4_pending">连接 WebDAV / DLNA 设备：还在开发中</string>
-    <string name="snack_p5_pending">这项界面设置：还在开发中</string>
-    <string name="action_cancel">取消</string>
-    <string name="action_confirm">确定</string>
-
-    <!-- 子路由占位 -->
-    <string name="stub_album">专辑详情</string>
-    <string name="stub_artist">艺术家详情</string>
-    <string name="stub_browser">文件浏览</string>
-    <string name="stub_add_smb">添加 SMB</string>
-    <string name="stub_add_webdav">添加 WebDAV</string>
-    <string name="stub_queue">播放队列</string>
-    <string name="stub_lyrics">歌词</string>
-    <string name="stub_equalizer">均衡器</string>
-    <string name="stub_screen_desc">这个页面还没做好，会在后续版本加入</string>
-
-    <!-- 错误文案（SourceError -> 用户可读） -->
+    <!-- 错误文案 -->
     <string name="error_network_unreachable">连不上 %1$s。检查设备是否开机、是否在同一 Wi-Fi。</string>
     <string name="error_auth_failed">用户名或密码不对，重新输入试试。</string>
     <string name="error_share_not_found">找不到共享「%1$s」，可能已被重命名。</string>
@@ -118,4 +309,10 @@
     <string name="error_unsupported">这个文件格式暂不支持。</string>
     <string name="error_not_found">文件已不存在，已跳到下一首。</string>
     <string name="error_unknown">出了点问题，已记录日志。重试或查看诊断。</string>
+    <string name="error_non_lan">仅支持局域网地址，公网地址已被拦截。</string>
+    <string name="error_no_network">网络不可用，请检查 Wi-Fi。</string>
+    <string name="error_generic">出了点问题，请重试。</string>
+
+    <!-- 其它 -->
+    <string name="browser_size_kb">%1$d KB</string>
 </resources>

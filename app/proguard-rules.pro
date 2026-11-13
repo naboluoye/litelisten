@@ -34,6 +34,16 @@
 -dontnote kotlinx.serialization.**
 -keepclassmembers class **$$serializer { *; }
 -keepclasseswithmembers class * { @kotlinx.serialization.Serializable <fields>; }
+-keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
+-keepclasseswithmembers class kotlinx.serialization.json.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+# 曲库实体、来源配置和队列快照在 Release 包里要能被 Room / 序列化反射找到。
+-keep,includedescriptorclasses class com.litelisten.player.core.model.** { *; }
+-keep,includedescriptorclasses class com.litelisten.player.core.database.** { *; }
+-keep,includedescriptorclasses class com.litelisten.player.core.datastore.QueueSnapshot { *; }
+-keep class com.litelisten.player.core.model.**$$serializer { *; }
+-keep class com.litelisten.player.core.datastore.**$$serializer { *; }
 
 # 反射 / 枚举
 -keepclassmembers enum * { *; }

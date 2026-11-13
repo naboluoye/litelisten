@@ -21,7 +21,6 @@ import com.litelisten.player.core.designsystem.component.MiniPlayer
 import com.litelisten.player.core.designsystem.component.TopLevelDestination
 import kotlinx.coroutines.launch
 
-/** App 级唯一 Scaffold：insets 只消费一次，子页面各自处理 statusBarsPadding。 */
 @Composable
 fun LiteListenRoot() {
     val navController = rememberNavController()
@@ -58,6 +57,8 @@ fun LiteListenRoot() {
             LiteListenNavHost(
                 navController = navController,
                 onMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
+                onNavigate = { route -> navController.navigate(route) },
+                onBack = { navController.popBackStack() },
                 modifier = Modifier.fillMaxSize(),
             )
         }

@@ -57,6 +57,7 @@ android {
         targetSdk = 35
         versionCode = appVersionCode
         versionName = appVersionName
+        buildConfigField("String", "VERSION_NAME", "\"$appVersionName\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -122,6 +123,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.core.ktx)
     implementation(libs.activity.compose)
+    implementation(libs.documentfile)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.lifecycle.viewmodel.compose)

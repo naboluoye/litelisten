@@ -13,6 +13,8 @@ import javax.inject.Singleton
 class SettingsRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,
 ) : SettingsRepository {
+    override val all: Flow<Preferences> = dataStore.data
+
     override val themeMode: Flow<ThemeMode> = dataStore.data.map { prefs ->
         ThemeMode.entries.firstOrNull {
             it.name.equals(prefs[SettingsKeys.THEME_MODE_KEY] ?: "SYSTEM", ignoreCase = true)
@@ -29,5 +31,12 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setOnboardingDone(done: Boolean) {
         dataStore.edit { it[SettingsKeys.ONBOARDING_DONE_KEY] = done }
+    }
+
+    override fun <T> observe(key: Preferences.Key<T>, default: T): Flow<T> =
+        dataStore.data.map { prefs -> prefs[key] ?: default }
+
+    override suspend fun <T> put(key: Preferences.Key<T>, value: T) {
+        dataStore.edit { it[key] = value }
     }
 }

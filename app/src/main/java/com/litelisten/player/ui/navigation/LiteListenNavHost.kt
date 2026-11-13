@@ -7,14 +7,22 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.litelisten.player.R
+import androidx.navigation.navArgument
+import com.litelisten.player.ui.browse.AddSourceScreen
+import com.litelisten.player.ui.browse.FileBrowserScreen
 import com.litelisten.player.ui.browse.SourcesScreen
+import com.litelisten.player.ui.library.AlbumDetailScreen
+import com.litelisten.player.ui.library.ArtistDetailScreen
+import com.litelisten.player.ui.library.FolderDetailScreen
 import com.litelisten.player.ui.library.LibraryScreen
+import com.litelisten.player.ui.player.EqualizerScreen
+import com.litelisten.player.ui.player.LyricsScreen
 import com.litelisten.player.ui.player.NowPlayingScreen
+import com.litelisten.player.ui.player.QueueScreen
 import com.litelisten.player.ui.search.SearchScreen
 import com.litelisten.player.ui.settings.SettingsScreen
 
@@ -22,6 +30,8 @@ import com.litelisten.player.ui.settings.SettingsScreen
 fun LiteListenNavHost(
     navController: NavHostController,
     onMessage: (String) -> Unit,
+    onNavigate: (String) -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -34,31 +44,70 @@ fun LiteListenNavHost(
         popExitTransition = { fadeOut(animationSpec = tween(180)) },
     ) {
         composable(Routes.LIBRARY) {
-            LibraryScreen(onMessage = onMessage)
+            LibraryScreen(onMessage = onMessage, onNavigate = onNavigate)
         }
         composable(Routes.SOURCES) {
-            SourcesScreen(onMessage = onMessage)
+            SourcesScreen(onMessage = onMessage, onNavigate = onNavigate)
         }
         composable(Routes.SEARCH) {
-            SearchScreen(onMessage = onMessage)
+            SearchScreen(onMessage = onMessage, onNavigate = onNavigate)
         }
         composable(Routes.SETTINGS) {
-            SettingsScreen(onMessage = onMessage)
+            SettingsScreen(onMessage = onMessage, onNavigate = onNavigate)
         }
         composable(
             route = Routes.NOW_PLAYING,
             enterTransition = { slideInVertically(animationSpec = tween(320)) { it } },
             exitTransition = { slideOutVertically(animationSpec = tween(320)) { it } },
         ) {
-            NowPlayingScreen(onBack = { navController.popBackStack() })
+            NowPlayingScreen(onBack = onBack, onNavigate = onNavigate, onMessage = onMessage)
         }
-        composable(Routes.ALBUM) { StubScreen(stringResource(R.string.stub_album), { navController.popBackStack() }) }
-        composable(Routes.ARTIST) { StubScreen(stringResource(R.string.stub_artist), { navController.popBackStack() }) }
-        composable(Routes.BROWSER) { StubScreen(stringResource(R.string.stub_browser), { navController.popBackStack() }) }
-        composable(Routes.ADD_SMB) { StubScreen(stringResource(R.string.stub_add_smb), { navController.popBackStack() }) }
-        composable(Routes.ADD_WEBDAV) { StubScreen(stringResource(R.string.stub_add_webdav), { navController.popBackStack() }) }
-        composable(Routes.QUEUE) { StubScreen(stringResource(R.string.stub_queue), { navController.popBackStack() }) }
-        composable(Routes.LYRICS) { StubScreen(stringResource(R.string.stub_lyrics), { navController.popBackStack() }) }
-        composable(Routes.EQUALIZER) { StubScreen(stringResource(R.string.stub_equalizer), { navController.popBackStack() }) }
+        composable(Routes.ALBUM) { entry ->
+            AlbumDetailScreen(
+                name = entry.arguments?.getString("key").orEmpty().substringBefore("|"),
+                onBack = onBack,
+                onMessage = onMessage,
+            )
+        }
+        composable(Routes.ARTIST) { entry ->
+            ArtistDetailScreen(
+                name = entry.arguments?.getString("key").orEmpty(),
+                onBack = onBack,
+                onMessage = onMessage,
+            )
+        }
+        composable(Routes.FOLDER) { entry ->
+            FolderDetailScreen(
+                name = entry.arguments?.getString("key").orEmpty(),
+                onBack = onBack,
+                onMessage = onMessage,
+            )
+        }
+        composable(
+            route = Routes.BROWSER,
+            arguments = listOf(
+                navArgument("sourceId") { type = NavType.StringType },
+                navArgument("path") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) {
+            FileBrowserScreen(onBack = onBack, onMessage = onMessage)
+        }
+        composable(Routes.ADD_SMB) {
+            AddSourceScreen(
+                type = com.litelisten.player.core.model.SourceType.SMB,
+                onBack = onBack,
+                onSaved = { id -> onNavigate(Routes.browser(id)) },
+            )
+        }
+        composable(Routes.ADD_WEBDAV) {
+            AddSourceScreen(
+                type = com.litelisten.player.core.model.SourceType.WEBDAV,
+                onBack = onBack,
+                onSaved = { id -> onNavigate(Routes.browser(id)) },
+            )
+        }
+        composable(Routes.QUEUE) { QueueScreen(onBack = onBack, onMessage = onMessage) }
+        composable(Routes.LYRICS) { LyricsScreen(onBack = onBack, onMessage = onMessage) }
+        composable(Routes.EQUALIZER) { EqualizerScreen(onBack = onBack) }
     }
 }
