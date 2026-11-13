@@ -77,7 +77,7 @@
 | `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL |
 | `./gradlew :app:testDebugUnitTest` | ✅ **8 个测试类 / 28 条用例，0 失败 0 错误**（新增局域网扫描计划、错误文案映射单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error（仅有 2 条已审计的库注入/导出服务告警） |
-| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩 + 强制签名） | ✅ BUILD SUCCESSFUL，产物 **8.6 MB**（≤ 20 MB 门禁） |
+| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩 + 强制签名） | ✅ BUILD SUCCESSFUL，云端正式签名产物 **8,929,618 B ≈ 8.9 MB**（≤ 20 MB 门禁），SHA-256 `a34a64f2…dcdd` |
 | `apksigner verify --verbose` | ✅ v2 + v3 签名有效，RSA 4096，证书 SHA-256 `cc7b03e7…e7ac`（与 v1.0.0 一致，可覆盖升级） |
 | `ci_guard.py --check all` | ✅ PASS，且契约模型的中文兜底告警已清零 |
 | `ci_guard.py --check apk` | ✅ PASS，合并后 Manifest 权限 = 11 项主动申请 + 2 项已审计库注入 |
