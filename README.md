@@ -1,11 +1,21 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.3（Jellyfin + 高保真版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.3 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.0.4（DLNA 群晖连接修复版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.0.4 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
 > 零账号、零广告、零遥测、零外网请求：所有网络目标在请求发出前强制校验为局域网私网地址。
 
-**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；**v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放，是当前推荐安装的版本**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；**v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案，是当前推荐安装的版本**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.0.4 新增与修复（实机反馈）
+
+| 反馈 | 根因 | 这一版做了什么 |
+|---|---|---|
+| Jellyfin（如 `SRV-2019`）能识别、但「加入曲库」扫描结果是 0 首 | 旧版扫描走层级 `walk`：先列 `/Users/{id}/Views`（媒体库），再逐层按 `ParentId` 浏览。Jellyfin 音乐库顶层往往是 `MusicArtist`/`UserView`，而某些账号配置下 `Views` 或层级 `Items` 查询直接返回空，导致递归到底一个音频都没拿到 | 扫描改成直接调 Jellyfin 的**递归搜索接口** `Recursive=true&IncludeItemTypes=Audio`，一次性拉取该账号能访问的全部音频，完全绕开 Views / 层级结构。手动翻目录浏览仍走层级，不影响使用 |
+| DLNA 媒体服务器（群晖 `swf_nas`）搜得到却连不上，填用户名密码也没用 | ① DLNA/UPnP 是**匿名协议**，旧版添加表单却对 DLNA 也强制要求账号密码，用户被卡死在凭据上；② DLNA 的 SOAP 控制请求默认走系统「默认网络」，手机在「Wi-Fi 无互联网 + 开蜂窝」时默认网络是蜂窝，192.168.x.x 的控制地址全部不可达 | ① DLNA 添加表单**不再要求、也不再发送**账号密码（已加单测锁定，防回退）；② 新增 `LocalNetworkHolder`，发现阶段记录真正的局域网 Network，DLNA 的控制请求、设备描述请求都强制绑定这张网卡，杀进程重启后也能即时解析；③ SOAP 控制请求补 `Accept` / `Connection` 头，增强群晖兼容 |
+| 希望 App 里说明出品方 | — | 设置页「关于」区加入出品方文字：「本软件由风起时出品，功能是为解决手机本地音频的播放，免费无广告，如有需要敬请使用」 |
+
+**DLNA / 群晖实操提示**：群晖 DSM 的「媒体服务器」默认就是匿名 DLNA，直接点「测试连接」即可，不用填凭据；若仍连不上，多半是手机与 NAS 不在同一 Wi-Fi、或路由器开了 AP 隔离，可在添加向导里手动填设备控制地址（形如 `http://192.168.x.x:端口/…/Control`，端口通常是 50001/8200 之类）。
 
 ### v2.0.3 新增与修复（实机反馈）
 
@@ -44,12 +54,12 @@
 
 ---
 
-## 扫码下载（v2.0.3）
+## 扫码下载（v2.0.4）
 
-![轻听 v2.0.3 扫码下载](docs/qr-download.png)
+![轻听 v2.0.4 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.3/LiteListen-v2.0.3.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.4/LiteListen-v2.0.4.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -84,17 +94,17 @@
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.3）
+## 3. 已真实跑通的验证（v2.0.4）
 
 | 项目 | 结果 |
 |---|---|
 | `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL |
-| `./gradlew :app:testDebugUnitTest` | ✅ **10 个测试类 / 47 条用例，0 失败**（新增 Jellyfin JSON 解析、静态原流地址、端口分类、凭据校验顺序、无损/Hi-Res 判定单测） |
+| `./gradlew :app:testDebugUnitTest` | ✅ **11 个测试类 / 48 条用例，0 失败**（新增 Jellyfin JSON 解析、静态原流地址、端口分类、凭据校验顺序、无损/Hi-Res 判定单测，及 DLNA 免登录单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error |
-| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) |
+| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) |
 | `apksigner verify --verbose`（云端流水线） | ✅ 沿用同一把 RSA 4096 密钥，证书 SHA-256 `cc7b03e7…e7ac`，与 v1.0.0 一致，可覆盖升级 |
 | `ci_guard.py --check all` / `--check apk` | ✅ PASS，合并后 Manifest 权限 = 11 项主动申请 + 2 项已审计库注入 |
-| GitHub Actions `CI` / `Release` | tag `v2.0.3` 触发签名发版，结果见仓库 Actions |
+| GitHub Actions `CI` / `Release` | tag `v2.0.4` 触发签名发版，结果见仓库 Actions |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -126,7 +136,7 @@ Windows 用 `gradlew.bat`。本地要出签名 Release 包，可复制 `keystore
 
 ```
 push / PR ──> ci.yml ──> 红线守卫 → assembleDebug → 单测 → Lint → 上传产物
-改 version.properties → commit → git tag v2.0.3 → push tag
+改 version.properties → commit → git tag v2.0.4 → push tag
         ▼
 release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
              → 从 Secrets 解码 keystore → assembleRelease（强制验签）
@@ -153,9 +163,9 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 ### 每次发版 SOP
 
 ```bash
-python3 scripts/bump_version.py 2.0.3     # versionCode 自动 +1
-git add version.properties && git commit -m "release: 2.0.3"
-git tag -a v2.0.3 -m "Release 2.0.3"
+python3 scripts/bump_version.py 2.0.4     # versionCode 自动 +1
+git add version.properties && git commit -m "release: 2.0.4"
+git tag -a v2.0.4 -m "Release 2.0.4"
 git push origin main --tags               # 推 tag 后 release.yml 自动跑
 ```
 
@@ -221,10 +231,10 @@ tag 与 `version.properties` 不一致会被硬门禁拒绝。也可在 Actions 
 litelisten/
 ├─ .github/workflows/{ci.yml, release.yml}     CI 门禁 / 签名发版
 ├─ .gitattributes                              gradlew 可执行位与 LF 换行
-├─ docs/{qr-download.png, qr-download-card.png}  v2.0.3 扫码下载图
+├─ docs/{qr-download.png, qr-download-card.png}  v2.0.4 扫码下载图
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
-├─ version.properties                          versionCode=5 / versionName=2.0.3
+├─ version.properties                          versionCode=6 / versionName=2.0.4
 ├─ app/proguard-rules.pro                      R8 / kotlinx.serialization 规则
 └─ app/src/main/java/com/litelisten/player/
    ├─ core/{model, common, designsystem, database, datastore, network, scan, player}
