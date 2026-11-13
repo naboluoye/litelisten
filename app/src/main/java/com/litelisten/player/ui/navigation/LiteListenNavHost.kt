@@ -92,18 +92,32 @@ fun LiteListenNavHost(
         ) {
             FileBrowserScreen(onBack = onBack, onMessage = onMessage)
         }
-        composable(Routes.ADD_SMB) {
+        composable(
+            route = Routes.ADD_SMB,
+            arguments = listOf(
+                navArgument("host") { type = NavType.StringType; defaultValue = "" },
+                navArgument("port") { type = NavType.IntType; defaultValue = 445 },
+            ),
+        ) { entry ->
             AddSourceScreen(
                 type = com.litelisten.player.core.model.SourceType.SMB,
                 onBack = onBack,
                 onSaved = { id -> onNavigate(Routes.browser(id)) },
+                initialHost = entry.arguments?.getString("host").orEmpty(),
+                initialPort = entry.arguments?.getInt("port") ?: 445,
             )
         }
-        composable(Routes.ADD_WEBDAV) {
+        composable(
+            route = Routes.ADD_WEBDAV,
+            arguments = listOf(
+                navArgument("url") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
             AddSourceScreen(
                 type = com.litelisten.player.core.model.SourceType.WEBDAV,
                 onBack = onBack,
                 onSaved = { id -> onNavigate(Routes.browser(id)) },
+                initialUrl = entry.arguments?.getString("url").orEmpty(),
             )
         }
         composable(Routes.QUEUE) { QueueScreen(onBack = onBack, onMessage = onMessage) }

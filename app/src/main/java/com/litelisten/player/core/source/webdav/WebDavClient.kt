@@ -53,10 +53,15 @@ class WebDavClient @Inject constructor(
             when (res.code) {
                 401, 403 -> throw SourceError.AuthFailed()
                 404, 410 -> throw SourceError.PathNotFound(path.orEmpty())
-                !in 200..299 -> if (res.code == 207) Unit else throw SourceError.Protocol("HTTP_${res.code}")
+                405 -> throw SourceError.Protocol("HTTP_405")
+                !in 200..299 -> throw SourceError.Protocol("HTTP_${res.code}")
             }
             val xml = res.body?.string().orEmpty()
             if (xml.isBlank()) throw SourceError.Protocol("EMPTY_RESPONSE")
+            // 地址填成 NAS 网页首页时会返回 200 + HTML，旧实现把它当 XML 解析，
+            // 结果只显示「文件夹是空的」，用户根本不知道是地址填错了。
+            if (!xml.trimStart().startsWith("<")) throw SourceError.Protocol("NOT_WEBDAV")
+            if (!xml.contains("multistatus", true)) throw SourceError.Protocol("NOT_MULTISTATUS")
             return parse(xml, config, path)
         }
     }

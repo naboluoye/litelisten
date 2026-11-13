@@ -1,11 +1,23 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.1（v2.0.0 稳定性修复版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.1 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.1) ｜ [v2.0.0（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.0) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.0.2（局域网发现修复版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.0.2 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v2.0.1（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.1) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
 > 零账号、零广告、零遥测、零外网请求：所有网络目标在请求发出前强制校验为局域网私网地址。
 
-**版本沿革**：v1.0.0 只是 P0 工程骨架，界面提示「P1 / P3 / P4 开发中」，扫描与添加服务器都不可用；**v2.0.0 把 P1–P7 全部实现为真实功能**，但发版后的运行时审计又发现「首次装完授权后不会自动扫描、曲库一直为空」「WebDAV 进二级目录后点歌 404」等缺陷；**v2.0.1 修复了这些问题，是当前推荐安装的版本**。三个版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；**v2.0.2 针对实机反馈修复局域网设备发现与根目录浏览，是当前推荐安装的版本**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.0.2 修了什么（实机反馈）
+
+| 问题 | 影响 | 修复 |
+|---|---|---|
+| 「扫描局域网设备」只发 SSDP 搜 DLNA 媒体服务器 | 普通 Windows 电脑 / NAS 文件共享不响应 M-SEARCH，发现列表永远为空 | 新增本机 Wi-Fi 子网端口探测（445/139/5000/5001/5005/8080/8081/8800/80/443）+ NetBIOS 名称查询，真正列出局域网里的电脑与 NAS；页面会显示扫描范围如 `192.168.1.0/24` |
+| 裸 Socket 未绑定 Wi-Fi 网络 | Wi-Fi 无互联网且开着蜂窝数据时，Android 把内网探测路由到蜂窝，一台也扫不到 | 端口探测与 NBNS 查询显式绑定到 Wi-Fi / 以太网 `Network`；SSDP 同时修好接口绑定、组播锁与等待时长 |
+| 浏览器把错误参数写死为空字符串 | 根目录失败时只显示「无法识别的内容（）」，真实原因全被吞掉 | `UiMessage` 统一给出可读文案与参数，区分 HTTP 状态码、非 WebDAV 地址、空响应、SMB 状态、目录读取失败，并提示下一步怎么做 |
+| 地址填成 NAS 网页首页 | 返回 200 + HTML，被当 XML 解析后只显示「文件夹是空的」 | 非 XML / 非 multistatus 响应明确报「这个地址不是 WebDAV 目录」 |
+| SMB「测试连接」吞掉列目录异常 | 测试成功，一进根目录就报错 | 测试与真实浏览走同一条路径，失败如实上报 |
+| 只发现 IP，却要用户手填共享名 | 连不上、不知道填什么 | 向导新增「自动查找共享」，列出这台机器上可用的共享名，点一下自动填入；Windows / 群晖 / 威联通 / 中文共享名均覆盖 |
+| 其它 | DLNA SOAP 响应容错、WebDAV 405 明确提示、SMB 错误码翻译、发现页进页面即扫描 | 均已修正 |
 
 ### v2.0.1 修了什么
 
@@ -20,12 +32,12 @@
 
 ---
 
-## 扫码下载（v2.0.1）
+## 扫码下载（v2.0.2）
 
-![轻听 v2.0.1 扫码下载](docs/qr-download.png)
+![轻听 v2.0.2 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.1/LiteListen-v2.0.1.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.1](https://github.com/naboluoye/litelisten/releases/tag/v2.0.1)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.2/LiteListen-v2.0.2.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -52,24 +64,24 @@
 
 1. **装好打开**：首次启动是 3 页引导，完成后按提示授予「读取音频」权限；**授权成功即自动扫描本机音乐**，曲库直接就有歌，不用再找扫描按钮。
 2. **想重扫或只加某个目录**：曲库页右上角的 ⟳ 是重新扫描，空曲库时也有「扫描本机音乐」按钮；点 ＋ 可只选一个文件夹索引。
-3. **加网络服务器**：底部「来源」→ 右上角 ＋ → 选「添加 SMB 服务器」或「添加 WebDAV 服务器」，填地址后点「测试连接」再「保存」；DLNA 设备点「扫描局域网设备」自动发现。保存后点「浏览」即可进目录播放，或「加入曲库」整目录导入。
+3. **加网络服务器**：底部「来源」页**进入即自动扫描本机 Wi-Fi 子网**，「发现的设备」里会列出开着文件共享的电脑 / NAS；点右侧「连接」会带着 IP 跳到添加向导，点「自动查找共享」选一个共享名，再「测试连接」→「保存」。也可以右上角 ＋ 手动添加 SMB / WebDAV。保存后进目录即可播放，或「加入曲库」整目录导入。
 
-> 服务器地址可填**局域网 IP**（如 `192.168.1.10`）、`.local` 名称，或 NAS / 路由器的短主机名（如 `nas`）；短主机名会先解析并确认落在私网段才放行，公网地址一律拦截，这是刻意设计，不是故障。SMB 匿名访问请勾「匿名登录」。
+> 扫描只覆盖**手机当前所在的子网**（页面会显示范围，例如 `192.168.1.0/24`）；如果电脑在另一个网段、连的是访客网络，或路由器开了 AP 隔离，需要手动填地址。服务器地址可填局域网 IP（如 `192.168.1.10`）、`.local` 名称，或 NAS / 路由器的短主机名（如 `nas`）；短主机名会先解析并确认落在私网段才放行，公网地址一律拦截，这是刻意设计，不是故障。SMB 匿名访问请勾「匿名登录」。
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.1）
+## 3. 已真实跑通的验证（v2.0.2）
 
 | 项目 | 结果 |
 |---|---|
 | `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL |
-| `./gradlew :app:testDebugUnitTest` | ✅ **6 个测试类 / 20 条用例，0 失败 0 错误** |
+| `./gradlew :app:testDebugUnitTest` | ✅ **8 个测试类 / 28 条用例，0 失败 0 错误**（新增局域网扫描计划、错误文案映射单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error（仅有 2 条已审计的库注入/导出服务告警） |
 | `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩 + 强制签名） | ✅ BUILD SUCCESSFUL，产物 **8.6 MB**（≤ 20 MB 门禁） |
 | `apksigner verify --verbose` | ✅ v2 + v3 签名有效，RSA 4096，证书 SHA-256 `cc7b03e7…e7ac`（与 v1.0.0 一致，可覆盖升级） |
 | `ci_guard.py --check all` | ✅ PASS，且契约模型的中文兜底告警已清零 |
 | `ci_guard.py --check apk` | ✅ PASS，合并后 Manifest 权限 = 11 项主动申请 + 2 项已审计库注入 |
-| GitHub Actions `CI` / `Release` | 见仓库 Actions；tag `v2.0.1` 触发签名发版 |
+| GitHub Actions `CI` / `Release` | 见仓库 Actions；tag `v2.0.2` 触发签名发版 |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -101,7 +113,7 @@ Windows 用 `gradlew.bat`。本地要出签名 Release 包，可复制 `keystore
 
 ```
 push / PR ──> ci.yml ──> 红线守卫 → assembleDebug → 单测 → Lint → 上传产物
-改 version.properties → commit → git tag v2.0.1 → push tag
+改 version.properties → commit → git tag v2.0.2 → push tag
         ▼
 release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
              → 从 Secrets 解码 keystore → assembleRelease（强制验签）
@@ -128,9 +140,9 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 ### 每次发版 SOP
 
 ```bash
-python3 scripts/bump_version.py 2.0.1     # versionCode 自动 +1
-git add version.properties && git commit -m "release: 2.0.1"
-git tag -a v2.0.1 -m "Release 2.0.1"
+python3 scripts/bump_version.py 2.0.2     # versionCode 自动 +1
+git add version.properties && git commit -m "release: 2.0.2"
+git tag -a v2.0.2 -m "Release 2.0.2"
 git push origin main --tags               # 推 tag 后 release.yml 自动跑
 ```
 
@@ -196,7 +208,7 @@ tag 与 `version.properties` 不一致会被硬门禁拒绝。也可在 Actions 
 litelisten/
 ├─ .github/workflows/{ci.yml, release.yml}     CI 门禁 / 签名发版
 ├─ .gitattributes                              gradlew 可执行位与 LF 换行
-├─ docs/{qr-download.png, qr-download-card.png}  v2.0.1 扫码下载图
+├─ docs/{qr-download.png, qr-download-card.png}  v2.0.2 扫码下载图
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
 ├─ version.properties                          versionCode=2 / versionName=2.0.0

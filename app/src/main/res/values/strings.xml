@@ -86,10 +86,21 @@
     <string name="sources_placeholder_desc">连接 NAS 或电脑上的共享文件夹</string>
     <string name="sources_add_smb">添加 SMB 服务器</string>
     <string name="sources_add_webdav">添加 WebDAV</string>
-    <string name="sources_scan_dlna">扫描局域网设备</string>
+    <string name="sources_scan_lan">扫描局域网设备</string>
     <string name="sources_empty_server">还没有添加服务器</string>
     <string name="sources_discovering">正在搜索局域网设备…</string>
     <string name="sources_no_device">没有发现设备，可手动添加服务器</string>
+    <string name="sources_discovery_hint">自动搜索当前 Wi-Fi 网段里的文件共享、WebDAV 和 DLNA 媒体服务器。扫描只在本机局域网内进行。</string>
+    <string name="sources_scan_range">扫描范围：%1$s</string>
+    <string name="sources_device_smb">文件共享 · 端口 %1$s</string>
+    <string name="sources_device_webdav">WebDAV · 端口 %1$s</string>
+    <string name="sources_device_dlna">DLNA 媒体服务器</string>
+    <string name="sources_device_address">地址 %1$s</string>
+    <string name="sources_add_shortcut_smb">手动添加 SMB</string>
+    <string name="sources_add_shortcut_webdav">手动添加 WebDAV</string>
+    <string name="sources_scan_no_wifi">没连上 Wi-Fi，无法扫描局域网。请先连接 Wi-Fi，或手动添加服务器。</string>
+    <string name="sources_scan_no_host">扫描完成，没找到开了文件共享的设备。请确认电脑和手机在同一 Wi-Fi、电脑已开启共享；也可手动添加服务器。</string>
+    <string name="action_add_device">添加</string>
     <string name="action_scan_now">立即扫描</string>
     <string name="action_connect">连接</string>
     <string name="action_browse">浏览文件</string>
@@ -127,7 +138,10 @@
     <string name="validation_port_invalid">端口需为 1 到 65535</string>
     <string name="validation_username_empty">请填写用户名，或勾选匿名登录</string>
     <string name="validation_url_invalid">请填写完整的 http:// 或 https:// 地址</string>
-    <string name="validation_share_empty">请填写共享名</string>
+    <string name="validation_share_empty">请填写共享名，或点下面的「自动查找共享」</string>
+    <string name="action_detect_shares">自动查找共享</string>
+    <string name="shares_found_hint">找到这些共享，点一个自动填入：</string>
+    <string name="shares_none_hint">没找到常见共享名，请手动填写。Windows 上可在文件夹「属性 → 共享」里查看共享名；NAS 后台的「共享文件夹」里也能看到。</string>
     <string name="webdav_https_notice">自签名 HTTPS 证书不受支持，请使用有效证书或局域网 HTTP 地址。</string>
     <string name="digest_not_supported">暂不支持 Digest 认证，请使用 Basic 认证。</string>
 
@@ -306,13 +320,24 @@
     <string name="error_share_not_found">找不到共享「%1$s」，可能已被重命名。</string>
     <string name="error_path_not_found">这个文件夹不存在了，可能被移动或删除。</string>
     <string name="error_timeout">连接超时。网络可能较慢，稍后重试。</string>
-    <string name="error_protocol">服务器返回了无法识别的内容（%1$s）。</string>
+    <string name="error_protocol">服务器返回了无法识别的内容。</string>
     <string name="error_unsupported">这个文件格式暂不支持。</string>
     <string name="error_not_found">文件已不存在，已跳到下一首。</string>
     <string name="error_unknown">出了点问题，已记录日志。重试或查看诊断。</string>
     <string name="error_non_lan">仅支持局域网地址，公网地址已被拦截。</string>
     <string name="error_no_network">网络不可用，请检查 Wi-Fi。</string>
     <string name="error_generic">出了点问题，请重试。</string>
+    <string name="error_missing_host">还没填服务器地址，请先填写 IP 或设备名。</string>
+    <string name="error_http_code">服务器拒绝了这次请求（HTTP %1$s）。请检查端口、路径和访问权限。</string>
+    <string name="error_empty_response">服务器返回了空内容，确认地址填的是共享目录而不是网页。</string>
+    <string name="error_not_webdav">这个地址不是 WebDAV 目录，请检查端口和路径后再试。</string>
+    <string name="error_dlna_no_control">这台设备没提供媒体目录地址，建议改用 SMB / WebDAV 连接。</string>
+    <string name="error_dlna_no_result">设备返回的目录内容无法解析，可能不支持浏览。</string>
+    <string name="error_non_lan_host">只支持局域网地址，请填写 192.168.x.x 这类内网 IP。</string>
+    <string name="error_shares_unavailable">读不到这台电脑的共享列表，请在添加服务器时手动填写共享名。</string>
+    <string name="error_host_unresolved">解析不了这个设备名，请改填局域网 IP（例如 192.168.1.10）。</string>
+    <string name="error_smb_status">服务器拒绝了访问（%1$s）。请检查共享名、账号和访问权限。</string>
+    <string name="error_browse_failed">读取目录失败（%1$s）。请检查地址、共享名和访问权限后重试。</string>
 
     <!-- 其它 -->
     <string name="browser_size_kb">%1$d KB</string>

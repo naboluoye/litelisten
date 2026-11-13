@@ -86,11 +86,14 @@ class DlnaSourceProvider @Inject constructor(
             throw SourceError.NetworkUnreachable(controlUrl)
         }
         return response.use { res ->
-            if (!res.isSuccessful) throw SourceError.Protocol("HTTP_${res.code}")
-            val xml = res.body?.string().orEmpty()
+            val raw = res.body?.string().orEmpty()
+            if (!res.isSuccessful) throw SourceError.Protocol("SOAP_${res.code}")
+            if (raw.isBlank() || !raw.trimStart().startsWith("<")) {
+                throw SourceError.Protocol("NO_DIDL_RESULT")
+            }
             val parser = Xml.newPullParser()
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
-            parser.setInput(StringReader(xml))
+            parser.setInput(StringReader(raw))
             var event = parser.eventType
             while (event != XmlPullParser.END_DOCUMENT) {
                 if (event == XmlPullParser.START_TAG &&
@@ -100,11 +103,14 @@ class DlnaSourceProvider @Inject constructor(
                 }
                 event = parser.next()
             }
+            // 空目录的设备只回 BrowseResponse 不带 Result，按空目录处理而不是报协议错。
+            if (raw.contains("BrowseResponse", true)) return@use ""
             throw SourceError.Protocol("NO_DIDL_RESULT")
         }
     }
 
     private fun parseDidl(didl: String): List<RemoteEntry> {
+        if (didl.isBlank()) return emptyList()
         val parser = Xml.newPullParser()
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
         parser.setInput(StringReader(didl))

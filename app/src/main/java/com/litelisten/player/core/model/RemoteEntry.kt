@@ -30,10 +30,13 @@ data class Source(
     val lastConnectedAt: Long? = null,
 )
 
-/** DLNA / mDNS 实时发现的设备。 */
+/** SSDP / 局域网扫描实时发现的设备。 */
 data class DiscoveredDevice(
     val id: String,
     val name: String,
     val type: SourceType,
     val address: String,
+    /** 端口等附加信息，UI 用 strings.xml 格式化后展示。 */
+    val detail: String = "",
+    val port: Int? = null,
 )

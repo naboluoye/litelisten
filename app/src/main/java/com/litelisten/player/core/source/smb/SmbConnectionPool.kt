@@ -1,5 +1,6 @@
 package com.litelisten.player.core.source.smb
 
+import android.content.Context
 import com.hierynomus.msdtyp.AccessMask
 import com.hierynomus.mssmb2.SMB2CreateDisposition
 import com.hierynomus.mssmb2.SMB2ShareAccess
@@ -11,10 +12,12 @@ import com.hierynomus.smbj.connection.Connection
 import com.hierynomus.smbj.session.Session
 import com.hierynomus.smbj.share.DiskShare
 import com.hierynomus.smbj.share.File as SmbFile
+import com.litelisten.player.R
 import com.litelisten.player.core.common.LanAddress
 import com.litelisten.player.core.common.NonLanAddressException
 import com.litelisten.player.core.model.SourceConfig
 import com.litelisten.player.core.model.SourceError
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.net.SocketTimeoutException
 import java.util.EnumSet
 import java.util.concurrent.ConcurrentHashMap
@@ -26,7 +29,9 @@ data class SmbOpenFile(val handle: SmbFile, val size: Long)
 
 /** smbj 对象非线程安全，所有共享操作串行；凭据只留内存，不写日志。 */
 @Singleton
-class SmbConnectionPool @Inject constructor() {
+class SmbConnectionPool @Inject constructor(
+    @ApplicationContext private val context: Context,
+) {
     data class Credentials(val config: SourceConfig, val username: String?, val password: String?)
 
     private data class Entry(
@@ -41,7 +46,10 @@ class SmbConnectionPool @Inject constructor() {
     private val lock = Any()
 
     // 与 Media3 的 C.LENGTH_UNSET 同值；连接池不依赖播放器层。
-    private companion object { const val UNKNOWN_LENGTH = -1L }
+    private companion object {
+        const val UNKNOWN_LENGTH = -1L
+        const val MAX_SHARES = 8
+    }
 
     fun configure(config: SourceConfig, username: String?, password: String?) {
         configurations[config.id] = Credentials(config, username, password)
@@ -54,6 +62,44 @@ class SmbConnectionPool @Inject constructor() {
     }
 
     fun configOf(sourceId: String): SourceConfig? = configurations[sourceId]?.config
+
+    /**
+     * 尽力列出共享名。smbj 0.14 没有 NetShareEnum 的高级封装，
+     * 用一次登录会话逐个尝试常见共享名，能连上的即为可用共享。
+     * 用户从「发现的设备」进来只有 IP，不给他这一步就只能猜共享名。
+     */
+    fun listShares(sourceId: String): List<String> = synchronized(lock) {
+        val saved = configurations[sourceId]
+            ?: throw SourceError.Protocol("MissingHost")
+        val config = saved.config
+        val host = config.host?.takeIf { it.isNotBlank() }
+            ?: throw SourceError.Protocol("MissingHost")
+        if (!LanAddress.isPrivateOrResolvableToPrivate(host)) {
+            val shortName = !host.contains('.') && !host.contains(':')
+            throw if (shortName) SourceError.Protocol("HOST_UNRESOLVED")
+            else NonLanAddressException(host)
+        }
+        val client = SMBClient(smbConfig())
+        val found = LinkedHashSet<String>()
+        try {
+            val connection = client.connect(host, config.port ?: 445)
+            val session = connection.authenticate(authentication(saved, config))
+            for (name in context.resources.getStringArray(R.array.common_smb_shares).distinct()) {
+                if (found.size >= MAX_SHARES) break
+                val share = runCatching { session.connectShare(name) }.getOrNull() ?: continue
+                val readable = runCatching {
+                    (share as? DiskShare)?.list("") != null
+                }.getOrDefault(false)
+                runCatching { share.close() }
+                if (readable) found.add(name)
+            }
+        } catch (error: Exception) {
+            throw mapError(error, host)
+        } finally {
+            runCatching { client.close() }
+        }
+        found.toList()
+    }
 
     fun <T> useShare(sourceId: String, block: (DiskShare, SourceConfig) -> T): T = synchronized(lock) {
         val entry = ensure(sourceId)
@@ -114,24 +160,15 @@ class SmbConnectionPool @Inject constructor() {
         val config = saved.config
         val host = config.host?.takeIf { it.isNotBlank() }
             ?: throw SourceError.Protocol("MissingHost")
-        if (!LanAddress.isPrivateOrResolvableToPrivate(host)) throw NonLanAddressException(host)
-        val smbConfig = SmbConfig.builder()
-            .withTimeout(10, TimeUnit.SECONDS)
-            .withSoTimeout(30, TimeUnit.SECONDS)
-            .build()
-        val client = SMBClient(smbConfig)
+        if (!LanAddress.isPrivateOrResolvableToPrivate(host)) {
+            // 短主机名解析失败和「公网地址被拦」是两回事，给用户不同的下一步指引。
+            val shortName = !host.contains('.') && !host.contains(':')
+            throw if (shortName) SourceError.Protocol("HOST_UNRESOLVED") else NonLanAddressException(host)
+        }
+        val client = SMBClient(smbConfig())
         try {
             val connection = client.connect(host, config.port ?: 445)
-            val auth = if (config.anonymous) {
-                AuthenticationContext.anonymous()
-            } else {
-                AuthenticationContext(
-                    saved.username.orEmpty(),
-                    saved.password?.toCharArray() ?: CharArray(0),
-                    config.domain.orEmpty(),
-                )
-            }
-            val session = connection.authenticate(auth)
+            val session = connection.authenticate(authentication(saved, config))
             val share = session.connectShare(config.share.orEmpty()) as DiskShare
             val entry = Entry(client, connection, session, share)
             entries[sourceId] = entry
@@ -141,6 +178,22 @@ class SmbConnectionPool @Inject constructor() {
             throw mapError(error, host)
         }
     }
+
+    private fun smbConfig(): SmbConfig = SmbConfig.builder()
+        .withTimeout(10, TimeUnit.SECONDS)
+        .withSoTimeout(30, TimeUnit.SECONDS)
+        .build()
+
+    private fun authentication(saved: Credentials, config: SourceConfig): AuthenticationContext =
+        if (config.anonymous) {
+            AuthenticationContext.anonymous()
+        } else {
+            AuthenticationContext(
+                saved.username.orEmpty(),
+                saved.password?.toCharArray() ?: CharArray(0),
+                config.domain.orEmpty(),
+            )
+        }
 
     private fun mapError(error: Throwable, host: String): Throwable = when {
         error is SourceError -> error
@@ -153,7 +206,9 @@ class SmbConnectionPool @Inject constructor() {
                 status.contains("BAD_NETWORK_NAME") -> SourceError.ShareNotFound(host)
                 status.contains("OBJECT_NAME_NOT_FOUND") || status.contains("OBJECT_PATH_NOT_FOUND") ||
                     status.contains("FILE_NOT_FOUND") -> SourceError.PathNotFound(host)
-                else -> SourceError.Unknown(error)
+                else -> SourceError.Protocol(
+                    "SMB_STATUS:" + status.ifBlank { error.javaClass.simpleName },
+                )
             }
         }
         error is SocketTimeoutException -> SourceError.Timeout()

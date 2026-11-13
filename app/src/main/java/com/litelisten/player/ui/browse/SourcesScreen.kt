@@ -55,6 +55,8 @@ fun SourcesScreen(
     val discovering by viewModel.discovering.collectAsStateWithLifecycle()
     val count by viewModel.trackCount.collectAsStateWithLifecycle()
     val scanState by viewModel.scanState.collectAsStateWithLifecycle()
+    val hint by viewModel.hint.collectAsStateWithLifecycle()
+    val scanRange by viewModel.scanRange.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<String?>(null) }
     val deniedText = stringResource(R.string.permission_denied)
@@ -87,14 +89,14 @@ fun SourcesScreen(
                 DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.sources_add_smb)) },
-                        onClick = { menuExpanded = false; onNavigate(Routes.ADD_SMB) },
+                        onClick = { menuExpanded = false; onNavigate(Routes.addSmb()) },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.sources_add_webdav)) },
-                        onClick = { menuExpanded = false; onNavigate(Routes.ADD_WEBDAV) },
+                        onClick = { menuExpanded = false; onNavigate(Routes.addWebdav()) },
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.sources_scan_dlna)) },
+                        text = { Text(stringResource(R.string.sources_scan_lan)) },
                         onClick = { menuExpanded = false; viewModel.discover() },
                     )
                 }
@@ -165,19 +167,50 @@ fun SourcesScreen(
             title = stringResource(R.string.sources_group_discovered),
             action = { TextButton(onClick = { viewModel.discover() }) { Text(stringResource(R.string.action_refresh)) } },
         )
+        Text(
+            stringResource(R.string.sources_discovery_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+        )
+        scanRange?.let {
+            Text(
+                stringResource(R.string.sources_scan_range, it),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = spacing.l),
+            )
+        }
         if (discovering) {
             Text(
                 stringResource(R.string.sources_discovering),
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = spacing.l),
+                modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
             )
-        } else if (devices.isEmpty()) {
+        }
+        hint?.let { res ->
+            Text(
+                stringResource(res),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+            )
+        }
+        if (devices.isEmpty() && !discovering) {
             Text(
                 stringResource(R.string.sources_no_device),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.m),
+                modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
             )
+            Row(modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s)) {
+                TextButton(onClick = { onNavigate(Routes.addSmb()) }) {
+                    Text(stringResource(R.string.sources_add_shortcut_smb))
+                }
+                TextButton(onClick = { onNavigate(Routes.addWebdav()) }) {
+                    Text(stringResource(R.string.sources_add_shortcut_webdav))
+                }
+            }
         } else {
             devices.forEach { device ->
                 OutlinedCard(modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.l, vertical = spacing.s)) {
@@ -185,10 +218,34 @@ fun SourcesScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(spacing.l),
                     ) {
-                        Text(device.name, modifier = Modifier.weight(1f), maxLines = 1)
-                        TextButton(onClick = {
-                            viewModel.addDevice(device) { id -> onNavigate(Routes.browser(id)) }
-                        }) { Text(stringResource(R.string.action_connect)) }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(device.name, maxLines = 1, style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                when {
+                                    device.port == null -> stringResource(R.string.sources_device_dlna)
+                                    device.type == com.litelisten.player.core.model.SourceType.SMB ->
+                                        stringResource(R.string.sources_device_smb, device.detail)
+                                    else -> stringResource(R.string.sources_device_webdav, device.detail)
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                            Text(
+                                stringResource(R.string.sources_device_address, device.address),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
+                        TextButton(onClick = { viewModel.addDevice(device, onNavigate) }) {
+                            Text(
+                                stringResource(
+                                    if (device.port != null) R.string.action_add_device
+                                    else R.string.action_connect,
+                                ),
+                            )
+                        }
                     }
                 }
             }

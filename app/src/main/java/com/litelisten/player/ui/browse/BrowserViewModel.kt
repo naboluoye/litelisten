@@ -50,7 +50,7 @@ class BrowserViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         loading = false,
                         messageRes = if (it is SourceError) UiMessage.of(it) else R.string.error_generic,
-                        messageArg = "",
+                        messageArg = if (it is SourceError) UiMessage.argOf(it) else "",
                     )
                 },
             )
@@ -75,6 +75,7 @@ class BrowserViewModel @Inject constructor(
                 onFailure = {
                     _state.value = _state.value.copy(
                         messageRes = if (it is SourceError) UiMessage.of(it) else R.string.error_generic,
+                        messageArg = if (it is SourceError) UiMessage.argOf(it) else "",
                     )
                 },
             )

@@ -35,7 +35,7 @@ sealed interface AddStatus {
     data object Idle : AddStatus
     data object Testing : AddStatus
     data class Ok(val detail: String) : AddStatus
-    data class Failed(@StringRes val messageRes: Int) : AddStatus
+    data class Failed(@StringRes val messageRes: Int, val messageArg: String = "") : AddStatus
     data class Saved(val id: String) : AddStatus
 }
 
@@ -45,6 +45,12 @@ class AddSourceViewModel @Inject constructor(
 ) : ViewModel() {
     private val _status = MutableStateFlow<AddStatus>(AddStatus.Idle)
     val status: StateFlow<AddStatus> = _status.asStateFlow()
+    private val _shares = MutableStateFlow<List<String>>(emptyList())
+    val shares: StateFlow<List<String>> = _shares.asStateFlow()
+    private val _detectingShares = MutableStateFlow(false)
+    val detectingShares: StateFlow<Boolean> = _detectingShares.asStateFlow()
+    private val _shareSearchDone = MutableStateFlow(false)
+    val shareSearchDone: StateFlow<Boolean> = _shareSearchDone.asStateFlow()
 
     fun newConfig(type: SourceType, form: ServerForm): SourceConfig = SourceConfig(
         id = type.name.lowercase() + "-" + UUID.randomUUID().toString(),
@@ -69,7 +75,7 @@ class AddSourceViewModel @Inject constructor(
             _status.value = AddStatus.Testing
             repository.test(config, credentials(form)).fold(
                 onSuccess = { _status.value = AddStatus.Ok(it.displayName) },
-                onFailure = { _status.value = AddStatus.Failed(messageRes(it)) },
+                onFailure = { _status.value = failed(it) },
             )
         }
     }
@@ -79,18 +85,40 @@ class AddSourceViewModel @Inject constructor(
             _status.value = AddStatus.Testing
             val tested = repository.test(config, credentials(form))
             if (tested.isFailure) {
-                _status.value = AddStatus.Failed(messageRes(tested.exceptionOrNull()))
+                _status.value = failed(tested.exceptionOrNull())
                 return@launch
             }
             repository.add(config, credentials(form)).fold(
                 onSuccess = { _status.value = AddStatus.Saved(it.id) },
-                onFailure = { _status.value = AddStatus.Failed(messageRes(it)) },
+                onFailure = { _status.value = failed(it) },
             )
         }
     }
 
+    /** 只填了 IP 也能查共享名；失败时把真实原因显示出来，不要退回「请手动填写」了事。 */
+    fun detectShares(config: SourceConfig, form: ServerForm) {
+        viewModelScope.launch {
+            _detectingShares.value = true
+            _shares.value = emptyList()
+            _shareSearchDone.value = false
+            _status.value = AddStatus.Idle
+            repository.listShares(config, credentials(form)).fold(
+                onSuccess = { _shares.value = it.map { share -> share.name } },
+                onFailure = { _status.value = failed(it) },
+            )
+            _shareSearchDone.value = true
+            _detectingShares.value = false
+        }
+    }
+
+    fun clearShares() { _shares.value = emptyList() }
+
     fun reset() { _status.value = AddStatus.Idle }
 
-    private fun messageRes(error: Throwable?): Int =
-        if (error is SourceError) UiMessage.of(error) else R.string.error_generic
+    private fun failed(error: Throwable?): AddStatus.Failed =
+        if (error is SourceError) {
+            AddStatus.Failed(UiMessage.of(error), UiMessage.argOf(error))
+        } else {
+            AddStatus.Failed(R.string.error_generic)
+        }
 }

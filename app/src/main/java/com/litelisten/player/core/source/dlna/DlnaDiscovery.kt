@@ -1,9 +1,10 @@
 package com.litelisten.player.core.source.dlna
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiManager
-import android.util.Xml
 import com.litelisten.player.core.model.DiscoveredDevice
 import com.litelisten.player.core.model.SourceConfig
 import com.litelisten.player.core.model.SourceType
@@ -12,12 +13,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.xmlpull.v1.XmlPullParser
-import java.io.StringReader
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,22 +38,29 @@ class DlnaDiscovery @Inject constructor(
             wifi.createMulticastLock("litelisten-ssdp").apply { setReferenceCounted(true); acquire() }
         }.getOrNull()
         try {
-            val locations = HashSet<String>()
-            DatagramSocket().use { socket ->
-                socket.soTimeout = 700
-                val target = InetAddress.getByName("239.255.255.250")
-                repeat(3) {
-                    val data = MESSAGE.toByteArray(Charsets.UTF_8)
-                    socket.send(DatagramPacket(data, data.size, target, 1900))
-                    val until = System.currentTimeMillis() + 1_100L
-                    while (System.currentTimeMillis() < until) {
-                        val buffer = ByteArray(2048)
-                        val packet = DatagramPacket(buffer, buffer.size)
-                        val received = runCatching { socket.receive(packet); true }.getOrDefault(false)
-                        if (!received) break
-                        val text = String(packet.data, 0, packet.length, Charsets.UTF_8)
-                        LOCATION.find(text)?.groupValues?.get(1)?.let { locations.add(it) }
+            val locations = LinkedHashSet<String>()
+            DatagramSocket(0).use { socket ->
+                // 蜂窝 + Wi-Fi 并存时，系统可能把组播发到蜂窝接口上；
+                // 显式绑定到 Wi-Fi / 以太网 Network，否则同一个网络里也搜不到设备。
+                bindToLocalNetwork(socket)
+                socket.soTimeout = 350
+                val target = InetAddress.getByName(SSDP_ADDRESS)
+                repeat(2) {
+                    SEARCH_TARGETS.forEach { st ->
+                        val data = message(st).toByteArray(Charsets.UTF_8)
+                        socket.send(DatagramPacket(data, data.size, target, SSDP_PORT))
                     }
+                }
+                // MX=2 允许设备在 2 秒内随机回复；旧实现每次 700ms 超时就 break，
+                // 实际只等了不到 1 秒，响应稍慢的设备全部漏掉。
+                val deadline = System.currentTimeMillis() + 4_000L
+                while (System.currentTimeMillis() < deadline) {
+                    val buffer = ByteArray(2048)
+                    val packet = DatagramPacket(buffer, buffer.size)
+                    val received = runCatching { socket.receive(packet); true }.getOrDefault(false)
+                    if (!received) continue
+                    val text = String(packet.data, 0, packet.length, Charsets.UTF_8)
+                    LOCATION.find(text)?.groupValues?.get(1)?.let { locations.add(it) }
                 }
             }
             locations.mapNotNull { location -> runCatching { parseDescription(location) }.getOrNull() }
@@ -73,68 +78,103 @@ class DlnaDiscovery @Inject constructor(
         }
     }
 
-    fun configFor(device: DiscoveredDevice): SourceConfig = SourceConfig(
-        id = "dlna-" + device.id.hashCode().toUInt().toString(16),
-        type = SourceType.DLNA,
-        name = device.name,
-        url = device.address.substringBefore("/_"),
-        deviceUuid = device.id,
-        controlUrl = device.address,
-    )
+    fun configFor(device: DiscoveredDevice): SourceConfig {
+        val uri = runCatching { Uri.parse(device.address) }.getOrNull()
+        // 旧实现用 substringBefore("/_") 猜 base URL，控制地址不含 "/_" 时会把
+        // 整个 SOAP 地址当成服务器地址；这里直接取 scheme://authority。
+        val origin = uri?.let { "${it.scheme}://${it.authority}" }.orEmpty()
+        return SourceConfig(
+            id = "dlna-" + device.id.hashCode().toUInt().toString(16),
+            type = SourceType.DLNA,
+            name = device.name,
+            url = origin,
+            deviceUuid = device.id,
+            controlUrl = device.address,
+        )
+    }
 
+    @Suppress("DEPRECATION")
+    private fun bindToLocalNetwork(socket: DatagramSocket) {
+        val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?: return
+        val network = runCatching {
+            manager.allNetworks.firstOrNull { candidate ->
+                val caps = runCatching { manager.getNetworkCapabilities(candidate) }.getOrNull()
+                caps != null && (
+                    caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    )
+            } ?: manager.activeNetwork
+        }.getOrNull() ?: return
+        runCatching { network.bindSocket(socket) }
+    }
+
+    /** 用容错正则提取设备描述：命名空间前缀、标签大小写、缺失字段各家实现都不一样。 */
     private fun parseDescription(location: String): DlnaDevice {
         val request = Request.Builder().url(location).header("User-Agent", USER_AGENT).build()
         val xml = client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IllegalStateException("HTTP_${response.code}")
             response.body?.string().orEmpty()
         }
-        val parser = Xml.newPullParser()
-        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
-        parser.setInput(StringReader(xml))
-        var friendlyName = ""
-        var udn = ""
-        var urlBase = location.substringBeforeLast('/', location)
-        val controlUrls = ArrayList<String>()
-        var inContentDirectory = false
-        var event = parser.eventType
-        while (event != XmlPullParser.END_DOCUMENT) {
-            val tag = parser.name?.substringAfterLast(':')?.lowercase(Locale.ROOT).orEmpty()
-            if (event == XmlPullParser.START_TAG && tag == "servicetype") {
-                inContentDirectory = parser.nextText().contains("ContentDirectory", true)
-            } else if (event == XmlPullParser.START_TAG) {
-                when (tag) {
-                    "friendlyname" -> friendlyName = parser.nextText()
-                    "udn" -> udn = parser.nextText()
-                    "urlbase" -> urlBase = parser.nextText()
-                    "controlurl" -> if (inContentDirectory) controlUrls.add(parser.nextText())
-                }
-            }
-            event = parser.next()
-        }
-        if (controlUrls.isEmpty()) throw IllegalStateException("NO_CONTENT_DIRECTORY")
-        val control = resolve(location, urlBase, controlUrls.first())
+        val urlBase = tag(xml, "URLBase").takeIf { it.startsWith("http", true) }
+            ?: location.substringBeforeLast('/', location)
+        val controlUrl = SERVICE_BLOCK.findAll(xml)
+            .firstOrNull { it.groupValues[1].contains("ContentDirectory", true) }
+            ?.let { tag(it.groupValues[1], "controlURL") }
+            ?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("NO_CONTENT_DIRECTORY")
         return DlnaDevice(
-            uuid = udn.ifBlank { location },
-            name = friendlyName.ifBlank { Uri.parse(location).host ?: location },
-            controlUrl = control,
-            baseUrl = location.substringBeforeLast('/', location),
+            uuid = tag(xml, "UDN").ifBlank { location },
+            name = tag(xml, "friendlyName").ifBlank { Uri.parse(location).host ?: location },
+            controlUrl = resolve(location, urlBase, controlUrl),
+            baseUrl = urlBase,
         )
     }
 
+    private fun tag(xml: String, name: String): String {
+        val regex = Regex(
+            "(?is)<(?:[a-z0-9_-]+:)?${name}[^>]*>(.*?)</(?:[a-z0-9_-]+:)?${name}>",
+            RegexOption.IGNORE_CASE,
+        )
+        return regex.find(xml)?.groupValues?.get(1)?.let(::unescape).orEmpty()
+    }
+
+    private fun unescape(value: String): String = value.trim()
+        .replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+
     private fun resolve(location: String, base: String, path: String): String {
         if (path.startsWith("http", true)) return path
-        val host = Uri.parse(location).let { "${it.scheme}://${it.authority}" }
+        val uri = Uri.parse(location)
+        val host = "${uri.scheme}://${uri.authority}"
         return if (path.startsWith("/")) host + path else base.trimEnd('/') + "/" + path
     }
 
+    private fun message(target: String): String =
+        "M-SEARCH * HTTP/1.1\r\n" +
+            "HOST: $SSDP_ADDRESS:$SSDP_PORT\r\n" +
+            "MAN: \"ssdp:discover\"\r\n" +
+            "MX: 2\r\n" +
+            "ST: $target\r\n\r\n"
+
     private companion object {
         const val USER_AGENT = "LiteListen/1.0 UPnP/1.1 DLNADOC/1.50"
+        const val SSDP_ADDRESS = "239.255.255.250"
+        const val SSDP_PORT = 1900
         val LOCATION = Regex("(?i)LOCATION:\\s*(\\S+)")
-        const val MESSAGE =
-            "M-SEARCH * HTTP/1.1\r\n" +
-                "HOST: 239.255.255.250:1900\r\n" +
-                "MAN: \"ssdp:discover\"\r\n" +
-                "MX: 2\r\n" +
-                "ST: urn:schemas-upnp-org:device:MediaServer:1\r\n\r\n"
+        // 不只查 MediaServer：很多 NAS / 路由器只响应 ssdp:all 或 rootdevice。
+        val SEARCH_TARGETS = listOf(
+            "ssdp:all",
+            "upnp:rootdevice",
+            "urn:schemas-upnp-org:device:MediaServer:1",
+            "urn:schemas-upnp-org:service:ContentDirectory:1",
+        )
+        val SERVICE_BLOCK = Regex(
+            "(?is)<(?:[a-z0-9_-]+:)?service[^>]*>(.*?)</(?:[a-z0-9_-]+:)?service>",
+            RegexOption.IGNORE_CASE,
+        )
     }
 }

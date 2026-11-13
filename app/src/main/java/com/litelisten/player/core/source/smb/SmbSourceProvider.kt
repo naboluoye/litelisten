@@ -27,16 +27,17 @@ class SmbSourceProvider @Inject constructor(
 
     override suspend fun testConnection(config: SourceConfig): Result<SourceInfo> = withContext(Dispatchers.IO) {
         runCatching {
-            val count = pool.useShare(config.id) { share, cfg ->
-                runCatching { share.list(root(cfg)).size }.getOrDefault(0)
-            }
+            // 以前用 runCatching 吞掉 list 异常，导致「测试连接成功」但一进根目录就报错。
+            // 测试必须和真实浏览走同一条路径，失败就如实报出来。
+            val count = pool.useShare(config.id) { share, cfg -> share.list(root(cfg)).size }
             SourceInfo(config.name, "SMB2 · $count items")
         }
     }
 
-    /** smbj 0.14.0 不暴露共享枚举 RPC；向导允许手动输入共享名。 */
     override suspend fun listShares(config: SourceConfig): Result<List<ShareInfo>> =
-        Result.success(emptyList())
+        withContext(Dispatchers.IO) {
+            runCatching { pool.listShares(config.id).map { ShareInfo(it) } }
+        }
 
     override suspend fun browse(config: SourceConfig, path: String?): Result<List<RemoteEntry>> =
         withContext(Dispatchers.IO) {

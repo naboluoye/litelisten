@@ -14,12 +14,14 @@ import com.litelisten.player.core.model.RemoteEntry
 import com.litelisten.player.core.model.Source
 import com.litelisten.player.core.model.SourceConfig
 import com.litelisten.player.core.model.SourceError
+import com.litelisten.player.core.model.ShareInfo
 import com.litelisten.player.core.model.SourceInfo
 import com.litelisten.player.core.model.SourceType
 import com.litelisten.player.core.network.AuthInterceptor
 import com.litelisten.player.core.scan.LibraryScanner
 import com.litelisten.player.core.source.api.CredentialStore
 import com.litelisten.player.core.source.api.SourceRegistry
+import com.litelisten.player.core.source.discovery.LanHostScanner
 import com.litelisten.player.core.source.dlna.DlnaDiscovery
 import com.litelisten.player.core.source.smb.SmbConnectionPool
 import com.litelisten.player.core.source.webdav.WebDavClient
@@ -45,6 +47,7 @@ class SourceRepositoryImpl @Inject constructor(
     private val webDav: WebDavClient,
     private val auth: AuthInterceptor,
     private val dlnaDiscovery: DlnaDiscovery,
+    private val lanHostScanner: LanHostScanner,
     private val libraryScanner: LibraryScanner,
 ) : SourceRepository {
     private val json = Json { ignoreUnknownKeys = true }
@@ -135,13 +138,30 @@ class SourceRepositoryImpl @Inject constructor(
             }
         }
 
+    /** 添加向导用：连上服务器后列出可用共享名，省得用户自己猜。 */
+    suspend fun listShares(config: SourceConfig, credentials: Credentials?): Result<List<ShareInfo>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                prepare(config, credentials)
+                val provider = registry.get(config.type)
+                    ?: throw SourceError.Unsupported(config.type.name)
+                provider.listShares(config).getOrThrow()
+            }
+        }
+
     override suspend fun browse(sourceId: String, path: String?): Result<List<RemoteEntry>> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val config = config(sourceId) ?: throw SourceError.NotFound()
                 prepare(config, credentialStore.get(sourceId))
                 val provider = registry.get(config.type) ?: throw SourceError.Unsupported(config.type.name)
-                val entries = provider.browse(config, path).getOrThrow()
+                //  provider 里抛出的普通异常（XML 解析、smbj 运行时异常等）以前会一路冒到
+                // UI 变成「出了点问题」，连是哪一步失败都看不出来。统一带上异常类型。
+                val entries = runCatching { provider.browse(config, path).getOrThrow() }
+                    .getOrElse { error ->
+                        throw if (error is SourceError) error
+                        else SourceError.Protocol("BROWSE_${error.javaClass.simpleName}")
+                    }
                 sourceDao.updateConnected(sourceId, System.currentTimeMillis())
                 entries
             }
@@ -161,8 +181,16 @@ class SourceRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * 分两次 emit：先给 SSDP 找到的 DLNA 媒体服务器，再补上子网里
+     * 开放 SMB / WebDAV 端口的电脑与 NAS。普通文件共享不响应 M-SEARCH，
+     * 只扫 SSDP 会让「发现的设备」永远是空的。
+     */
     override suspend fun discovered(): Flow<List<DiscoveredDevice>> = flow {
-        emit(dlnaDiscovery.discover())
+        val upnp = runCatching { dlnaDiscovery.discover() }.getOrDefault(emptyList())
+        emit(upnp)
+        val lan = runCatching { lanHostScanner.scan() }.getOrDefault(emptyList())
+        emit((upnp + lan).distinctBy { it.id })
     }
 
     suspend fun playableTracks(sourceId: String, entries: List<RemoteEntry>): List<com.litelisten.player.core.model.Track> {
@@ -250,7 +278,8 @@ class SourceRepositoryImpl @Inject constructor(
                 url?.host?.let { host ->
                     auth.registerHeaders(
                         host,
-                        if (url.port > 0) url.port else 80,
+                        if (url.port > 0) url.port
+                        else if (url.scheme.equals("https", true)) 443 else 80,
                         mapOf(
                             "transferMode.dlna.org" to "Streaming",
                             "getcontentFeatures.dlna.org" to "1",

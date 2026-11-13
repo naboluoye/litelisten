@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      SMB 没有标准的「列出共享」轻量接口，自动查找时逐个尝试这些常见共享名。
+      中文名是国内 Windows / NAS 上很常见的实际共享名，属于网络资源标识而非界面文案，
+      仍统一放资源文件，遵守「源码里不出现中文字符串」的红线。
+    -->
+    <string-array name="common_smb_shares">
+        <item>music</item>
+        <item>Music</item>
+        <item>MUSIC</item>
+        <item>media</item>
+        <item>Media</item>
+        <item>video</item>
+        <item>Video</item>
+        <item>photo</item>
+        <item>Photo</item>
+        <item>public</item>
+        <item>Public</item>
+        <item>share</item>
+        <item>Share</item>
+        <item>shared</item>
+        <item>Shared</item>
+        <item>Users</item>
+        <item>homes</item>
+        <item>home</item>
+        <item>Home</item>
+        <item>Multimedia</item>
+        <item>Download</item>
+        <item>downloads</item>
+        <item>Downloads</item>
+        <item>Volume1</item>
+        <item>volume1</item>
+        <item>Data</item>
+        <item>data</item>
+        <item>Documents</item>
+        <item>Audio</item>
+        <item>MP3</item>
+        <item>NAS</item>
+        <item>音乐</item>
+        <item>共享</item>
+        <item>影片</item>
+        <item>共享文件夹</item>
+    </string-array>
+</resources>

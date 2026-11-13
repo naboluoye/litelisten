@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -14,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,13 +41,23 @@ fun AddSourceScreen(
     onBack: () -> Unit,
     onSaved: (String) -> Unit,
     modifier: Modifier = Modifier,
+    initialHost: String = "",
+    initialUrl: String = "",
+    initialPort: Int? = null,
     viewModel: AddSourceViewModel = hiltViewModel(),
 ) {
     val spacing = LocalSpacing.current
     val status by viewModel.status.collectAsStateWithLifecycle()
+    val shares by viewModel.shares.collectAsStateWithLifecycle()
+    val detectingShares by viewModel.detectingShares.collectAsStateWithLifecycle()
+    val shareSearchDone by viewModel.shareSearchDone.collectAsStateWithLifecycle()
     var form by remember {
         mutableStateOf(
-            ServerForm(port = if (type == SourceType.SMB) "445" else "80"),
+            ServerForm(
+                host = initialHost,
+                url = initialUrl,
+                port = (initialPort ?: if (type == SourceType.SMB) 445 else 80).toString(),
+            ),
         )
     }
     var showPassword by remember { mutableStateOf(false) }
@@ -87,6 +99,41 @@ fun AddSourceScreen(
             Field(stringResource(R.string.field_host), form.host) { form = form.copy(host = it) }
             Field(stringResource(R.string.field_port), form.port) { form = form.copy(port = it) }
             Field(stringResource(R.string.field_share), form.share) { form = form.copy(share = it) }
+            OutlinedButton(
+                onClick = {
+                    if (form.host.isBlank()) {
+                        validation = R.string.validation_host_empty
+                    } else {
+                        validation = null
+                        viewModel.detectShares(currentConfig(), form)
+                    }
+                },
+                enabled = !detectingShares && status !is AddStatus.Testing,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    if (detectingShares) stringResource(R.string.action_loading)
+                    else stringResource(R.string.action_detect_shares),
+                )
+            }
+            if (shares.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.shares_found_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                    shares.forEach { name ->
+                        TextButton(onClick = { form = form.copy(share = name) }) { Text(name) }
+                    }
+                }
+            } else if (shareSearchDone && status !is AddStatus.Failed) {
+                Text(
+                    stringResource(R.string.shares_none_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Field(stringResource(R.string.field_base_path), form.basePath) { form = form.copy(basePath = it) }
             Field(stringResource(R.string.field_domain), form.domain) { form = form.copy(domain = it) }
         } else {
@@ -131,7 +178,7 @@ fun AddSourceScreen(
                 style = MaterialTheme.typography.bodyMedium,
             )
             is AddStatus.Failed -> Text(
-                stringResource(current.messageRes),
+                stringResource(current.messageRes, current.messageArg),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium,
             )
