@@ -28,7 +28,7 @@
     <string name="sources_group_discovered">发现的设备</string>
     <string name="sources_local_card">本机音乐</string>
     <string name="sources_local_card_sub">尚未扫描</string>
-    <string name="sources_placeholder_desc">等待 P3 / P4 接入</string>
+    <string name="sources_placeholder_desc">连接家里 NAS / 网络服务器的功能还在开发中</string>
     <string name="sources_add_smb">添加 SMB 服务器</string>
     <string name="sources_add_webdav">添加 WebDAV</string>
     <string name="sources_scan_dlna">扫描 DLNA 设备</string>
@@ -89,11 +89,11 @@
     <string name="cd_mini_player">打开正在播放页</string>
     <string name="cd_navigate_up">返回上一页</string>
 
-    <!-- 占位反馈 -->
-    <string name="snack_p1_pending">P1 实现</string>
-    <string name="snack_p3_pending">P3 实现</string>
-    <string name="snack_p4_pending">P4 实现</string>
-    <string name="snack_p5_pending">P5 实现</string>
+    <!-- 占位反馈：面向用户说人话，不暴露内部阶段编号 -->
+    <string name="snack_p1_pending">扫描手机里的音乐：还在开发中，下一版加入</string>
+    <string name="snack_p3_pending">连接 SMB 网络服务器：还在开发中</string>
+    <string name="snack_p4_pending">连接 WebDAV / DLNA 设备：还在开发中</string>
+    <string name="snack_p5_pending">这项界面设置：还在开发中</string>
     <string name="action_cancel">取消</string>
     <string name="action_confirm">确定</string>
 
@@ -106,7 +106,7 @@
     <string name="stub_queue">播放队列</string>
     <string name="stub_lyrics">歌词</string>
     <string name="stub_equalizer">均衡器</string>
-    <string name="stub_screen_desc">该页面将在后续阶段接入数据</string>
+    <string name="stub_screen_desc">这个页面还没做好，会在后续版本加入</string>
 
     <!-- 错误文案（SourceError -> 用户可读） -->
     <string name="error_network_unreachable">连不上 %1$s。检查设备是否开机、是否在同一 Wi-Fi。</string>
