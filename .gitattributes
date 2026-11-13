@@ -1,0 +1,4 @@
+# Gradle Wrapper 必须在 Linux/macOS 运行器上可执行且为 LF 换行
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+*.sh text eol=lf
