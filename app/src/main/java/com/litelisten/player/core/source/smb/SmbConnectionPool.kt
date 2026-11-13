@@ -73,7 +73,13 @@ class SmbConnectionPool @Inject constructor() {
 
     fun openFile(sourceId: String, path: String): SmbOpenFile = synchronized(lock) {
         val entry = ensure(sourceId)
-        val smbPath = path.replace('/', '\\')
+        // 浏览时 RemoteEntry.path 是相对 basePath 的，播放必须把 basePath 补回去，
+        // 否则把共享里的某个子目录设为起点时，所有歌曲都会找不到。
+        val base = configurations[sourceId]?.config?.basePath
+            ?.trim('/')?.replace('/', '\\').orEmpty()
+        val smbPath = listOf(base, path.replace('/', '\\'))
+            .filter { it.isNotBlank() }
+            .joinToString("\\")
         val handle = entry.share.openFile(
             smbPath,
             EnumSet.of(AccessMask.GENERIC_READ),
@@ -108,7 +114,7 @@ class SmbConnectionPool @Inject constructor() {
         val config = saved.config
         val host = config.host?.takeIf { it.isNotBlank() }
             ?: throw SourceError.Protocol("MissingHost")
-        if (!LanAddress.isPrivateHost(host)) throw NonLanAddressException(host)
+        if (!LanAddress.isPrivateOrResolvableToPrivate(host)) throw NonLanAddressException(host)
         val smbConfig = SmbConfig.builder()
             .withTimeout(10, TimeUnit.SECONDS)
             .withSoTimeout(30, TimeUnit.SECONDS)

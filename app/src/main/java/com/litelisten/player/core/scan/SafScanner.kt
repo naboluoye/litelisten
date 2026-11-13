@@ -19,8 +19,11 @@ import javax.inject.Singleton
 class SafScanner @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
+    /** 同一个目录树必须复用同一个 sourceId，空目录时也要能定位到旧记录。 */
+    fun sourceId(treeUri: Uri): String = "saf:" + sha1(treeUri.toString())
+
     suspend fun scan(treeUri: Uri, onProgress: (Int) -> Unit): List<TrackEntity> {
-        val sourceId = "saf:" + sha1(treeUri.toString())
+        val sourceId = sourceId(treeUri)
         val root = DocumentFile.fromTreeUri(context, treeUri) ?: return emptyList()
         val result = ArrayList<TrackEntity>()
         walk(root, sourceId, 0, result, onProgress)

@@ -21,7 +21,11 @@ class LanOnlyInterceptor @Inject constructor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val host = chain.request().url.host
-        if (!LanAddress.isPrivateHost(host)) throw NonLanAddressException(host)
+        // 第一道：纯字符串私网闸口，所有 OkHttp 出口都必须从这里过（红线硬约束）。
+        // 第二道：NAS / 路由器常填的短主机名，解析后仍须落在私网段才放行。
+        val allowed = LanAddress.isPrivateHost(host) ||
+            LanAddress.isPrivateOrResolvableToPrivate(host)
+        if (!allowed) throw NonLanAddressException(host)
         if (runtime.wifiOnly && !onWifi()) throw IOException("WIFI_ONLY")
         return chain.proceed(chain.request())
     }

@@ -119,7 +119,6 @@ fun SearchScreen(
                         track = track,
                         playing = false,
                         onClick = { viewModel.play(track, result.localTracks); viewModel.submit(query) },
-                        onMore = { viewModel.submit(query) },
                     )
                 }
             }

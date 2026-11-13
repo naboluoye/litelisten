@@ -40,5 +40,6 @@ sealed interface PlaybackError {
     data object FileMissing : PlaybackError
     data object NetworkLost : PlaybackError
     data object AuthFailed : PlaybackError
+    data object PlayerNotReady : PlaybackError
     data class Other(val message: String) : PlaybackError
 }

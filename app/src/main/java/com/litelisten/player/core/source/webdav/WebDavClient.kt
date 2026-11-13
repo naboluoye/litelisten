@@ -1,6 +1,7 @@
 package com.litelisten.player.core.source.webdav
 
 import android.net.Uri
+import android.util.Xml
 import com.litelisten.player.core.common.MimeTypes
 import com.litelisten.player.core.model.RemoteEntry
 import com.litelisten.player.core.model.SourceConfig
@@ -11,9 +12,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.xmlpull.v1.XmlPullParser
-import android.util.Xml
 import java.io.StringReader
-import java.net.URLDecoder
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -58,15 +57,20 @@ class WebDavClient @Inject constructor(
             }
             val xml = res.body?.string().orEmpty()
             if (xml.isBlank()) throw SourceError.Protocol("EMPTY_RESPONSE")
-            return parse(xml, url, path)
+            return parse(xml, config, path)
         }
     }
 
-    private fun parse(xml: String, requestUrl: String, requestedPath: String?): List<RemoteEntry> {
+    /**
+     * href 一律相对 config.url 的 path 计算，而不是本次 PROPFIND 请求 URL 的 path。
+     * 否则进入二级目录后去掉的是当前目录，entry.path 会丢掉父层级，
+     * 播放与整目录导入时拼出来的 URI 就会 404。与 SMB 的累积路径坐标系保持一致。
+     */
+    private fun parse(xml: String, config: SourceConfig, requestedPath: String?): List<RemoteEntry> {
         val parser = Xml.newPullParser()
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
         parser.setInput(StringReader(xml))
-        val basePath = Uri.parse(requestUrl).path.orEmpty().trimEnd('/')
+        val basePath = Uri.parse(config.url.orEmpty()).path.orEmpty().trimEnd('/')
         val selfPath = requestedPath?.trim('/').orEmpty()
         val result = ArrayList<RemoteEntry>()
         var current: MutableResponse? = null
@@ -86,6 +90,7 @@ class WebDavClient @Inject constructor(
                 }
                 XmlPullParser.TEXT -> current?.let { item ->
                     when (item.pending) {
+                        // Uri.decode 只解 %XX；URLDecoder 会把文件名里的 '+' 变成空格。
                         "href" -> item.href = parser.text
                         "getcontentlength" -> item.size = parser.text?.toLongOrNull()
                         "getcontenttype" -> item.mime = parser.text
@@ -95,11 +100,15 @@ class WebDavClient @Inject constructor(
                     when (tag) {
                         "response" -> current?.let { item ->
                             val href = item.href.orEmpty()
-                            val decoded = runCatching { URLDecoder.decode(href, "UTF-8") }.getOrDefault(href)
+                            val decoded = Uri.decode(href)
                             val rawPath = if (decoded.startsWith("http", true)) {
                                 Uri.parse(decoded).path.orEmpty()
                             } else decoded
-                            val relative = rawPath.removePrefix(basePath).trim('/')
+                            val relative = if (rawPath == basePath || rawPath == "$basePath/") {
+                                ""
+                            } else {
+                                rawPath.removePrefix("$basePath/").trim('/')
+                            }
                             if (relative.isNotBlank() && relative != selfPath && relative != "$selfPath/") {
                                 val name = relative.substringAfterLast('/')
                                 result.add(

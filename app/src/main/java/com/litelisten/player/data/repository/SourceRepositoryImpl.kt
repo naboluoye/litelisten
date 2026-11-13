@@ -262,9 +262,12 @@ class SourceRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun portOf(config: SourceConfig): Int = when {
-        config.type == SourceType.SMB -> config.port ?: 445
-        else -> runCatching { Uri.parse(config.url.orEmpty()).port }.getOrDefault(80).takeIf { it > 0 } ?: 80
+    /** 与 WebDavClient.prepare / DLNA registerHeaders 使用同一套默认端口，避免清不掉认证头。 */
+    private fun portOf(config: SourceConfig): Int {
+        if (config.type == SourceType.SMB) return config.port ?: 445
+        val url = runCatching { Uri.parse(config.url.orEmpty()) }.getOrNull() ?: return 80
+        if (url.port > 0) return url.port
+        return if (url.scheme.equals("https", true)) 443 else 80
     }
 
     private fun describe(config: SourceConfig?): String = when (config?.type) {

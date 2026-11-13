@@ -21,7 +21,9 @@ import com.litelisten.player.core.model.PlaybackController
 import com.litelisten.player.core.model.PlaybackError
 import com.litelisten.player.core.model.PlayerUiState
 import com.litelisten.player.core.model.RepeatMode
+import com.litelisten.player.core.model.SourceType
 import com.litelisten.player.core.model.Track
+import com.litelisten.player.core.source.api.SourceReadiness
 import com.litelisten.player.data.repository.TrackRepositoryImpl
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +51,7 @@ class PlaybackControllerImpl @Inject constructor(
     private val queueStore: QueueStore,
     private val settings: SettingsRepository,
     private val runtime: RuntimeConfig,
+    private val sourceReadiness: SourceReadiness,
 ) : PlaybackController {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val controllerFlow = MutableStateFlow<MediaController?>(null)
@@ -61,15 +64,21 @@ class PlaybackControllerImpl @Inject constructor(
     private var sleepJob: Job? = null
     private var failureCount = 0
 
-    init {
+    init { connect() }
+
+    private fun connect(restoreQueueOnSuccess: Boolean = true) {
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, token).buildAsync()
         future.addListener(
             {
-                val controller = runCatching { future.get() }.getOrNull() ?: return@addListener
+                val controller = runCatching { future.get() }.getOrNull()
+                if (controller == null) {
+                    _state.value = _state.value.copy(error = PlaybackError.PlayerNotReady)
+                    return@addListener
+                }
                 controller.addListener(playerListener)
                 controllerFlow.value = controller
-                scope.launch { restoreQueue() }
+                if (restoreQueueOnSuccess) scope.launch { restoreQueue() }
                 updateState()
             },
             ContextCompat.getMainExecutor(context),
@@ -116,7 +125,7 @@ class PlaybackControllerImpl @Inject constructor(
 
     /** 插入队列但不打断当前播放；UI 通过 PlaybackControllerImpl 直接调用。 */
     fun playNext(track: Track) {
-        val controller = controllerFlow.value ?: return
+        val controller = requireController() ?: return
         val index = (controller.currentMediaItemIndex + 1).coerceAtLeast(0)
         controller.addMediaItem(index, buildMediaItem(track))
         _queue.value = _queue.value.toMutableList().also { list ->
@@ -126,7 +135,7 @@ class PlaybackControllerImpl @Inject constructor(
     }
 
     fun addToQueue(track: Track) {
-        val controller = controllerFlow.value ?: return
+        val controller = requireController() ?: return
         controller.addMediaItem(buildMediaItem(track))
         _queue.value = _queue.value + track
         persistQueue()
@@ -136,7 +145,13 @@ class PlaybackControllerImpl @Inject constructor(
         val items = context.ifEmpty { listOf(track) }
         _queue.value = items
         _state.value = _state.value.copy(error = null)
-        val controller = awaitController() ?: return
+        awaitSourcesIfNeeded(items)
+        val controller = awaitController()
+        if (controller == null) {
+            _state.value = _state.value.copy(error = PlaybackError.PlayerNotReady)
+            connect(restoreQueueOnSuccess = false)
+            return
+        }
         val index = (startIndex ?: items.indexOfFirst { it.id == track.id }).coerceIn(0, items.lastIndex)
         controller.setMediaItems(items.map { buildMediaItem(it) }, index, 0L)
         controller.prepare()
@@ -144,8 +159,22 @@ class PlaybackControllerImpl @Inject constructor(
         persistQueue()
     }
 
+    /** 网络源冷启动 hydrate 是异步的，播放前等它完成，避免连接池 / 认证头还没注册。 */
+    private suspend fun awaitSourcesIfNeeded(items: List<Track>) {
+        if (items.any { it.sourceType != SourceType.LOCAL && it.sourceType != SourceType.SAF }) {
+            sourceReadiness.await()
+        }
+    }
+
+    /** 连接尚未建立时不再静默丢弃操作：明确报错，并尝试重连以便下次点击生效。 */
+    private fun requireController(): MediaController? = controllerFlow.value ?: run {
+        _state.value = _state.value.copy(error = PlaybackError.PlayerNotReady)
+        connect(restoreQueueOnSuccess = false)
+        null
+    }
+
     override fun playPause() {
-        val controller = controllerFlow.value ?: return
+        val controller = requireController() ?: return
         if (controller.isPlaying) {
             controller.pause()
         } else {
@@ -156,7 +185,7 @@ class PlaybackControllerImpl @Inject constructor(
     }
 
     override fun next() {
-        val controller = controllerFlow.value ?: return
+        val controller = requireController() ?: return
         controller.seekToNextMediaItem()
         _state.value = _state.value.copy(error = null)
     }
@@ -254,7 +283,7 @@ class PlaybackControllerImpl @Inject constructor(
     }
 
     private suspend fun awaitController(): MediaController? =
-        withTimeoutOrNull(5_000L) { controllerFlow.filterNotNull().first() }
+        controllerFlow.value ?: withTimeoutOrNull(5_000L) { controllerFlow.filterNotNull().first() }
 
     private fun buildMediaItem(track: Track): MediaItem {
         val metadata = MediaMetadata.Builder()
@@ -339,6 +368,7 @@ class PlaybackControllerImpl @Inject constructor(
         val ordered = snapshot.ids.mapNotNull { byId[it] }
         if (ordered.isEmpty()) return
         _queue.value = ordered
+        awaitSourcesIfNeeded(ordered)
         val controller = awaitController() ?: return
         controller.setMediaItems(
             ordered.map { buildMediaItem(it) },

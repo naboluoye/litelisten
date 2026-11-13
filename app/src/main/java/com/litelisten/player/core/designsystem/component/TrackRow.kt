@@ -67,7 +67,7 @@ fun TrackRow(
     track: Track,
     playing: Boolean,
     onClick: () -> Unit,
-    onMore: () -> Unit,
+    onMore: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val spacing = LocalSpacing.current
@@ -112,8 +112,10 @@ fun TrackRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        IconButton(onClick = onMore) {
-            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.cd_more))
+        if (onMore != null) {
+            IconButton(onClick = onMore) {
+                Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.cd_more))
+            }
         }
     }
 }

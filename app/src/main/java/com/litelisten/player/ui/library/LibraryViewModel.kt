@@ -59,6 +59,8 @@ class LibraryViewModel @Inject constructor(
 
     fun scanLocal() = scanner.scanLocal()
 
+    fun autoScanIfEmpty() = scanner.scanLocalIfEmpty()
+
     fun addFolder(uri: Uri) = scanner.scanTree(uri)
 
     fun rebuildIndex() = scanner.rebuild()

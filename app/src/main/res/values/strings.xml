@@ -190,6 +190,7 @@
     <string name="player_error_network">网络断开，请检查连接</string>
     <string name="player_error_auth">用户名或密码不对</string>
     <string name="player_error_other">播放出错：%1$s</string>
+    <string name="player_error_not_ready">播放器正在启动，请再点一次播放</string>
     <string name="player_buffering">正在缓冲…</string>
     <string name="player_track_info">曲目信息</string>
     <string name="player_track_info_path">路径：%1$s</string>

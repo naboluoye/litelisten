@@ -1,20 +1,31 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.0 完整可用版** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.0 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.0) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.0.1（v2.0.0 稳定性修复版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.0.1 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.1) ｜ [v2.0.0（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.0) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
 > 零账号、零广告、零遥测、零外网请求：所有网络目标在请求发出前强制校验为局域网私网地址。
 
-**v2.0.0 与 v1.0.0 的区别**：v1.0.0 只是 P0 工程骨架，界面提示「P1 / P3 / P4 开发中」，扫描与添加服务器都不可用；**v2.0.0 把 P1–P7 全部实现为真实功能**，是可以直接当播放器使用的产品。两个版本使用同一把签名密钥，**已装 v1.0.0 可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架，界面提示「P1 / P3 / P4 开发中」，扫描与添加服务器都不可用；**v2.0.0 把 P1–P7 全部实现为真实功能**，但发版后的运行时审计又发现「首次装完授权后不会自动扫描、曲库一直为空」「WebDAV 进二级目录后点歌 404」等缺陷；**v2.0.1 修复了这些问题，是当前推荐安装的版本**。三个版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.0.1 修了什么
+
+| 问题 | 影响 | 修复 |
+|---|---|---|
+| 授权成功后不自动扫描 | 装完打开曲库一直是空的，必须自己找到「扫描」按钮 —— 正是上一版实机退货的复现路径 | 授权回调、冷启动、进入曲库页三处都会检查「已授权且本地曲库为空」并自动建库 |
+| WebDAV 二级目录路径丢父层级 | 进入子文件夹后点歌 404、整目录导入路径错位 | `href` 统一相对 `config.url` 的 path 计算，与 SMB 累积路径坐标系对齐 |
+| 只认 IP / `.local`，短主机名被当公网拦截 | 填 `nas`、`DISKSTATION` 这类常见设备名时测试连接必失败 | 短主机名先解析，全部地址落在私网段才放行；解析到公网仍拒绝 |
+| 冷启动网络源异步恢复时的竞态 | 从曲库点已入库的 SMB / WebDAV 歌曲偶发失败或 401 | 播放网络曲目与恢复队列前等待 hydrate 完成（带超时兜底） |
+| 播放器未就绪时点歌无反馈 | 点击后什么都不发生 | 显示「播放器正在启动，请再点一次播放」并自动重连 |
+| 其它 | 重建索引失败留下空曲库、SAF 空目录不清旧记录、HTTPS WebDAV 删除后认证头残留、歌词/文件名 `+` 被解成空格 | 均已修正 |
 
 ---
 
-## 扫码下载（v2.0.0）
+## 扫码下载（v2.0.1）
 
-![轻听 v2.0.0 扫码下载](docs/qr-download.png)
+![轻听 v2.0.1 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.0/LiteListen-v2.0.0.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.0](https://github.com/naboluoye/litelisten/releases/tag/v2.0.0)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.1/LiteListen-v2.0.1.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.0.1](https://github.com/naboluoye/litelisten/releases/tag/v2.0.1)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -39,15 +50,15 @@
 
 ## 2. 上手三步（用户视角）
 
-1. **装好打开**：首次启动是 3 页引导，完成后按提示授予「读取音频」权限，曲库会自动可扫。
-2. **扫描本机音乐**：曲库页右上角的 ⟳ 就是重新扫描；空曲库时也有「扫描本机音乐」按钮。想只加某个目录，点 ＋ 选择文件夹。
+1. **装好打开**：首次启动是 3 页引导，完成后按提示授予「读取音频」权限；**授权成功即自动扫描本机音乐**，曲库直接就有歌，不用再找扫描按钮。
+2. **想重扫或只加某个目录**：曲库页右上角的 ⟳ 是重新扫描，空曲库时也有「扫描本机音乐」按钮；点 ＋ 可只选一个文件夹索引。
 3. **加网络服务器**：底部「来源」→ 右上角 ＋ → 选「添加 SMB 服务器」或「添加 WebDAV 服务器」，填地址后点「测试连接」再「保存」；DLNA 设备点「扫描局域网设备」自动发现。保存后点「浏览」即可进目录播放，或「加入曲库」整目录导入。
 
-> 服务器地址请填**局域网 IP**（如 `192.168.1.10`）或 `.local` 名称；公网地址会被直接拦截，这是刻意设计，不是故障。SMB 匿名访问请勾「匿名登录」。
+> 服务器地址可填**局域网 IP**（如 `192.168.1.10`）、`.local` 名称，或 NAS / 路由器的短主机名（如 `nas`）；短主机名会先解析并确认落在私网段才放行，公网地址一律拦截，这是刻意设计，不是故障。SMB 匿名访问请勾「匿名登录」。
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.0）
+## 3. 已真实跑通的验证（v2.0.1）
 
 | 项目 | 结果 |
 |---|---|
@@ -58,7 +69,7 @@
 | `apksigner verify --verbose` | ✅ v2 + v3 签名有效，RSA 4096，证书 SHA-256 `cc7b03e7…e7ac`（与 v1.0.0 一致，可覆盖升级） |
 | `ci_guard.py --check all` | ✅ PASS，且契约模型的中文兜底告警已清零 |
 | `ci_guard.py --check apk` | ✅ PASS，合并后 Manifest 权限 = 11 项主动申请 + 2 项已审计库注入 |
-| GitHub Actions `CI` / `Release` | 见仓库 Actions；tag `v2.0.0` 触发签名发版 |
+| GitHub Actions `CI` / `Release` | 见仓库 Actions；tag `v2.0.1` 触发签名发版 |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -90,7 +101,7 @@ Windows 用 `gradlew.bat`。本地要出签名 Release 包，可复制 `keystore
 
 ```
 push / PR ──> ci.yml ──> 红线守卫 → assembleDebug → 单测 → Lint → 上传产物
-改 version.properties → commit → git tag v2.0.0 → push tag
+改 version.properties → commit → git tag v2.0.1 → push tag
         ▼
 release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
              → 从 Secrets 解码 keystore → assembleRelease（强制验签）
@@ -185,7 +196,7 @@ tag 与 `version.properties` 不一致会被硬门禁拒绝。也可在 Actions 
 litelisten/
 ├─ .github/workflows/{ci.yml, release.yml}     CI 门禁 / 签名发版
 ├─ .gitattributes                              gradlew 可执行位与 LF 换行
-├─ docs/{qr-download.png, qr-download-card.png}  v2.0.0 扫码下载图
+├─ docs/{qr-download.png, qr-download-card.png}  v2.0.1 扫码下载图
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
 ├─ version.properties                          versionCode=2 / versionName=2.0.0

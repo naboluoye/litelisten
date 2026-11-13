@@ -63,6 +63,9 @@ interface TrackDao {
     @Query("SELECT COUNT(*) FROM tracks WHERE isAvailable = 1")
     fun count(): Flow<Int>
 
+    @Query("SELECT COUNT(*) FROM tracks WHERE sourceId = 'local' AND isAvailable = 1")
+    suspend fun countLocal(): Int
+
     @Upsert
     suspend fun upsertAll(items: List<TrackEntity>)
 

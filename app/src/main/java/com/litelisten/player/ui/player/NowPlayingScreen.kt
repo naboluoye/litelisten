@@ -158,6 +158,7 @@ fun NowPlayingScreen(
                 PlaybackError.FileMissing -> stringResource(R.string.player_error_missing)
                 PlaybackError.NetworkLost -> stringResource(R.string.player_error_network)
                 PlaybackError.AuthFailed -> stringResource(R.string.player_error_auth)
+                PlaybackError.PlayerNotReady -> stringResource(R.string.player_error_not_ready)
                 is PlaybackError.Other -> stringResource(R.string.player_error_other, error.message)
             }
             Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)

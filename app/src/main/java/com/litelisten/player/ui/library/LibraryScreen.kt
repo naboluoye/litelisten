@@ -39,6 +39,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -87,6 +88,10 @@ fun LibraryScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var sortMenu by remember { mutableStateOf(false) }
     var actionTrack by remember { mutableStateOf<Track?>(null) }
+
+    // 兜底：从任何入口进入曲库页，只要已授权且本地曲库为空就自动扫一次。
+    LaunchedEffect(Unit) { viewModel.autoScanIfEmpty() }
+
     val deniedText = stringResource(R.string.permission_denied)
     val playNextText = stringResource(R.string.action_play_next)
     val queuedText = stringResource(R.string.action_add_to_queue)
