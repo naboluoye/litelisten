@@ -59,6 +59,16 @@ data class TrackEntity(
     val addedAt: Long,
     val playCount: Int = 0,
     val lastPlayedAt: Long = 0,
+    /** ReplayGain 轨道增益（dB，多为负值）；无标签时为 null。 */
+    val replayGainDb: Double? = null,
+)
+
+/** 扫描时从文件内嵌标签提取的歌词；一条曲目至多一条记录。 */
+@Entity(tableName = "lyrics", primaryKeys = ["trackId"])
+data class LyricsEntity(
+    val trackId: String,
+    val isSynced: Boolean,
+    val content: String,
 )
 
 /**

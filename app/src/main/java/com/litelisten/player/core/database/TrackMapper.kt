@@ -36,6 +36,7 @@ fun TrackEntity.toModel(): Track = Track(
     addedAt = addedAt,
     playCount = playCount,
     lastPlayedAt = lastPlayedAt,
+    replayGainDb = replayGainDb,
 )
 
 fun AlbumRow.toModel(): Album = Album(

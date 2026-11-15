@@ -29,6 +29,8 @@ data class Track(
     val addedAt: Long = 0L,
     val playCount: Int = 0,
     val lastPlayedAt: Long = 0L,
+    /** ReplayGain 轨道增益（dB）；无标签时为 null。 */
+    val replayGainDb: Double? = null,
 ) {
     // 兜底文案属于 UI，统一由 strings.xml 提供；模型只暴露可空原始值。
     val displayArtist: String? get() = artist?.takeIf { it.isNotBlank() }

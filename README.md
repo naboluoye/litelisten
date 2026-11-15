@@ -1,11 +1,23 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.4（DLNA 群晖连接修复版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.4 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.0.5（音频体验升级版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.0.5 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.4（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
 > 零账号、零广告、零遥测、零外网请求：所有网络目标在请求发出前强制校验为局域网私网地址。
 
-**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；**v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案，是当前推荐安装的版本**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；**v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是当前推荐安装的版本**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.0.5 新增（音频体验升级）
+
+| 新增 | 说明 |
+|---|---|
+| 无缝播放 | 跳过歌曲首尾静音，连续播放更顺滑（设置 → 音效 → 无缝播放，默认开启）。自带 gapless 元数据的 MP3 可做到采样级无缝；其他格式为「跳过静音」近似无缝 |
+| ReplayGain 响度均衡 | 扫描时读取音频文件里的响度标签（FLAC VORBIS_COMMENT、MP3 ID3v2 TXXX），播放时自动拉平歌曲之间的音量。**只压低不放大**，不会产生爆音（设置 → 音效 → ReplayGain，默认开启；无标签的文件不受影响） |
+| 内嵌歌词 | 扫描时自动提取文件内嵌歌词（FLAC LYRICS/SYNCEDLYRICS、MP3 USLT），优先级：同名 .lrc 文件 → 内嵌同步歌词 → 手动选择（原有功能全部保留） |
+| 逐字歌词 | 支持增强 LRC（`<mm:ss.xx>` 逐字时间戳），播放页当前行内加粗高亮正在唱的字 |
+| 关于区补充 | 设置 → 关于新增**联系邮箱**（点击拉起邮件）与**检查新版本**（打开浏览器进 GitHub 下载页看最新版；是跳外部浏览器，App 内仍是零外网请求） |
+
+边界说明（如实）：ReplayGain 与内嵌歌词目前只对本机扫描的文件生效（FLAC / MP3 优先），SMB / WebDAV / DLNA / Jellyfin 等远程来源暂不解析标签；OGG/OPUS/M4A 的标签解析与「按专辑增益」留待后续版本。
 
 ### v2.0.4 新增与修复（实机反馈）
 
@@ -54,12 +66,12 @@
 
 ---
 
-## 扫码下载（v2.0.4）
+## 扫码下载（v2.0.5）
 
-![轻听 v2.0.4 扫码下载](docs/qr-download.png)
+![轻听 v2.0.5 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.4/LiteListen-v2.0.4.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.5/LiteListen-v2.0.5.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.0.5](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -71,13 +83,13 @@
 |---|---|
 | 本机曲库 | 首次进入申请读取音频权限；扫描 MediaStore 全部音乐，过滤系统音/0 字节/短音频（可开关）；按**歌曲 / 专辑 / 艺术家 / 文件夹**四视图浏览，支持排序、升降序、按来源筛选 |
 | 目录扫描 | 「＋」选一个文件夹，通过 SAF 递归索引（不修改、不删除用户文件）；曲库页常驻「重新扫描」按钮，随时可重扫 |
-| 播放 | Media3 `MediaSessionService` 后台播放，通知栏 / 锁屏 / 蓝牙按键控制；队列拖拽与删除、随机、单曲/列表循环、0.5–2× 倍速、10 秒快进退、睡眠定时（最后 10 秒淡出）、杀进程后恢复队列与进度 |
+| 播放 | Media3 `MediaSessionService` 后台播放，通知栏 / 锁屏 / 蓝牙按键控制；队列拖拽与删除、随机、单曲/列表循环、0.5–2× 倍速、10 秒快进退、睡眠定时（最后 10 秒淡出）、杀进程后恢复队列与进度；**无缝播放**（跳过首尾静音）与 **ReplayGain 响度均衡**（按标签拉平音量，只压低不放大） |
 | 高保真 | 32 位浮点输出避免 24 bit 降位、解码器回退、无损更大预读；播放页实时显示解码出的格式 / 采样率 / 位深 / 声道与 Hi-Res 标签（设置 → 音效 → 高保真输出，默认开启） |
 | 网络源 | **SMB**（smbj 随机读 DataSource，支持拖动进度）、**WebDAV**（PROPFIND 目录浏览 + OkHttp Range 流播）、**DLNA/UPnP**（SSDP + ContentDirectory Browse）、**Jellyfin**（REST API 登录 + 媒体库浏览 + `static=true` 原始无损流）；均可测试连接、浏览目录、直接播放、整目录导入曲库 |
 | 凭据 | 用户名/密码用 Android Keystore AES-256-GCM 加密后存储，明文不落盘、不进 URI、不进日志；地址不合规直接拒绝连接 |
 | 搜索 | 中文原名 / 全拼 / 首字母混合索引，空格分词 AND 语义；同时搜歌曲、专辑、艺术家；保留最近 10 条搜索历史 |
-| 其它 | 收藏、最近播放、LRC 歌词（自动找同名文件 + 手动选择 .lrc，点击歌词行跳转）、均衡器与低音增强（挂到真实 audioSessionId）、首次使用 3 页引导、浅色/深色/纯黑主题、动态取色 |
-| 设置 | 主题、动态取色、断点恢复、自动播放、拔耳机暂停、淡出、出错自动跳过、倍速、**高保真输出**、扫描短音频、仅 Wi-Fi、连接超时、缓冲时长、缓存上限、重建索引、清理封面缓存 |
+| 其它 | 收藏、最近播放、LRC 歌词（自动找同名文件 → 内嵌歌词 → 手动选择 .lrc，点击歌词行跳转，增强 LRC 支持逐字加粗高亮）、均衡器与低音增强（挂到真实 audioSessionId）、首次使用 3 页引导、浅色/深色/纯黑主题、动态取色 |
+| 设置 | 主题、动态取色、断点恢复、自动播放、拔耳机暂停、淡出、出错自动跳过、倍速、**高保真输出**、**无缝播放**、**ReplayGain 响度均衡**、扫描短音频、仅 Wi-Fi、连接超时、缓冲时长、缓存上限、重建索引、清理封面缓存；关于区含出品方说明、联系邮箱、检查新版本 |
 
 所有设置项都接了真实逻辑：超时/缓冲/缓存/仅 Wi-Fi/拔耳机暂停/淡出经 `RuntimeConfig` 快照驱动 OkHttp、ExoPlayer、拦截器与封面缓存；下次新建连接或播放器时生效，不打断正在播放的音频。
 
@@ -94,17 +106,17 @@
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.4）
+## 3. 已真实跑通的验证（v2.0.5）
 
 | 项目 | 结果 |
 |---|---|
 | `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL |
-| `./gradlew :app:testDebugUnitTest` | ✅ **11 个测试类 / 48 条用例，0 失败**（新增 Jellyfin JSON 解析、静态原流地址、端口分类、凭据校验顺序、无损/Hi-Res 判定单测，及 DLNA 免登录单测） |
+| `./gradlew :app:testDebugUnitTest` | ✅ **11 个测试类 / 59 条用例，0 失败**（本轮新增标签解析 9 条、增强 LRC 逐字 2 条单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error |
-| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) |
+| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.5](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) |
 | `apksigner verify --verbose`（云端流水线） | ✅ 沿用同一把 RSA 4096 密钥，证书 SHA-256 `cc7b03e7…e7ac`，与 v1.0.0 一致，可覆盖升级 |
 | `ci_guard.py --check all` / `--check apk` | ✅ PASS，合并后 Manifest 权限 = 11 项主动申请 + 2 项已审计库注入 |
-| GitHub Actions `CI` / `Release` | tag `v2.0.4` 触发签名发版，结果见仓库 Actions |
+| GitHub Actions `CI` / `Release` | tag `v2.0.5` 触发签名发版，结果见仓库 Actions |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -163,9 +175,9 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 ### 每次发版 SOP
 
 ```bash
-python3 scripts/bump_version.py 2.0.4     # versionCode 自动 +1
-git add version.properties && git commit -m "release: 2.0.4"
-git tag -a v2.0.4 -m "Release 2.0.4"
+python3 scripts/bump_version.py 2.0.5     # versionCode 自动 +1
+git add version.properties && git commit -m "release: 2.0.5"
+git tag -a v2.0.5 -m "Release 2.0.5"
 git push origin main --tags               # 推 tag 后 release.yml 自动跑
 ```
 
@@ -234,7 +246,7 @@ litelisten/
 ├─ docs/{qr-download.png, qr-download-card.png}  v2.0.4 扫码下载图
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
-├─ version.properties                          versionCode=6 / versionName=2.0.4
+├─ version.properties                          versionCode=7 / versionName=2.0.5
 ├─ app/proguard-rules.pro                      R8 / kotlinx.serialization 规则
 └─ app/src/main/java/com/litelisten/player/
    ├─ core/{model, common, designsystem, database, datastore, network, scan, player}

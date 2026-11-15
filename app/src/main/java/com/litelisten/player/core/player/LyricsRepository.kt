@@ -6,6 +6,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import com.litelisten.player.core.database.LyricsDao
+import com.litelisten.player.core.metadata.TagParseUtil
 import com.litelisten.player.core.model.SourceType
 import com.litelisten.player.core.model.Track
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,12 +21,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 歌词加载：优先自动找同名 .lrc；Android 10+ 分区存储下非媒体文件不一定可见，
+ * 歌词加载优先级（自动模式）：同名 .lrc 文件 → 曲库内嵌歌词（扫描时从文件标签提取，
+ * 需带时间戳）→ 手动选择入口始终保留。Android 10+ 分区存储下非媒体文件不一定可见，
  * 因此始终提供手动选择入口。手动挂载的歌词按曲目 id 存在内存，切换歌曲互不影响。
  */
 @Singleton
 class LyricsRepository @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val lyricsDao: LyricsDao,
 ) {
     private val _manual = MutableStateFlow<Map<String, List<LyricLine>>>(emptyMap())
     val manual: StateFlow<Map<String, List<LyricLine>>> = _manual.asStateFlow()
@@ -39,7 +43,13 @@ class LyricsRepository @Inject constructor(
 
     suspend fun loadAuto(track: Track?): List<LyricLine> = withContext(Dispatchers.IO) {
         if (track == null) return@withContext emptyList()
-        readAutoText(track)?.let { LrcParser.parse(it) } ?: emptyList()
+        val sibling = readAutoText(track)
+        if (sibling != null) return@withContext LrcParser.parse(sibling)
+        val embedded = runCatching { lyricsDao.byTrackId(track.id) }.getOrNull()?.content
+        if (embedded != null && TagParseUtil.looksSynced(embedded)) {
+            return@withContext LrcParser.parse(embedded)
+        }
+        emptyList()
     }
 
     fun readFromUri(uri: Uri): List<LyricLine> = runCatching {

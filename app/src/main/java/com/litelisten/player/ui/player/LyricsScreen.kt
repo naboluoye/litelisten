@@ -23,7 +23,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.litelisten.player.R
@@ -31,6 +35,23 @@ import com.litelisten.player.core.designsystem.component.LiteListenTopBar
 import com.litelisten.player.core.designsystem.component.TrackArtwork
 import com.litelisten.player.core.designsystem.theme.LocalSpacing
 import com.litelisten.player.core.player.LyricLine
+
+/** 逐字歌词：当前行内高亮正在唱的字（加粗）；普通歌词直接整行显示。 */
+private fun lyricText(line: LyricLine, isCurrent: Boolean, positionMs: Long) =
+    if (isCurrent && line.words.isNotEmpty()) {
+        val wordIndex = line.words.indexOfLast { it.startMs <= positionMs }
+        buildAnnotatedString {
+            line.words.forEachIndexed { index, word ->
+                if (index == wordIndex) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(word.text) }
+                } else {
+                    append(word.text)
+                }
+            }
+        }
+    } else {
+        buildAnnotatedString { append(line.text) }
+    }
 
 @Composable
 fun LyricsScreen(
@@ -103,11 +124,12 @@ fun LyricsScreen(
         } else {
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                 itemsIndexed(lines, key = { index, line -> "$index-${line.timeMs}" }) { index, line ->
+                    val isCurrent = index == currentIndex
                     Text(
-                        text = line.text,
-                        style = if (index == currentIndex) MaterialTheme.typography.titleMedium
+                        text = lyricText(line, isCurrent, state.positionMs),
+                        style = if (isCurrent) MaterialTheme.typography.titleMedium
                         else MaterialTheme.typography.bodyMedium,
-                        color = if (index == currentIndex) MaterialTheme.colorScheme.primary
+                        color = if (isCurrent) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center,
                         modifier = Modifier

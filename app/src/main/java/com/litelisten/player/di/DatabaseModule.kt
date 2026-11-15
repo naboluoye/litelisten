@@ -3,6 +3,7 @@ package com.litelisten.player.di
 import android.content.Context
 import androidx.room.Room
 import com.litelisten.player.core.database.AppDatabase
+import com.litelisten.player.core.database.LyricsDao
 import com.litelisten.player.core.database.SourceDao
 import com.litelisten.player.core.database.TrackDao
 import dagger.Module
@@ -19,6 +20,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "litelisten.db")
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .fallbackToDestructiveMigration()
             .build()
 
@@ -27,4 +29,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSourceDao(db: AppDatabase): SourceDao = db.sourceDao()
+
+    @Provides
+    fun provideLyricsDao(db: AppDatabase): LyricsDao = db.lyricsDao()
 }

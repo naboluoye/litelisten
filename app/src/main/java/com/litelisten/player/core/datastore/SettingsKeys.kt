@@ -30,6 +30,8 @@ object SettingsKeys {
     const val LAST_SCAN_AT = "last_scan_at"
     const val ONBOARDING_DONE = "onboarding_done"
     const val HIFI_OUTPUT = "hifi_output"
+    const val GAPLESS_SKIP_SILENCE = "gapless_skip_silence"
+    const val REPLAYGAIN_ENABLED = "replaygain_enabled"
 
     val THEME_MODE_KEY = stringPreferencesKey(THEME_MODE)
     val DYNAMIC_COLOR_KEY = booleanPreferencesKey(DYNAMIC_COLOR)
@@ -53,4 +55,6 @@ object SettingsKeys {
     val LAST_SCAN_AT_KEY = longPreferencesKey(LAST_SCAN_AT)
     val ONBOARDING_DONE_KEY = booleanPreferencesKey(ONBOARDING_DONE)
     val HIFI_OUTPUT_KEY = booleanPreferencesKey(HIFI_OUTPUT)
+    val GAPLESS_SKIP_SILENCE_KEY = booleanPreferencesKey(GAPLESS_SKIP_SILENCE)
+    val REPLAYGAIN_ENABLED_KEY = booleanPreferencesKey(REPLAYGAIN_ENABLED)
 }

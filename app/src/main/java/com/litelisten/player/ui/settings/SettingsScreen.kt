@@ -140,6 +140,26 @@ fun SettingsScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
         )
+        SwitchRow(
+            stringResource(R.string.settings_gapless),
+            prefs[SettingsKeys.GAPLESS_SKIP_SILENCE_KEY] ?: true,
+        ) { viewModel.set(SettingsKeys.GAPLESS_SKIP_SILENCE_KEY, it) }
+        Text(
+            stringResource(R.string.settings_gapless_notice),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+        )
+        SwitchRow(
+            stringResource(R.string.settings_replaygain),
+            prefs[SettingsKeys.REPLAYGAIN_ENABLED_KEY] ?: true,
+        ) { viewModel.set(SettingsKeys.REPLAYGAIN_ENABLED_KEY, it) }
+        Text(
+            stringResource(R.string.settings_replaygain_notice),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+        )
         ValueRow(stringResource(R.string.settings_equalizer), "") { onNavigate(Routes.EQUALIZER) }
 
         SectionHeader(title = stringResource(R.string.settings_group_library))
@@ -186,6 +206,26 @@ fun SettingsScreen(
             modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
         )
         ValueRow(stringResource(R.string.app_name), stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME)) {}
+        ValueRow(
+            stringResource(R.string.about_contact_email),
+            stringResource(R.string.about_contact_email_value),
+        ) {
+            runCatching {
+                context.startActivity(
+                    Intent(Intent.ACTION_SENDTO, Uri.parse(context.getString(R.string.about_mailto_uri))),
+                )
+            }
+        }
+        ValueRow(
+            stringResource(R.string.about_check_updates),
+            stringResource(R.string.about_check_updates_value),
+        ) {
+            runCatching {
+                context.startActivity(
+                    Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.about_releases_url))),
+                )
+            }
+        }
         ValueRow(stringResource(R.string.settings_open_licenses), "") { dialog = "licenses" }
         ValueRow(stringResource(R.string.settings_battery_settings), "") {
             val intent = Intent(

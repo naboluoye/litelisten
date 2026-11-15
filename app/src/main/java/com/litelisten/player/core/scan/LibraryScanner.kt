@@ -8,10 +8,14 @@ import android.os.Build
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import com.litelisten.player.R
+import com.litelisten.player.core.database.LyricsDao
+import com.litelisten.player.core.database.LyricsEntity
 import com.litelisten.player.core.database.TrackDao
 import com.litelisten.player.core.database.TrackEntity
 import com.litelisten.player.core.datastore.SettingsKeys
 import com.litelisten.player.core.datastore.SettingsRepository
+import com.litelisten.player.core.metadata.MediaTags
+import com.litelisten.player.core.metadata.TagParseUtil
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +28,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,6 +43,7 @@ sealed interface ScanState {
 @Singleton
 class LibraryScanner @Inject constructor(
     private val trackDao: TrackDao,
+    private val lyricsDao: LyricsDao,
     private val mediaStoreScanner: MediaStoreScanner,
     private val safScanner: SafScanner,
     private val artworkCache: ArtworkCache,
@@ -99,6 +105,7 @@ class LibraryScanner @Inject constructor(
                     replace("local", scanned.map { it.entity })
                     _state.value = ScanState.Done(scanned.size)
                     fillArtwork(scanned)
+                    fillTags(scanned.map { it.entity })
                 }.onFailure { error ->
                     if (error is kotlinx.coroutines.CancellationException) throw error
                     _state.value = ScanState.Failed(R.string.library_scan_failed)
@@ -143,6 +150,7 @@ class LibraryScanner @Inject constructor(
             replace("local", scanned.map { it.entity })
             _state.value = ScanState.Done(scanned.size)
             fillArtwork(scanned)
+            fillTags(scanned.map { it.entity })
         }.onFailure { error ->
             if (error is kotlinx.coroutines.CancellationException) throw error
             _state.value = ScanState.Failed(R.string.library_scan_failed)
@@ -175,5 +183,36 @@ class LibraryScanner @Inject constructor(
             val key = keys[item.albumId] ?: return@mapNotNull null
             trackDao.byId(item.entity.id)?.let { it.copy(artworkKey = key) }
         }.chunked(500).forEach { chunk -> trackDao.upsertAll(chunk) }
+    }
+
+    /**
+     * 本地文件（有绝对路径的）低优先级补齐 ReplayGain 与内嵌歌词。
+     * 只做有界读取，解析失败按无标签处理；远程来源（Jellyfin/SMB 等）暂不解析。
+     */
+    private suspend fun fillTags(entities: List<TrackEntity>) {
+        val updated = ArrayList<TrackEntity>()
+        val lyricsRows = ArrayList<LyricsEntity>()
+        entities.forEach { entity ->
+            val path = entity.path
+            if (path.isBlank() || !path.startsWith("/")) return@forEach
+            val file = File(path)
+            if (!file.isFile) return@forEach
+            val tags = runCatching { TagParseUtil.parse(file) }.getOrDefault(MediaTags())
+            if (!tags.hasTags) return@forEach
+            var row = entity
+            tags.replayGainDb?.let { row = row.copy(replayGainDb = it) }
+            updated.add(row)
+            val text = tags.lyrics?.trim()?.take(LYRICS_MAX_CHARS)
+            if (!text.isNullOrEmpty()) {
+                lyricsRows.add(LyricsEntity(row.id, TagParseUtil.looksSynced(text), text))
+            }
+        }
+        updated.chunked(500).forEach { chunk -> trackDao.upsertAll(chunk) }
+        lyricsDao.upsertAll(lyricsRows)
+        lyricsDao.deleteOrphans()
+    }
+
+    private companion object {
+        const val LYRICS_MAX_CHARS = 65536
     }
 }

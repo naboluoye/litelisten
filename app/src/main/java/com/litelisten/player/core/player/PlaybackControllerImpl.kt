@@ -5,6 +5,7 @@ package com.litelisten.player.core.player
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import androidx.media3.common.C
@@ -15,6 +16,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.litelisten.player.core.datastore.QueueSnapshot
 import com.litelisten.player.core.datastore.QueueStore
@@ -47,6 +49,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.pow
 
 /** UI 只通过 MediaController 操作播放器；Activity 不持有 ExoPlayer。 */
 @Singleton
@@ -68,8 +71,20 @@ class PlaybackControllerImpl @Inject constructor(
     private var tickerJob: Job? = null
     private var sleepJob: Job? = null
     private var failureCount = 0
+    /** 当前曲目的基础音量（ReplayGain 衰减后），睡眠定时淡出在其基础上叠加。 */
+    @Volatile private var baseVolume = 1f
 
-    init { connect() }
+    init {
+        connect()
+        scope.launch {
+            settings.observe(SettingsKeys.GAPLESS_SKIP_SILENCE_KEY, true).collect { enabled ->
+                sendSkipSilence(enabled)
+            }
+        }
+        scope.launch {
+            settings.observe(SettingsKeys.REPLAYGAIN_ENABLED_KEY, true).collect { applyVolume() }
+        }
+    }
 
     private fun connect(restoreQueueOnSuccess: Boolean = true) {
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
@@ -83,6 +98,12 @@ class PlaybackControllerImpl @Inject constructor(
                 }
                 controller.addListener(playerListener)
                 controllerFlow.value = controller
+                scope.launch {
+                    sendSkipSilence(
+                        settings.observe(SettingsKeys.GAPLESS_SKIP_SILENCE_KEY, true).first(),
+                    )
+                    applyVolume()
+                }
                 if (restoreQueueOnSuccess) scope.launch { restoreQueue() }
                 updateState()
             },
@@ -100,6 +121,7 @@ class PlaybackControllerImpl @Inject constructor(
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             failureCount = 0
             updateState()
+            applyVolume()
             mediaItem?.mediaId?.let { id -> scope.launch { trackRepository.markPlayed(id) } }
             persistQueue()
         }
@@ -270,12 +292,12 @@ class PlaybackControllerImpl @Inject constructor(
             val controller = controllerFlow.value
             if (runtime.fadeEnabled) {
                 for (step in 10 downTo 1) {
-                    controller?.setVolume(step / 10f)
+                    controller?.setVolume(baseVolume * step / 10f)
                     delay(1_000L)
                 }
             }
             controller?.pause()
-            controller?.setVolume(1f)
+            controller?.setVolume(baseVolume)
             _state.value = _state.value.copy(sleepTimerRemainingMs = null)
         }
     }
@@ -343,6 +365,37 @@ class PlaybackControllerImpl @Inject constructor(
         C.ENCODING_PCM_16BIT -> 16
         C.ENCODING_PCM_FLOAT -> 32
         else -> null
+    }
+
+    /** 无缝播放开关经自定义 SessionCommand 透传给服务端 ExoPlayer（MediaController 无此接口）。 */
+    private fun sendSkipSilence(enabled: Boolean) {
+        val controller = controllerFlow.value ?: return
+        runCatching {
+            val args = Bundle().apply { putBoolean(PlaybackService.EXTRA_ENABLED, enabled) }
+            controller.sendCustomCommand(
+                SessionCommand(PlaybackService.ACTION_SET_SKIP_SILENCE, Bundle.EMPTY),
+                args,
+            )
+        }
+    }
+
+    /**
+     * ReplayGain 响度均衡：按当前曲目标签把音量压到目标响度。
+     * 只衰减不放大（上限 1.0），避免误标导致削波；无标签或开关关闭时为原始音量。
+     */
+    private fun applyVolume() {
+        scope.launch {
+            val enabled = settings.observe(SettingsKeys.REPLAYGAIN_ENABLED_KEY, true).first()
+            val mediaId = controllerFlow.value?.currentMediaItem?.mediaId
+            val current = _queue.value.firstOrNull { it.id == mediaId }
+            val db = current?.replayGainDb
+            baseVolume = if (enabled && db != null) {
+                10.0.pow(db / 20.0).toFloat().coerceIn(0.05f, 1f)
+            } else {
+                1f
+            }
+            controllerFlow.value?.setVolume(baseVolume)
+        }
     }
 
     private fun updateState() {

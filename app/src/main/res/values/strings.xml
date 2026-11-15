@@ -253,6 +253,12 @@
     <string name="settings_group_network">网络</string>
     <string name="settings_group_about">关于</string>
     <string name="about_credit">本软件由风起时出品，功能是为解决手机本地音频的播放，免费无广告，如有需要敬请使用</string>
+    <string name="about_contact_email">联系邮箱</string>
+    <string name="about_contact_email_value" translatable="false">9336193@qq.com</string>
+    <string name="about_mailto_uri" translatable="false">mailto:9336193@qq.com</string>
+    <string name="about_check_updates">检查新版本</string>
+    <string name="about_check_updates_value">打开下载页看最新版</string>
+    <string name="about_releases_url" translatable="false">https://github.com/naboluoye/litelisten/releases/latest</string>
     <string name="settings_theme">主题</string>
     <string name="settings_dynamic_color">动态取色</string>
     <string name="settings_theme_system">跟随系统</string>
@@ -358,6 +364,10 @@
 
     <!-- v2.0.3：高保真输出 -->
     <string name="settings_hifi_output">高保真输出</string>
+    <string name="settings_gapless">无缝播放</string>
+    <string name="settings_gapless_notice">跳过歌曲首尾的静音，连续播放更顺滑</string>
+    <string name="settings_replaygain">响度均衡 ReplayGain</string>
+    <string name="settings_replaygain_notice">按文件里的响度标签自动拉平歌曲之间的音量，只压低不放大，不会产生爆音</string>
     <string name="settings_hifi_notice">以 32 位浮点输出声音，FLAC / WAV 等 24 bit、96 kHz 以上的无损音乐不会被压成 16 bit；切换后下次播放生效。开启均衡器或变速时声音仍会被重新处理，追求原音质时请关闭音效。</string>
     <string name="player_quality_unknown">音频</string>
     <string name="player_quality_spec_full">%1$s · %2$.1f kHz · %3$d bit · %4$d 声道</string>

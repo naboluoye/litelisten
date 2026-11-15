@@ -40,4 +40,28 @@ class LrcParserTest {
         assertThat(LrcParser.parse("")).isEmpty()
         assertThat(LrcParser.parse("[ti:x]")).isEmpty()
     }
+
+    @Test
+    fun plainLinesHaveNoWordTimeline() {
+        val lines = LrcParser.parse("[00:01.50]first")
+        assertThat(lines[0].words).isEmpty()
+    }
+
+    @Test
+    fun enhancedLrcBuildsWordTimeline() {
+        val lines = LrcParser.parse("[00:10.00]<00:10.00>深<00:10.50>蓝<00:11.00>的夜")
+        assertThat(lines).hasSize(1)
+        assertThat(lines[0].text).isEqualTo("深蓝的夜")
+        val words = lines[0].words
+        assertThat(words).hasSize(3)
+        assertThat(words[0].startMs).isEqualTo(10_000L)
+        assertThat(words[0].text).isEqualTo("深")
+        assertThat(words[1].startMs).isEqualTo(10_500L)
+        assertThat(words[1].text).isEqualTo("蓝")
+        assertThat(words[2].startMs).isEqualTo(11_000L)
+        assertThat(words[2].text).isEqualTo("的夜")
+        // endMs = next word start; last word falls back to its own start
+        assertThat(words[0].endMs).isEqualTo(10_500L)
+        assertThat(words[1].endMs).isEqualTo(11_000L)
+    }
 }
