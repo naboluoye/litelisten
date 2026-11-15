@@ -1,11 +1,22 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.5（音频体验升级版，推荐安装）** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.5 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.4（上一版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.0.6（AI 介绍测试版）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.0.6 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) ｜ [v2.0.5（正式版，推荐稳定使用）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
-> 零账号、零广告、零遥测、零外网请求：所有网络目标在请求发出前强制校验为局域网私网地址。
+> 零账号、零广告、零遥测；本地/局域网音乐播放与曲库管理全程离线。v2.0.6 测试版新增的「AI 介绍」是**唯一的可选联网功能**：只有你主动点击播放页的按钮时才会发起一次请求，不点就完全离线；服务配置由构建期注入，仓库与文档不含任何服务信息。
 
-**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；**v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是当前推荐安装的版本**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是**稳定的正式版**；**v2.0.6 是功能测试版：增加播放页「AI 介绍」按钮**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.0.6 新增（测试版 · AI 介绍）
+
+| 新增 | 说明 |
+|---|---|
+| 播放页「AI 介绍」按钮 | 点击后根据**正在播放的歌曲**（歌名 + 演唱者）查询并弹出三段介绍：**歌曲背景 / 演唱者介绍 / 歌词简介**；回答风格为轻松口语化、短句、不编造 |
+| 三段式展示 | 结果按三段分栏展示并支持滚动；模型未按格式分段时自动展示原文，不会白屏 |
+| 错误与限流提示 | 配置异常、请求过快、内容过长、服务故障、断网分别给出大白话提示，支持一键重试；不会把任何技术细节暴露给用户 |
+| 隐私与开关 | 该功能默认关闭、不使用即完全离线；只在点击按钮时发起一次请求。设备标识是本机随机生成的匿名 ID，不采集通讯录/位置/账号 |
+
+> 说明：这是**功能测试版**，只想安安静静听歌的话继续用 v2.0.5 即可。服务地址与凭据只在构建期以私有 Secrets 注入，未写进本仓库、二维码或任何公开文档。
 
 ### v2.0.5 新增（音频体验升级）
 
@@ -66,12 +77,12 @@
 
 ---
 
-## 扫码下载（v2.0.5）
+## 扫码下载（v2.0.6 测试版）
 
-![轻听 v2.0.5 扫码下载](docs/qr-download.png)
+![轻听 v2.0.6 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.5/LiteListen-v2.0.5.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.5](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.6/LiteListen-v2.0.6.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -106,17 +117,17 @@
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.5）
+## 3. 已真实跑通的验证（v2.0.6）
 
 | 项目 | 结果 |
 |---|---|
-| `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL |
-| `./gradlew :app:testDebugUnitTest` | ✅ **11 个测试类 / 59 条用例，0 失败**（本轮新增标签解析 9 条、增强 LRC 逐字 2 条单测） |
+| `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL（含构建期配置注入链路验证） |
+| `./gradlew :app:testDebugUnitTest` | ✅ **13 个测试类 / 72 条用例，0 失败**（本轮新增 AI 响应信封解析 9 条、三段介绍解析 4 条单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error |
-| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.5](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) |
+| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) |
 | `apksigner verify --verbose`（云端流水线） | ✅ 沿用同一把 RSA 4096 密钥，证书 SHA-256 `cc7b03e7…e7ac`，与 v1.0.0 一致，可覆盖升级 |
 | `ci_guard.py --check all` / `--check apk` | ✅ PASS，合并后 Manifest 权限 = 11 项主动申请 + 2 项已审计库注入 |
-| GitHub Actions `CI` / `Release` | tag `v2.0.5` 触发签名发版，结果见仓库 Actions |
+| GitHub Actions `CI` / `Release` | tag `v2.0.6` 触发签名发版，结果见仓库 Actions |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -175,9 +186,9 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 ### 每次发版 SOP
 
 ```bash
-python3 scripts/bump_version.py 2.0.5     # versionCode 自动 +1
-git add version.properties && git commit -m "release: 2.0.5"
-git tag -a v2.0.5 -m "Release 2.0.5"
+python3 scripts/bump_version.py 2.0.6     # versionCode 自动 +1
+git add version.properties && git commit -m "release: 2.0.6"
+git tag -a v2.0.6 -m "Release 2.0.6"
 git push origin main --tags               # 推 tag 后 release.yml 自动跑
 ```
 
@@ -246,7 +257,7 @@ litelisten/
 ├─ docs/{qr-download.png, qr-download-card.png}  v2.0.4 扫码下载图
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
-├─ version.properties                          versionCode=7 / versionName=2.0.5
+├─ version.properties                          versionCode=8 / versionName=2.0.6
 ├─ app/proguard-rules.pro                      R8 / kotlinx.serialization 规则
 └─ app/src/main/java/com/litelisten/player/
    ├─ core/{model, common, designsystem, database, datastore, network, scan, player}

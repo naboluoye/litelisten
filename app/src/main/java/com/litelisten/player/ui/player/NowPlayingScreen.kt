@@ -11,7 +11,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -50,6 +54,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.litelisten.player.R
+import com.litelisten.player.BuildConfig
+import com.litelisten.player.core.ai.AiErrorCode
+import com.litelisten.player.core.ai.AiIntroParser
+import com.litelisten.player.core.ai.AiIntroState
 import com.litelisten.player.core.common.MimeTypes
 import com.litelisten.player.core.common.TimeFormat
 import com.litelisten.player.core.designsystem.component.TrackArtwork
@@ -69,6 +77,7 @@ fun NowPlayingScreen(
 ) {
     val spacing = LocalSpacing.current
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val aiState by viewModel.aiIntroState.collectAsStateWithLifecycle()
     val track = state.current
     var sliderValue by remember { mutableStateOf<Float?>(null) }
     var dialog by remember { mutableStateOf<String?>(null) }
@@ -227,6 +236,14 @@ fun NowPlayingScreen(
 
         Spacer(Modifier.height(spacing.l))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            if (viewModel.aiEnabled) {
+                IconButton(
+                    onClick = { track?.let { viewModel.requestAiIntro(it) } },
+                    enabled = track != null,
+                ) {
+                    Icon(Icons.Filled.AutoAwesome, contentDescription = stringResource(R.string.ai_button))
+                }
+            }
             IconButton(onClick = { onNavigate(Routes.QUEUE) }) {
                 Icon(Icons.Filled.QueueMusic, contentDescription = stringResource(R.string.player_queue))
             }
@@ -243,6 +260,61 @@ fun NowPlayingScreen(
                 Icon(Icons.Filled.Speed, contentDescription = stringResource(R.string.nav_more))
             }
         }
+    }
+
+    when (val ai = aiState) {
+        AiIntroState.Loading -> AlertDialog(
+            onDismissRequest = { viewModel.resetAiIntro() },
+            title = { Text(stringResource(R.string.ai_intro_title)) },
+            text = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(stringResource(R.string.ai_intro_loading))
+                }
+            },
+            confirmButton = {},
+        )
+        is AiIntroState.Success -> AlertDialog(
+            onDismissRequest = { viewModel.resetAiIntro() },
+            title = { Text(stringResource(R.string.ai_intro_title)) },
+            text = { AiIntroContent(ai.sections) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.resetAiIntro() }) {
+                    Text(stringResource(R.string.ai_action_close))
+                }
+            },
+        )
+        is AiIntroState.Failure -> AlertDialog(
+            onDismissRequest = { viewModel.resetAiIntro() },
+            title = { Text(stringResource(R.string.ai_intro_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        when (ai.code) {
+                            AiErrorCode.AUTH -> R.string.ai_error_auth
+                            AiErrorCode.RATE -> R.string.ai_error_rate
+                            AiErrorCode.BAD_REQUEST -> R.string.ai_error_bad_request
+                            AiErrorCode.SERVER -> R.string.ai_error_server
+                            AiErrorCode.EMPTY -> R.string.ai_error_empty
+                            AiErrorCode.DISABLED -> R.string.ai_error_disabled
+                            AiErrorCode.NETWORK -> R.string.ai_error_network
+                        },
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { track?.let { viewModel.requestAiIntro(it) } }) {
+                    Text(stringResource(R.string.ai_action_retry))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.resetAiIntro() }) {
+                    Text(stringResource(R.string.ai_action_close))
+                }
+            },
+        )
+        else -> Unit
     }
 
     when (dialog) {
@@ -297,6 +369,37 @@ fun NowPlayingScreen(
             },
             confirmButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.action_close)) } },
         )
+    }
+}
+
+/** AI 三段介绍内容；模型没按格式分段时整段展示原文。 */
+@Composable
+private fun AiIntroContent(sections: AiIntroParser.Sections) {
+    if (!sections.isStructured) {
+        Text(
+            sections.raw,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.verticalScroll(rememberScrollState()),
+        )
+        return
+    }
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        listOf(
+            stringResource(R.string.ai_section_header_background) to sections.background,
+            stringResource(R.string.ai_section_header_artist) to sections.artist,
+            stringResource(R.string.ai_section_header_lyrics) to sections.lyricsIntro,
+        ).forEach { (header, body) ->
+            Text(
+                header,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                body,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
     }
 }
 

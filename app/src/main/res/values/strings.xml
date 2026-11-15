@@ -253,6 +253,27 @@
     <string name="settings_group_network">网络</string>
     <string name="settings_group_about">关于</string>
     <string name="about_credit">本软件由风起时出品，功能是为解决手机本地音频的播放，免费无广告，如有需要敬请使用</string>
+    <string name="ai_button">AI 介绍</string>
+    <string name="ai_intro_title">歌曲 AI 介绍</string>
+    <string name="ai_intro_loading">正在向 AI 查询，请稍候…</string>
+    <string name="ai_section_background">【歌曲背景】</string>
+    <string name="ai_section_artist">【演唱者介绍】</string>
+    <string name="ai_section_lyrics">【歌词简介】</string>
+    <string name="ai_section_header_background">歌曲背景</string>
+    <string name="ai_section_header_artist">演唱者介绍</string>
+    <string name="ai_section_header_lyrics">歌词简介</string>
+    <string name="ai_intro_system_prompt">你是音乐播放器里的音乐聊天助手。请用轻松口语化的中文回答，像朋友聊天一样，多用短句，不要学术腔。回答必须分三段，每段分别以【歌曲背景】【演唱者介绍】【歌词简介】开头。不确定的信息就直说不确定，绝不编造。三段总共控制在300字以内。</string>
+    <string name="ai_intro_user_question">请介绍一下歌曲《%1$s》（演唱者：%2$s）。第一段讲这首歌的背景和风格，第二段介绍演唱者，第三段聊聊歌词讲了什么。</string>
+    <string name="ai_intro_message_template">【系统设定】%1$s\n\n【用户提问】%2$s</string>
+    <string name="ai_error_auth">AI 服务配置有问题，请告诉管理员</string>
+    <string name="ai_error_rate">问得太快了，歇一分钟再问吧</string>
+    <string name="ai_error_bad_request">内容太长或格式不对，请说得简短些</string>
+    <string name="ai_error_server">AI 有点累了，过一会儿再试</string>
+    <string name="ai_error_network">网络连接失败，请检查网络后重试</string>
+    <string name="ai_error_empty">AI 没有返回内容，请稍后再试</string>
+    <string name="ai_error_disabled">AI 功能未配置</string>
+    <string name="ai_action_close">关闭</string>
+    <string name="ai_action_retry">再试一次</string>
     <string name="about_contact_email">联系邮箱</string>
     <string name="about_contact_email_value" translatable="false">9336193@qq.com</string>
     <string name="about_mailto_uri" translatable="false">mailto:9336193@qq.com</string>

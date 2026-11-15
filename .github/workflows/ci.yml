@@ -57,6 +57,9 @@ jobs:
         run: python3 scripts/ci_guard.py --check all
 
       - name: 组装 Debug APK
+        env:
+          AI_API_KEY: ${{ secrets.AI_SERVICE_KEY }}
+          AI_CHAT_URL: ${{ secrets.AI_SERVICE_URL }}
         run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: 单元测试

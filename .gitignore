@@ -12,6 +12,7 @@ captures/
 *.jks
 *.keystore
 keystore.properties
+ai.properties
 signing/
 *.pepk
 *.pem

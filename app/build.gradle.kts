@@ -39,6 +39,16 @@ val hasReleaseSigning = listOf(
     resolvedStoreFile, resolvedStorePassword, resolvedKeyAlias, resolvedKeyPassword
 ).all { !it.isNullOrBlank() }
 
+// 可选 AI 功能构建配置：取值只从环境变量(CI)或 gitignore 的本地配置文件读取，仓库内无任何服务信息。
+val aiProps = Properties().apply {
+    val f = rootProject.file("ai.properties")
+    if (f.isFile) FileInputStream(f).use { load(it) }
+}
+fun aiValue(envName: String, propName: String): String =
+    System.getenv(envName)?.takeIf { it.isNotBlank() }
+        ?: aiProps.getProperty(propName)?.takeIf { it.isNotBlank() }
+        ?: ""
+
 // 发布流水线强制验签：缺密钥直接失败，绝不产出 debug 签名或 unsigned 的 Release 包。
 if (System.getenv("LITELISTEN_REQUIRE_SIGNING") == "true" && !hasReleaseSigning) {
     throw GradleException(
@@ -58,6 +68,8 @@ android {
         versionCode = appVersionCode
         versionName = appVersionName
         buildConfigField("String", "VERSION_NAME", "\"$appVersionName\"")
+        buildConfigField("String", "AI_CHAT_URL", "\"${aiValue("AI_CHAT_URL", "aiChatUrl")}\"")
+        buildConfigField("String", "AI_API_KEY", "\"${aiValue("AI_API_KEY", "aiApiKey")}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -172,6 +184,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
+    // JVM 单测里用真实 org.json（android.jar 里的只是抛 Stub 的壳）。
+    testImplementation(libs.org.json)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))

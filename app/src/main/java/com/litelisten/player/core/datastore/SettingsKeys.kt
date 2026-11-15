@@ -32,6 +32,7 @@ object SettingsKeys {
     const val HIFI_OUTPUT = "hifi_output"
     const val GAPLESS_SKIP_SILENCE = "gapless_skip_silence"
     const val REPLAYGAIN_ENABLED = "replaygain_enabled"
+    const val AI_USER_ID = "ai_user_id"
 
     val THEME_MODE_KEY = stringPreferencesKey(THEME_MODE)
     val DYNAMIC_COLOR_KEY = booleanPreferencesKey(DYNAMIC_COLOR)
@@ -57,4 +58,5 @@ object SettingsKeys {
     val HIFI_OUTPUT_KEY = booleanPreferencesKey(HIFI_OUTPUT)
     val GAPLESS_SKIP_SILENCE_KEY = booleanPreferencesKey(GAPLESS_SKIP_SILENCE)
     val REPLAYGAIN_ENABLED_KEY = booleanPreferencesKey(REPLAYGAIN_ENABLED)
+    val AI_USER_ID_KEY = stringPreferencesKey(AI_USER_ID)
 }

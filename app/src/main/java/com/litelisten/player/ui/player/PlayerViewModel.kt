@@ -2,13 +2,17 @@ package com.litelisten.player.ui.player
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.litelisten.player.core.ai.AiIntroRepository
+import com.litelisten.player.core.ai.AiIntroState
 import com.litelisten.player.core.player.PlaybackControllerImpl
 import com.litelisten.player.core.model.PlayerUiState
 import com.litelisten.player.core.model.RepeatMode
 import com.litelisten.player.core.model.Track
 import com.litelisten.player.data.repository.TrackRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,9 +20,27 @@ import javax.inject.Inject
 class PlayerViewModel @Inject constructor(
     val controller: PlaybackControllerImpl,
     private val tracks: TrackRepositoryImpl,
+    private val aiIntro: AiIntroRepository,
 ) : ViewModel() {
     val state: StateFlow<PlayerUiState> = controller.state
     val queue: StateFlow<List<Track>> = controller.queue
+
+    private val _aiIntroState = MutableStateFlow<AiIntroState>(AiIntroState.Idle)
+    val aiIntroState: StateFlow<AiIntroState> = _aiIntroState.asStateFlow()
+
+    val aiEnabled: Boolean get() = com.litelisten.player.BuildConfig.AI_API_KEY.isNotBlank()
+
+    fun requestAiIntro(track: Track) {
+        if (_aiIntroState.value is AiIntroState.Loading) return
+        _aiIntroState.value = AiIntroState.Loading
+        viewModelScope.launch {
+            _aiIntroState.value = aiIntro.fetchIntro(track)
+        }
+    }
+
+    fun resetAiIntro() {
+        _aiIntroState.value = AiIntroState.Idle
+    }
 
     fun play(track: Track, context: List<Track> = listOf(track)) {
         viewModelScope.launch { controller.play(track, context) }

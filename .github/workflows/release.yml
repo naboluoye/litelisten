@@ -100,6 +100,8 @@ jobs:
           LITELISTEN_KEYSTORE_PASSWORD: ${{ secrets.LITELISTEN_KEYSTORE_PASSWORD }}
           LITELISTEN_KEY_ALIAS: ${{ secrets.LITELISTEN_KEY_ALIAS }}
           LITELISTEN_KEY_PASSWORD: ${{ secrets.LITELISTEN_KEY_PASSWORD }}
+          AI_API_KEY: ${{ secrets.AI_SERVICE_KEY }}
+          AI_CHAT_URL: ${{ secrets.AI_SERVICE_URL }}
         run: ./gradlew clean :app:assembleRelease --stacktrace
 
       - name: 验签 + 包体门禁（<= 20MB）
