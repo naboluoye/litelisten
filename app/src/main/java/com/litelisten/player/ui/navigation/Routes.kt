@@ -19,10 +19,12 @@ object Routes {
     const val QUEUE = "queue"
     const val LYRICS = "lyrics"
     const val EQUALIZER = "equalizer"
+    const val PLAYLIST = "playlist/{id}"
 
     fun album(name: String) = "album/${Uri.encode(name)}"
     fun artist(name: String) = "artist/${Uri.encode(name)}"
     fun folder(name: String) = "folder/${Uri.encode(name)}"
+    fun playlist(id: Long) = "playlist/$id"
     fun browser(sourceId: String, path: String = "") =
         "browser/${Uri.encode(sourceId)}?path=${Uri.encode(path)}"
 

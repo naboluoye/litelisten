@@ -21,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun trackDao(): TrackDao
     abstract fun sourceDao(): SourceDao
     abstract fun lyricsDao(): LyricsDao
+    abstract fun playlistDao(): PlaylistDao
 
     companion object {
         /** v2：本地曲库增加 ReplayGain 列与内嵌歌词表；保留用户数据，不重建。 */

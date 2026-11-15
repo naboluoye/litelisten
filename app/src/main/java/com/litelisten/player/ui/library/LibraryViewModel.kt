@@ -3,13 +3,16 @@ package com.litelisten.player.ui.library
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.litelisten.player.core.common.FolderPaths
 import com.litelisten.player.core.model.Album
 import com.litelisten.player.core.model.Artist
+import com.litelisten.player.core.model.Playlist
 import com.litelisten.player.core.player.PlaybackControllerImpl
 import com.litelisten.player.core.model.SortKey
 import com.litelisten.player.core.model.SortOrder
 import com.litelisten.player.core.model.Track
 import com.litelisten.player.core.scan.LibraryScanner
+import com.litelisten.player.data.repository.PlaylistRepository
 import com.litelisten.player.data.repository.TrackRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,6 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val repository: TrackRepositoryImpl,
+    private val playlistRepository: PlaylistRepository,
     val controller: PlaybackControllerImpl,
     val scanner: LibraryScanner,
 ) : ViewModel() {
@@ -51,6 +55,9 @@ class LibraryViewModel @Inject constructor(
     val count: StateFlow<Int> = repository.count()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
+    val playlists: StateFlow<List<Playlist>> = playlistRepository.playlists()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val scanState = scanner.state
 
     fun setSort(value: SortKey) { _sort.value = value }
@@ -64,6 +71,31 @@ class LibraryViewModel @Inject constructor(
     fun addFolder(uri: Uri) = scanner.scanTree(uri)
 
     fun rebuildIndex() = scanner.rebuild()
+
+    /** 重置：停播、清队列、清空曲库索引与歌词，并保留歌单名字，方便重新按文件夹整理。 */
+    fun resetLibrary(onDone: () -> Unit) {
+        viewModelScope.launch {
+            controller.stop()
+            controller.clearQueue()
+            scanner.resetLibrary()
+            onDone()
+        }
+    }
+
+    fun songsInFolder(folder: String): List<Track> =
+        songs.value.filter { FolderPaths.isUnder(folder, it.path) }
+
+    /** 新建歌单；[tracks] 为空表示建空歌单。回调拿到新歌单 id。 */
+    fun createPlaylist(name: String, tracks: List<Track> = emptyList(), onDone: (Long) -> Unit) {
+        if (name.isBlank()) return
+        viewModelScope.launch { onDone(playlistRepository.createWith(name, tracks)) }
+    }
+
+    /** 把歌曲加入已有歌单；回调返回真正新增的条数（已在歌单里的会跳过）。 */
+    fun addToPlaylist(playlistId: Long, tracks: List<Track>, onDone: (Int) -> Unit) {
+        if (tracks.isEmpty()) return
+        viewModelScope.launch { onDone(playlistRepository.addTracks(playlistId, tracks)) }
+    }
 
     fun play(track: Track, context: List<Track>) {
         viewModelScope.launch { controller.play(track, context) }
@@ -83,6 +115,9 @@ class LibraryViewModel @Inject constructor(
     }
 
     fun remove(track: Track) {
-        viewModelScope.launch { repository.removeFromLibrary(track.id) }
+        viewModelScope.launch {
+            repository.removeFromLibrary(track.id)
+            playlistRepository.pruneOrphans()
+        }
     }
 }

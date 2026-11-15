@@ -19,6 +19,7 @@ import com.litelisten.player.ui.library.AlbumDetailScreen
 import com.litelisten.player.ui.library.ArtistDetailScreen
 import com.litelisten.player.ui.library.FolderDetailScreen
 import com.litelisten.player.ui.library.LibraryScreen
+import com.litelisten.player.ui.library.PlaylistDetailScreen
 import com.litelisten.player.ui.player.EqualizerScreen
 import com.litelisten.player.ui.player.LyricsScreen
 import com.litelisten.player.ui.player.NowPlayingScreen
@@ -134,6 +135,12 @@ fun LiteListenNavHost(
             )
         }
         composable(Routes.QUEUE) { QueueScreen(onBack = onBack, onMessage = onMessage) }
+        composable(
+            route = Routes.PLAYLIST,
+            arguments = listOf(navArgument("id") { type = NavType.StringType }),
+        ) {
+            PlaylistDetailScreen(onBack = onBack, onMessage = onMessage)
+        }
         composable(Routes.LYRICS) { LyricsScreen(onBack = onBack, onMessage = onMessage) }
         composable(Routes.EQUALIZER) { EqualizerScreen(onBack = onBack) }
     }

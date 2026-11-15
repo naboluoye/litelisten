@@ -16,6 +16,7 @@ import com.litelisten.player.core.datastore.SettingsKeys
 import com.litelisten.player.core.datastore.SettingsRepository
 import com.litelisten.player.core.metadata.MediaTags
 import com.litelisten.player.core.metadata.TagParseUtil
+import com.litelisten.player.data.repository.PlaylistRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,16 +49,21 @@ class LibraryScanner @Inject constructor(
     private val safScanner: SafScanner,
     private val artworkCache: ArtworkCache,
     private val settings: SettingsRepository,
+    private val playlistRepository: PlaylistRepository,
     @ApplicationContext private val context: Context,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
     private var currentJob: Job? = null
+    /** 用户主动「重置」后置真：避免下次进入曲库页把刚清空的库又自动扫回来。 */
+    @Volatile private var autoScanBlocked = false
     private val _state = MutableStateFlow<ScanState>(ScanState.Idle)
     val state: StateFlow<ScanState> = _state.asStateFlow()
 
     /** 所有入口统一从设置读取「显示短音频」，避免不同页面扫描结果不一致。 */
     fun scanLocal() {
+        // 用户手动扫描是明确的意愿，先解除「重置后不自动扫」的抑制。
+        autoScanBlocked = false
         currentJob?.cancel()
         currentJob = scope.launch {
             val showShort = settings.observe(SettingsKeys.SHOW_SHORT_AUDIO_KEY, false).first()
@@ -70,6 +76,7 @@ class LibraryScanner @Inject constructor(
      * 权限与「本地曲库是否为空」两个条件都在内部判断，调用点可以无条件、重复调用。
      */
     fun scanLocalIfEmpty() {
+        if (autoScanBlocked) return
         if (_state.value is ScanState.Running) return
         if (!hasAudioPermission()) return
         currentJob?.cancel()
@@ -139,6 +146,27 @@ class LibraryScanner @Inject constructor(
         val sourceId = items.first().sourceId
         mutex.withLock { replace(sourceId, items) }
         return items.size
+    }
+
+    /**
+     * 清空曲库索引（「重置」）：删除全部曲目、内嵌歌词、手动歌词和歌单里的歌曲条目，
+     * 保留歌单名字与服务器配置。只动 App 自己的数据库，绝不碰用户文件。
+     */
+    suspend fun resetLibrary() {
+        currentJob?.cancel()
+        mutex.withLock {
+            runCatching {
+                autoScanBlocked = true
+                trackDao.deleteAll()
+                lyricsDao.deleteOrphans()
+                lyricsDao.deleteManualOrphans()
+                playlistRepository.clearAllEntries()
+                _state.value = ScanState.Idle
+            }.onFailure { error ->
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                _state.value = ScanState.Failed(R.string.library_reset_failed)
+            }
+        }
     }
 
     private suspend fun runScanLocked(showShort: Boolean) {

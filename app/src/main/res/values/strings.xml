@@ -75,6 +75,40 @@
     <string name="action_open_settings">去设置开启</string>
     <string name="permission_denied">没有读取音频的权限，无法扫描本机音乐</string>
     <string name="library_reindex_done">正在清空并重新扫描曲库…</string>
+    <string name="library_tab_playlists">歌单</string>
+    <string name="library_folders_empty">还没有文件夹信息。扫描一次本机音乐，或点右上角「⋮ → 扫描指定文件夹」单独添加一个目录。</string>
+    <string name="action_scan_folder">扫描指定文件夹</string>
+    <string name="action_reset_library">清空曲库（重置）</string>
+    <string name="reset_library_title">清空曲库？</string>
+    <string name="reset_library_message">会清空已扫描到的歌曲、歌词，以及歌单里的歌曲条目；不会删除手机或 NAS 上的任何音乐文件，歌单名字会保留。清空后可以重新扫描，或按文件夹逐个添加。</string>
+    <string name="library_reset_done">曲库已清空，可以重新扫描或按文件夹添加</string>
+    <string name="library_reset_failed">清空曲库失败，请重试</string>
+
+    <!-- 歌单 -->
+    <string name="playlist_tab">歌单</string>
+    <string name="playlist_count">%1$d 个歌单</string>
+    <string name="playlist_new">新建歌单</string>
+    <string name="playlist_name_hint">歌单名称</string>
+    <string name="playlist_empty">这个歌单还是空的</string>
+    <string name="playlist_empty_desc">还没有歌单。切到「歌单」标签就能新建，长按单曲或整张专辑、整个文件夹也能一次加进去。</string>
+    <string name="playlist_add_to">加入歌单</string>
+    <string name="playlist_add_count">已选 %1$d 首歌</string>
+    <string name="playlist_added">已加入歌单：%1$d 首</string>
+    <string name="playlist_added_none">这些歌已经在歌单里了</string>
+    <string name="playlist_created">已新建歌单「%1$s」</string>
+    <string name="playlist_renamed">已改名为「%1$s」</string>
+    <string name="playlist_rename">重命名歌单</string>
+    <string name="playlist_delete">删除歌单</string>
+    <string name="playlist_remove_track">从歌单移除</string>
+    <string name="playlist_track_removed">已从歌单移除</string>
+    <string name="playlist_shuffle">随机播放</string>
+    <string name="confirm_delete_playlist">删除歌单「%1$s」？只会删掉这个歌单，不会删除任何音乐文件。</string>
+    <string name="queue_load_playlist">载入歌单</string>
+    <string name="queue_load_playlist_hint">选中后会用这个歌单替换当前队列，从第一首开始播放。</string>
+    <string name="queue_load_playlist_from_empty">队列是空的，去载入一个歌单</string>
+    <string name="playlist_loaded">已载入歌单「%1$s」，共 %2$d 首</string>
+    <string name="album_add_to_playlist">整张加入歌单</string>
+    <string name="folder_add_to_playlist">整个文件夹加入歌单</string>
 
     <!-- 来源 -->
     <string name="sources_title">来源</string>

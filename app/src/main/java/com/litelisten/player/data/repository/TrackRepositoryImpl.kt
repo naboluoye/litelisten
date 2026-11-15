@@ -2,6 +2,7 @@ package com.litelisten.player.data.repository
 
 import androidx.paging.PagingData
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.litelisten.player.core.common.FolderPaths
 import com.litelisten.player.core.database.AlbumRow
 import com.litelisten.player.core.database.ArtistRow
 import com.litelisten.player.core.database.TrackDao
@@ -37,11 +38,10 @@ class TrackRepositoryImpl @Inject constructor(
     }
 
     fun folders(): Flow<List<String>> = dao.allPaths().map { paths ->
-        paths.mapNotNull { path ->
-            val normalized = path.replace('\\', '/')
-            val first = normalized.trim('/').substringBefore('/')
-            first.takeIf { it.isNotBlank() }
-        }.distinct().sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
+        paths.map { FolderPaths.folderOf(it) }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it })
     }
 
     fun byFolder(prefix: String): Flow<List<Track>> =

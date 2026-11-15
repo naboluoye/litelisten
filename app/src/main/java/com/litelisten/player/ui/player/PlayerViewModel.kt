@@ -7,13 +7,18 @@ import com.litelisten.player.core.ai.AiIntroState
 import com.litelisten.player.core.ai.AiLyricsState
 import com.litelisten.player.core.player.PlaybackControllerImpl
 import com.litelisten.player.core.model.PlayerUiState
+import com.litelisten.player.core.model.Playlist
 import com.litelisten.player.core.model.RepeatMode
 import com.litelisten.player.core.model.Track
+import com.litelisten.player.data.repository.PlaylistRepository
 import com.litelisten.player.data.repository.TrackRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,10 +26,24 @@ import javax.inject.Inject
 class PlayerViewModel @Inject constructor(
     val controller: PlaybackControllerImpl,
     private val tracks: TrackRepositoryImpl,
+    private val playlists: PlaylistRepository,
     private val aiIntro: AiIntroRepository,
 ) : ViewModel() {
     val state: StateFlow<PlayerUiState> = controller.state
     val queue: StateFlow<List<Track>> = controller.queue
+
+    /** 队列页「载入歌单」用：不订阅具体曲目，选中后再一次性取。 */
+    val playlistList: StateFlow<List<Playlist>> = playlists.playlists()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** 用整个歌单替换当前队列并从头播放；回调返回实际载入的歌曲数。 */
+    fun loadPlaylist(playlist: Playlist, onDone: (Int) -> Unit) {
+        viewModelScope.launch {
+            val items = playlists.tracks(playlist.id).first()
+            if (items.isNotEmpty()) controller.play(items.first(), items)
+            onDone(items.size)
+        }
+    }
 
     private val _aiIntroState = MutableStateFlow<AiIntroState>(AiIntroState.Idle)
     val aiIntroState: StateFlow<AiIntroState> = _aiIntroState.asStateFlow()

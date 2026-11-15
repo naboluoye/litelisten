@@ -26,7 +26,7 @@ class SafScanner @Inject constructor(
         val sourceId = sourceId(treeUri)
         val root = DocumentFile.fromTreeUri(context, treeUri) ?: return emptyList()
         val result = ArrayList<TrackEntity>()
-        walk(root, sourceId, 0, result, onProgress)
+        walk(root, sourceId, "", 0, result, onProgress)
         onProgress(result.size)
         return result
     }
@@ -34,6 +34,7 @@ class SafScanner @Inject constructor(
     private suspend fun walk(
         dir: DocumentFile,
         sourceId: String,
+        relativeDir: String,
         depth: Int,
         out: MutableList<TrackEntity>,
         onProgress: (Int) -> Unit,
@@ -42,9 +43,10 @@ class SafScanner @Inject constructor(
         val children = runCatching { dir.listFiles() }.getOrDefault(emptyArray())
         for (child in children) {
             val name = child.name ?: continue
+            val relativePath = if (relativeDir.isEmpty()) name else "$relativeDir/$name"
             if (child.isDirectory) {
                 if (name.startsWith(".") || name.equals("Android", true)) continue
-                walk(child, sourceId, depth + 1, out, onProgress)
+                walk(child, sourceId, relativePath, depth + 1, out, onProgress)
                 yield()
             } else if (MimeTypes.isSupported(name)) {
                 val uri = child.uri.toString()
@@ -54,7 +56,8 @@ class SafScanner @Inject constructor(
                     sourceId = sourceId,
                     sourceType = SourceType.SAF.name,
                     uri = uri,
-                    path = name,
+                    // 存相对所选文件夹的路径，文件夹分类与同名歌词推导都依赖它。
+                    path = relativePath,
                     title = meta.title,
                     titleNorm = Pinyin.normalize(meta.title),
                     artist = meta.artist,

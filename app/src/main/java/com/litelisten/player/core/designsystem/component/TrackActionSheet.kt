@@ -27,6 +27,9 @@ fun TrackActionSheet(
     onFavorite: () -> Unit,
     onInfo: () -> Unit,
     onRemove: () -> Unit,
+    onAddToPlaylist: (() -> Unit)? = null,
+    removeLabelRes: Int = R.string.action_remove_from_library,
+    showFavorite: Boolean = true,
 ) {
     val spacing = LocalSpacing.current
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -44,18 +47,28 @@ fun TrackActionSheet(
             )
             ActionItem(R.string.action_play_next, onDismiss, onPlayNext)
             ActionItem(R.string.action_add_to_queue, onDismiss, onAddToQueue)
+            if (onAddToPlaylist != null) {
+                ActionItem(R.string.playlist_add_to, onDismiss, onAddToPlaylist)
+            }
             ActionItem(
                 if (track.isFavorite) R.string.action_unfavorite else R.string.action_favorite,
                 onDismiss, onFavorite,
+                visible = showFavorite,
             )
             ActionItem(R.string.action_track_info, onDismiss, onInfo)
-            ActionItem(R.string.action_remove_from_library, onDismiss, onRemove)
+            ActionItem(removeLabelRes, onDismiss, onRemove)
         }
     }
 }
 
 @Composable
-private fun ActionItem(labelRes: Int, onDismiss: () -> Unit, action: () -> Unit) {
+private fun ActionItem(
+    labelRes: Int,
+    onDismiss: () -> Unit,
+    action: () -> Unit,
+    visible: Boolean = true,
+) {
+    if (!visible) return
     ListItem(
         headlineContent = { Text(stringResource(labelRes)) },
         modifier = Modifier.clickable {

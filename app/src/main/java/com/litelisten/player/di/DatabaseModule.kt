@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.litelisten.player.core.database.AppDatabase
 import com.litelisten.player.core.database.LyricsDao
+import com.litelisten.player.core.database.PlaylistDao
 import com.litelisten.player.core.database.SourceDao
 import com.litelisten.player.core.database.TrackDao
 import dagger.Module
@@ -32,4 +33,7 @@ object DatabaseModule {
 
     @Provides
     fun provideLyricsDao(db: AppDatabase): LyricsDao = db.lyricsDao()
+
+    @Provides
+    fun providePlaylistDao(db: AppDatabase): PlaylistDao = db.playlistDao()
 }

@@ -1,6 +1,8 @@
 package com.litelisten.player.ui.library
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,10 +21,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.litelisten.player.R
+import com.litelisten.player.core.common.FolderPaths
+import com.litelisten.player.core.designsystem.component.AddToPlaylistSheet
 import com.litelisten.player.core.designsystem.component.EmptyState
 import com.litelisten.player.core.designsystem.component.LiteListenTopBar
 import com.litelisten.player.core.designsystem.component.TrackActionSheet
@@ -36,9 +42,14 @@ private fun TrackListPage(
     onBack: () -> Unit,
     onMessage: (String) -> Unit,
     viewModel: LibraryViewModel,
+    addAllLabel: Int? = null,
 ) {
     val spacing = LocalSpacing.current
+    val context = LocalContext.current
+    val playlists by viewModel.playlists.collectAsStateWithLifecycle()
     var actionTrack by remember { mutableStateOf<Track?>(null) }
+    var playlistTarget by remember { mutableStateOf<List<Track>>(emptyList()) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -57,13 +68,26 @@ private fun TrackListPage(
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
             )
-            Button(
-                onClick = { viewModel.playAll(tracks) },
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.l),
+                horizontalArrangement = Arrangement.spacedBy(spacing.s),
             ) {
-                Text(stringResource(R.string.action_play_all))
+                Button(
+                    onClick = { viewModel.playAll(tracks) },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.action_play_all))
+                }
+                if (addAllLabel != null) {
+                    OutlinedButton(
+                        onClick = { playlistTarget = tracks },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(addAllLabel), maxLines = 1)
+                    }
+                }
             }
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(tracks, key = { it.id }) { track ->
@@ -86,6 +110,31 @@ private fun TrackListPage(
             onFavorite = { viewModel.favorite(track) },
             onInfo = { onMessage(track.path) },
             onRemove = { viewModel.remove(track) },
+            onAddToPlaylist = { playlistTarget = listOf(track) },
+        )
+    }
+
+    if (playlistTarget.isNotEmpty()) {
+        val target = playlistTarget
+        AddToPlaylistSheet(
+            playlists = playlists,
+            trackCount = target.size,
+            onDismiss = { playlistTarget = emptyList() },
+            onPick = { playlist ->
+                playlistTarget = emptyList()
+                viewModel.addToPlaylist(playlist.id, target) { added ->
+                    onMessage(
+                        if (added > 0) context.getString(R.string.playlist_added, added)
+                        else context.getString(R.string.playlist_added_none),
+                    )
+                }
+            },
+            onCreate = { name ->
+                playlistTarget = emptyList()
+                viewModel.createPlaylist(name, target) {
+                    onMessage(context.getString(R.string.playlist_created, name))
+                }
+            },
         )
     }
 }
@@ -99,7 +148,7 @@ fun AlbumDetailScreen(
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
     val tracks = songs.filter { it.album == name }
-    TrackListPage(name, tracks, onBack, onMessage, viewModel)
+    TrackListPage(name, tracks, onBack, onMessage, viewModel, R.string.album_add_to_playlist)
 }
 
 @Composable
@@ -111,7 +160,7 @@ fun ArtistDetailScreen(
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
     val tracks = songs.filter { it.artist == name }
-    TrackListPage(name, tracks, onBack, onMessage, viewModel)
+    TrackListPage(name, tracks, onBack, onMessage, viewModel, R.string.album_add_to_playlist)
 }
 
 @Composable
@@ -122,6 +171,6 @@ fun FolderDetailScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
-    val tracks = songs.filter { it.path.replace('\\', '/').trimStart('/').startsWith(name) }
-    TrackListPage(name, tracks, onBack, onMessage, viewModel)
+    val tracks = songs.filter { FolderPaths.isUnder(name, it.path) }
+    TrackListPage(name, tracks, onBack, onMessage, viewModel, R.string.folder_add_to_playlist)
 }
