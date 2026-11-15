@@ -1,11 +1,27 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.6（AI 介绍测试版）** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.6 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) ｜ [v2.0.5（正式版，推荐稳定使用）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.0.7（歌词跟唱测试版）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.0.7 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.7) ｜ [v2.0.5（正式版，推荐稳定使用）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) ｜ [v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
-> 零账号、零广告、零遥测；本地/局域网音乐播放与曲库管理全程离线。v2.0.6 测试版新增的「AI 介绍」是**唯一的可选联网功能**：只有你主动点击播放页的按钮时才会发起一次请求，不点就完全离线；服务配置由构建期注入，仓库与文档不含任何服务信息。
+> 零账号、零广告、零遥测；本地/局域网音乐播放与曲库管理全程离线。可选的联网功能只有两个，都必须由你**主动点击**才发一次请求：播放页「AI 介绍」（v2.0.6 起）与歌词页「AI 讲解歌词」（v2.0.7 起），不点就完全离线；服务配置由构建期注入，仓库与文档不含任何服务信息。
 
-**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是**稳定的正式版**；**v2.0.6 是功能测试版：增加播放页「AI 介绍」按钮**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是**稳定的正式版**；v2.0.6 增加播放页「AI 介绍」按钮；**v2.0.7 是歌词与跟唱测试版：歌词更准、能跟着唱、AI 能讲歌词**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.0.7 新增（测试版 · 歌词与跟唱）
+
+| 新增 | 说明 |
+|---|---|
+| 歌词时间轴修正 | 修掉两处老问题：带 `[offset:]` 的逐字歌词会整体错位；每句没有「结束时间」，导致最后一句永远唱不完。现在逐字时间与行尾都会正确回填 |
+| 进度精度提升 | 歌词页进度从 500ms 提升到 **60ms** 采样，逐字染色不再「跳字」 |
+| 卡拉 OK 式染色 | 已唱过的字用主色、正在唱的字加粗、没唱的字淡化；普通 LRC（无逐字标签）也会按句子时长做渐进染色 |
+| 跟唱模式 | 歌词页右上角「跟唱」开关。开启后：**点任意一句即单句循环**（唱完自动跳回句首）、可切 0.75x / 0.9x 慢速练唱、可 ±0.1 秒微调歌词偏移 |
+| 手动歌词持久化 | 以前手动选的 .lrc 重启就丢，现在存进本地数据库，下次直接显示；可随时移除 |
+| 共享目录歌词 | NAS / SMB 共享里与歌曲**同目录同名**的 .lrc 现在会自动读取（以前只支持手机本地），中文歌词自动识别 UTF-8 / GBK 编码 |
+| 批量导入 | 没歌词时可选一个文件夹，把里面的 .lrc 一次性按文件名匹配进曲库（只接受带时间轴的歌词） |
+| 粘贴导入 | 不想下载文件时，把网页上的歌词复制进 App 粘贴保存，自动识别时间轴 |
+| AI 讲解歌词 | 歌词页「AI 讲解歌词」按钮：三段讲**歌词大意 / 值得注意的句子 / 怎么唱好**。没有歌词原文时也能用（只讲大意，并明确要求模型不许编造歌词） |
+
+边界说明（如实）：本版**不做**联网自动抓取歌词网站的歌词——那会打破「非私网地址一律拦截」的红线，并带来版权与随时失效的问题，所以走「同目录自动匹配 / 批量导入 / 粘贴导入」三条离线路径。跟唱模式不录音、不开麦克风、不做音准打分（音准打分需要 `RECORD_AUDIO` 权限，与现有权限白名单冲突，留待你明确授权后再评估）。
 
 ### v2.0.6 新增（测试版 · AI 介绍）
 
@@ -77,12 +93,12 @@
 
 ---
 
-## 扫码下载（v2.0.6 测试版）
+## 扫码下载（v2.0.7 测试版）
 
-![轻听 v2.0.6 扫码下载](docs/qr-download.png)
+![轻听 v2.0.7 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.6/LiteListen-v2.0.6.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.7/LiteListen-v2.0.7.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.0.7](https://github.com/naboluoye/litelisten/releases/tag/v2.0.7)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -99,7 +115,7 @@
 | 网络源 | **SMB**（smbj 随机读 DataSource，支持拖动进度）、**WebDAV**（PROPFIND 目录浏览 + OkHttp Range 流播）、**DLNA/UPnP**（SSDP + ContentDirectory Browse）、**Jellyfin**（REST API 登录 + 媒体库浏览 + `static=true` 原始无损流）；均可测试连接、浏览目录、直接播放、整目录导入曲库 |
 | 凭据 | 用户名/密码用 Android Keystore AES-256-GCM 加密后存储，明文不落盘、不进 URI、不进日志；地址不合规直接拒绝连接 |
 | 搜索 | 中文原名 / 全拼 / 首字母混合索引，空格分词 AND 语义；同时搜歌曲、专辑、艺术家；保留最近 10 条搜索历史 |
-| 其它 | 收藏、最近播放、LRC 歌词（自动找同名文件 → 内嵌歌词 → 手动选择 .lrc，点击歌词行跳转，增强 LRC 支持逐字加粗高亮）、均衡器与低音增强（挂到真实 audioSessionId）、首次使用 3 页引导、浅色/深色/纯黑主题、动态取色 |
+| 其它 | 收藏、最近播放、LRC 歌词（自动找同名文件 → 共享目录同名文件 → 内嵌歌词 → 手动挂载，点击歌词行跳转，逐字染色与跟唱模式）、均衡器与低音增强（挂到真实 audioSessionId）、首次使用 3 页引导、浅色/深色/纯黑主题、动态取色 |
 | 设置 | 主题、动态取色、断点恢复、自动播放、拔耳机暂停、淡出、出错自动跳过、倍速、**高保真输出**、**无缝播放**、**ReplayGain 响度均衡**、扫描短音频、仅 Wi-Fi、连接超时、缓冲时长、缓存上限、重建索引、清理封面缓存；关于区含出品方说明、联系邮箱、检查新版本 |
 
 所有设置项都接了真实逻辑：超时/缓冲/缓存/仅 Wi-Fi/拔耳机暂停/淡出经 `RuntimeConfig` 快照驱动 OkHttp、ExoPlayer、拦截器与封面缓存；下次新建连接或播放器时生效，不打断正在播放的音频。
@@ -117,17 +133,17 @@
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.6）
+## 3. 已真实跑通的验证（v2.0.7）
 
 | 项目 | 结果 |
 |---|---|
-| `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL（含构建期配置注入链路验证） |
-| `./gradlew :app:testDebugUnitTest` | ✅ **13 个测试类 / 72 条用例，0 失败**（本轮新增 AI 响应信封解析 9 条、三段介绍解析 4 条单测） |
+| `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL |
+| `./gradlew :app:testDebugUnitTest` | ✅ **14 个测试类 / 79 条用例，0 失败**（本轮新增歌词时间轴与命名匹配 10 条单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error |
-| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) |
+| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.7](https://github.com/naboluoye/litelisten/releases/tag/v2.0.7) |
 | `apksigner verify --verbose`（云端流水线） | ✅ 沿用同一把 RSA 4096 密钥，证书 SHA-256 `cc7b03e7…e7ac`，与 v1.0.0 一致，可覆盖升级 |
-| `ci_guard.py --check all` / `--check apk` | ✅ PASS，合并后 Manifest 权限 = 11 项主动申请 + 2 项已审计库注入 |
-| GitHub Actions `CI` / `Release` | tag `v2.0.6` 触发签名发版，结果见仓库 Actions |
+| `ci_guard.py --check all` / `--check apk` | ✅ PASS，合并后 Manifest 权限仍为 11 项主动申请 + 2 项已审计库注入（**未新增麦克风权限**） |
+| GitHub Actions `CI` / `Release` | tag `v2.0.7` 触发签名发版，结果见仓库 Actions |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -186,9 +202,9 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 ### 每次发版 SOP
 
 ```bash
-python3 scripts/bump_version.py 2.0.6     # versionCode 自动 +1
-git add version.properties && git commit -m "release: 2.0.6"
-git tag -a v2.0.6 -m "Release 2.0.6"
+python3 scripts/bump_version.py 2.0.7     # versionCode 自动 +1
+git add version.properties && git commit -m "release: 2.0.7"
+git tag -a v2.0.7 -m "Release 2.0.7"
 git push origin main --tags               # 推 tag 后 release.yml 自动跑
 ```
 
@@ -230,7 +246,7 @@ tag 与 `version.properties` 不一致会被硬门禁拒绝。也可在 Actions 
 | 7 | P7 才处理混淆 | P0 预置 R8 规则并真跑 | smbj 传递依赖引用 Android 不存在的 `javax.el.*`，已定向 `-dontwarn` |
 | 8 | MediaStore `IS_MUSIC != 0` 过滤 | 读出来后判定，不用 SQL 硬过滤 | 部分 ROM 未打标记会整库漏歌；`IS_MUSIC` 是 API 29 才加入，放进投影会让 Android 8/9 抛无效列 |
 | 9 | 权限严格 11 项 | 源 Manifest 11 项；合并后 +2 项库注入 | 删除会破坏旧系统动态接收器保护与 WorkManager 重启 |
-| 10 | 歌词只读同名文件 | 同名自动查找 + 手动选择 .lrc | Android 10+ 分区存储下非媒体文件常不可见，必须有可靠兜底 |
+| 10 | 歌词只读同名文件 | 同名自动查找 + 共享目录同名查找 + 批量导入 + 粘贴导入 | Android 10+ 分区存储下非媒体文件常不可见，且多数人不会逐首下载歌词，必须有多条兜底 |
 | 11 | 均衡器挂全局混音 session 0 | 生成并发布真实 `audioSessionId` 后挂接 | 挂 session 0 在很多机型上对播放无效 |
 
 ---
@@ -257,7 +273,7 @@ litelisten/
 ├─ docs/{qr-download.png, qr-download-card.png}  v2.0.4 扫码下载图
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
-├─ version.properties                          versionCode=8 / versionName=2.0.6
+├─ version.properties                          versionCode=9 / versionName=2.0.7
 ├─ app/proguard-rules.pro                      R8 / kotlinx.serialization 规则
 └─ app/src/main/java/com/litelisten/player/
    ├─ core/{model, common, designsystem, database, datastore, network, scan, player}
@@ -274,7 +290,7 @@ litelisten/
 - **未在真机安装验证**：本机无可用 Android 设备，冷启动耗时、大字体 1.3×、旋转/分屏、锁屏与蓝牙控制、不同 ROM 的 MediaStore 差异仍需按 `16_验收清单与测试矩阵.md` 人工勾验。
 - `LanAddress` 按字符串判断私网，不做 DNS 解析：SMB / WebDAV 主机请填 **IP** 或 `.local` 名称。
 - DLNA 能否播放取决于媒体服务器返回的 `res` 资源 URL 是否可被本机直连（部分设备需额外头，已注入 `transferMode.dlna.org` / `getcontentFeatures.dlna.org`）。
-- 歌词自动匹配在 Android 13+ 常受分区存储限制，此时请用「选择 .lrc 歌词文件」手动挂载；手动挂载为会话内有效。
+- 歌词自动匹配在 Android 13+ 常受分区存储限制，此时请用「选择 .lrc 歌词文件」手动挂载、或「导入歌词文件夹」批量导入；两种方式都会存进本地数据库，重启不丢。
 - 均衡器效果依赖设备/system 的 `android.media.audiofx` 实现，部分蓝牙设备或 ROM 可能不支持（页面会提示）。
 - **HiFi 边界**：高保真输出解决的是 App 内部的降位与转码，最终音质仍受手机 DAC、系统混音、蓝牙编码（SBC/AAC/LDAC）限制；APE / DSD / WMA 无解码器，不支持。Jellyfin 自签名 HTTPS（8920）需要服务器使用受信任证书，局域网自签名证书不受支持。
 - `connectedDebugAndroidTest` 仪器化测试与真机全流程回归矩阵仍未接入 CI。

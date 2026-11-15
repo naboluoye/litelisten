@@ -72,6 +72,17 @@ data class LyricsEntity(
 )
 
 /**
+ * 用户自己挂载或批量导入的歌词原文。与 [LyricsEntity] 分表存放，
+ * 这样重新扫描曲库时不会把手动歌词当成内嵌歌词覆盖掉。
+ */
+@Entity(tableName = "manual_lyrics", primaryKeys = ["trackId"])
+data class ManualLyricsEntity(
+    val trackId: String,
+    val content: String,
+    val updatedAt: Long,
+)
+
+/**
  * 契约保留的 FTS4 外部内容表定义，当前**未注册进 AppDatabase**、数据库中不建此表。
  * 原因：FTS4 external content 要求内容表用 INTEGER rowid，而 TrackEntity.id 是 String，
  * 注册会直接编译失败；强行改写主键会波及全部 DAO 与播放队列。

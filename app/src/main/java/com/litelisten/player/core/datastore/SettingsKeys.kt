@@ -33,6 +33,9 @@ object SettingsKeys {
     const val GAPLESS_SKIP_SILENCE = "gapless_skip_silence"
     const val REPLAYGAIN_ENABLED = "replaygain_enabled"
     const val AI_USER_ID = "ai_user_id"
+    const val LYRICS_OFFSET_MS = "lyrics_offset_ms"
+    const val LYRICS_SING_ALONG = "lyrics_sing_along"
+    const val LYRICS_LOOP_LINE = "lyrics_loop_line"
 
     val THEME_MODE_KEY = stringPreferencesKey(THEME_MODE)
     val DYNAMIC_COLOR_KEY = booleanPreferencesKey(DYNAMIC_COLOR)
@@ -59,4 +62,7 @@ object SettingsKeys {
     val GAPLESS_SKIP_SILENCE_KEY = booleanPreferencesKey(GAPLESS_SKIP_SILENCE)
     val REPLAYGAIN_ENABLED_KEY = booleanPreferencesKey(REPLAYGAIN_ENABLED)
     val AI_USER_ID_KEY = stringPreferencesKey(AI_USER_ID)
+    val LYRICS_OFFSET_MS_KEY = intPreferencesKey(LYRICS_OFFSET_MS)
+    val LYRICS_SING_ALONG_KEY = booleanPreferencesKey(LYRICS_SING_ALONG)
+    val LYRICS_LOOP_LINE_KEY = booleanPreferencesKey(LYRICS_LOOP_LINE)
 }

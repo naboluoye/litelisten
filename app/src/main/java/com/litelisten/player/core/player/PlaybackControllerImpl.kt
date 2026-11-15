@@ -227,6 +227,15 @@ class PlaybackControllerImpl @Inject constructor(
         controllerFlow.value?.seekTo(positionMs.coerceAtLeast(0L))
     }
 
+    /**
+     * 细粒度进度：全局 state 的 ticker 是 500ms，逐字歌词与单句循环需要更密的采样。
+     * 只由歌词页按需轮询，不影响其他界面的刷新频率。
+     */
+    fun currentPositionMs(): Long {
+        val controller = controllerFlow.value ?: return 0L
+        return runCatching { controller.currentPosition }.getOrDefault(0L).coerceAtLeast(0L)
+    }
+
     override fun setShuffle(enabled: Boolean) {
         controllerFlow.value?.shuffleModeEnabled = enabled
         updateState()

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.litelisten.player.core.ai.AiIntroRepository
 import com.litelisten.player.core.ai.AiIntroState
+import com.litelisten.player.core.ai.AiLyricsState
 import com.litelisten.player.core.player.PlaybackControllerImpl
 import com.litelisten.player.core.model.PlayerUiState
 import com.litelisten.player.core.model.RepeatMode
@@ -40,6 +41,22 @@ class PlayerViewModel @Inject constructor(
 
     fun resetAiIntro() {
         _aiIntroState.value = AiIntroState.Idle
+    }
+
+    private val _aiLyricsState = MutableStateFlow<AiLyricsState>(AiLyricsState.Idle)
+    val aiLyricsState: StateFlow<AiLyricsState> = _aiLyricsState.asStateFlow()
+
+    /** 讲解当前歌词：只在用户点按钮时发一次，不主动联网。 */
+    fun requestLyricsExplanation(track: Track, lyrics: String) {
+        if (_aiLyricsState.value is AiLyricsState.Loading) return
+        _aiLyricsState.value = AiLyricsState.Loading
+        viewModelScope.launch {
+            _aiLyricsState.value = aiIntro.explainLyrics(track, lyrics)
+        }
+    }
+
+    fun resetLyricsExplanation() {
+        _aiLyricsState.value = AiLyricsState.Idle
     }
 
     fun play(track: Track, context: List<Track> = listOf(track)) {

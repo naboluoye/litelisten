@@ -224,10 +224,33 @@
 
     <!-- 歌词 -->
     <string name="lyrics_none">暂无歌词</string>
-    <string name="lyrics_none_desc">没有找到同名 .lrc 歌词。可以手动选择一个歌词文件。</string>
+    <string name="lyrics_none_desc">会自动找歌曲同目录的同名 .lrc（手机和共享目录都支持），也可以手动选择、批量导入或直接粘贴。</string>
     <string name="lyrics_pick">选择 .lrc 歌词文件</string>
     <string name="lyrics_pick_failed">歌词文件读取失败</string>
     <string name="lyrics_back_to_current">回到当前</string>
+    <string name="lyrics_import_folder">导入歌词文件夹</string>
+    <string name="lyrics_import_result">已为 %1$d 首歌匹配到歌词（共扫描 %2$d 个 .lrc）</string>
+    <string name="lyrics_import_empty">没有匹配上，检查歌词文件名是否和歌曲名一致</string>
+    <string name="lyrics_paste">粘贴歌词</string>
+    <string name="lyrics_paste_hint">把网页上的歌词全文复制到这里。带 [00:12.30] 时间轴的会逐句滚动并支持跟唱，纯文本只能整页浏览。</string>
+    <string name="lyrics_paste_placeholder">[00:12.30]第一句歌词</string>
+    <string name="lyrics_paste_confirm">保存</string>
+    <string name="lyrics_paste_cancel">取消</string>
+    <string name="lyrics_paste_failed">没识别出歌词，检查内容是否完整</string>
+    <string name="lyrics_remove_manual">移除这首的手动歌词</string>
+    <string name="lyrics_sing_along">跟唱</string>
+    <string name="lyrics_loop_line">单句循环</string>
+    <string name="lyrics_speed_slow">0.75x</string>
+    <string name="lyrics_speed_mid">0.9x</string>
+    <string name="lyrics_speed_normal">1.0x</string>
+    <string name="lyrics_offset_minus">−0.1 秒</string>
+    <string name="lyrics_offset_plus">+0.1 秒</string>
+    <string name="lyrics_offset_value">偏移 %1$d 毫秒</string>
+    <string name="lyrics_offset_reset">复位</string>
+    <string name="lyrics_source_manual">手动导入的歌词</string>
+    <string name="lyrics_source_side_car">同目录歌词文件</string>
+    <string name="lyrics_source_shared">共享目录里的歌词文件</string>
+    <string name="lyrics_source_embedded">歌曲内嵌歌词</string>
 
     <!-- 均衡器 -->
     <string name="equalizer_title">均衡器</string>
@@ -272,6 +295,11 @@
     <string name="ai_error_network">网络连接失败，请检查网络后重试</string>
     <string name="ai_error_empty">AI 没有返回内容，请稍后再试</string>
     <string name="ai_error_disabled">AI 功能未配置</string>
+    <string name="ai_lyrics_button">AI 讲解歌词</string>
+    <string name="ai_lyrics_title">歌词讲解</string>
+    <string name="ai_lyrics_system_prompt">你是音乐播放器里的歌词讲解助手。请用轻松口语化的中文讲，像朋友聊天，多用短句，不要学术腔。回答分三段，分别以【歌词大意】【值得注意的句子】【怎么唱好】开头：第一段讲整首歌在说什么、情绪怎么走；第二段挑两三句最关键的词句说说意思和妙处；第三段给两条马上能用上的跟唱建议，比如换气位置、咬字轻重、情绪重点。不要整段复述歌词原文，不要编造歌曲信息，拿不准就直说。</string>
+    <string name="ai_lyrics_user_question">请讲解《%1$s》（演唱者：%2$s）这首歌的歌词。歌词内容如下：\n%3$s</string>
+    <string name="ai_lyrics_user_question_no_text">我这儿暂时没有《%1$s》（演唱者：%2$s）的歌词原文，请凭你的了解讲讲这首歌大致在唱什么、情绪怎么走，再给两条唱这首歌的建议。千万不要编造具体歌词句子，拿不准就直说。</string>
     <string name="ai_action_close">关闭</string>
     <string name="ai_action_retry">再试一次</string>
     <string name="about_contact_email">联系邮箱</string>

@@ -8,17 +8,28 @@ data class LyricLine(
     val text: String,
     /** 增强 LRC 的逐字时间轴；普通 LRC 为空列表。 */
     val words: List<LyricWord> = emptyList(),
-)
+    /** 行结束时间（下一行开始时间）；最后一行为 0，表示未知。 */
+    val endMs: Long = 0L,
+) {
+    /** 跟唱循环与染色用的行尾；未知时给一个保守估计，避免最后一行永远唱不完。 */
+    val effectiveEndMs: Long get() = if (endMs > timeMs) endMs else timeMs + DEFAULT_LINE_MS
+
+    companion object {
+        const val DEFAULT_LINE_MS = 2_500L
+    }
+}
 
 /**
  * 纯函数：支持多时间标签、offset、元数据行与增强 LRC（&lt;mm:ss.xx&gt; 逐字标签）；
- * 非法行直接跳过。
+ * 非法行直接跳过。解析完成后统一回填行尾时间与逐字时长，供卡拉 OK 式染色与单句循环使用。
  */
 object LrcParser {
     private val tagRegex = Regex("\\[(\\d{1,3}):(\\d{1,2})(?:[.:](\\d{1,3}))?]")
     private val wordTagRegex = Regex("<(\\d{1,3}):(\\d{1,2})(?:[.:](\\d{1,3}))?>")
     private val offsetRegex = Regex("\\[offset:\\s*([+-]?\\d+)\\s*]", RegexOption.IGNORE_CASE)
     private val metaRegex = Regex("\\[(ti|ar|al|by|re|ve):.*?]", RegexOption.IGNORE_CASE)
+
+    private const val ESTIMATED_WORD_MS = 220L
 
     fun parse(content: String): List<LyricLine> {
         val offset = offsetRegex.find(content)?.groupValues?.get(1)?.toLongOrNull() ?: 0L
@@ -39,20 +50,51 @@ object LrcParser {
                     2 -> fractionRaw.toLongOrNull()?.times(10) ?: 0L
                     else -> fractionRaw.take(3).toLongOrNull() ?: 0L
                 }
-                val time = minutes * 60_000L + seconds * 1000L + fraction - offset
-                lines.add(buildLine(time.coerceAtLeast(0L), body))
+                val time = (minutes * 60_000L + seconds * 1000L + fraction - offset).coerceAtLeast(0L)
+                lines.add(buildLine(time, body, offset))
             }
         }
-        return lines.distinctBy { it.timeMs to it.text }.sortedBy { it.timeMs }
+        val ordered = lines.distinctBy { it.timeMs to it.text }.sortedBy { it.timeMs }
+        return closeTimeline(ordered)
     }
 
-    private fun buildLine(timeMs: Long, body: String): LyricLine {
+    /** 回填行尾：下一行开始即本行结束；最后一行为 0（由 effectiveEndMs 兜底）。 */
+    private fun closeTimeline(lines: List<LyricLine>): List<LyricLine> =
+        lines.mapIndexed { index, line ->
+            val nextStart = lines.getOrNull(index + 1)?.timeMs
+            val end = if (nextStart != null && nextStart > line.timeMs) nextStart else 0L
+            if (line.words.isEmpty()) {
+                line.copy(endMs = end)
+            } else {
+                line.copy(endMs = end, words = closeWords(line.words, end))
+            }
+        }
+
+    /** 逐字收尾：优先用下一个字，其次用行尾，都没有时给一个短估计，避免零时长。 */
+    private fun closeWords(words: List<LyricWord>, lineEnd: Long): List<LyricWord> {
+        val result = words.toMutableList()
+        for (index in result.indices) {
+            val current = result[index]
+            val nextStart = result.getOrNull(index + 1)?.startMs
+            val end = when {
+                nextStart != null && nextStart > current.startMs -> nextStart
+                lineEnd > current.startMs -> lineEnd
+                else -> current.startMs + ESTIMATED_WORD_MS
+            }
+            result[index] = current.copy(endMs = end)
+        }
+        return result
+    }
+
+    private fun buildLine(timeMs: Long, body: String, offset: Long): LyricLine {
         val wordMatches = wordTagRegex.findAll(body).toList()
         if (wordMatches.isEmpty()) return LyricLine(timeMs, body)
         val display = wordTagRegex.replace(body, "")
         val words = ArrayList<LyricWord>()
         wordMatches.forEachIndexed { index, match ->
-            val start = parseWordTime(match) ?: return@forEachIndexed
+            // 逐字标签同样是绝对时间，必须一起减 offset，否则带 offset 的歌词会整体错位。
+            val raw = parseWordTime(match) ?: return@forEachIndexed
+            val start = (raw - offset).coerceAtLeast(0L)
             val startIdx = match.range.last + 1
             val endIdx = if (index + 1 < wordMatches.size) {
                 wordMatches[index + 1].range.first
@@ -61,11 +103,7 @@ object LrcParser {
             }
             val text = body.substring(startIdx, endIdx).trim()
             if (text.isEmpty()) return@forEachIndexed
-            words.add(LyricWord(start, 0L, text))
-        }
-        words.forEachIndexed { index, word ->
-            val end = if (index + 1 < words.size) words[index + 1].startMs else word.startMs
-            words[index] = word.copy(endMs = end)
+            words.add(LyricWord(start, start, text))
         }
         return LyricLine(timeMs, display, words)
     }

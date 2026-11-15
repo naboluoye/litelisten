@@ -12,8 +12,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         PlaylistEntity::class,
         PlaylistTrackEntity::class,
         LyricsEntity::class,
+        ManualLyricsEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -31,6 +32,20 @@ abstract class AppDatabase : RoomDatabase() {
                         "trackId TEXT NOT NULL, " +
                         "isSynced INTEGER NOT NULL, " +
                         "content TEXT NOT NULL, " +
+                        "PRIMARY KEY(trackId)" +
+                        ")"
+                )
+            }
+        }
+
+        /** v3：用户手动挂载/批量导入的歌词单独建表，避免被重新扫描覆盖。 */
+        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS manual_lyrics (" +
+                        "trackId TEXT NOT NULL, " +
+                        "content TEXT NOT NULL, " +
+                        "updatedAt INTEGER NOT NULL, " +
                         "PRIMARY KEY(trackId)" +
                         ")"
                 )
