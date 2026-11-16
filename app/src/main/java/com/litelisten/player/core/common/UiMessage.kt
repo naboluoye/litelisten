@@ -54,6 +54,7 @@ object UiMessage {
         detail == "LIST_SHARES_FAILED" -> R.string.error_shares_unavailable
         detail == "HTTP_401" || detail == "HTTP_403" -> R.string.error_auth_failed
         detail == "HTTP_404" || detail == "HTTP_410" -> R.string.error_path_not_found
+        detail == "SOAP_500" || detail == "SOAP_501" -> R.string.error_dlna_rejected
         detail.startsWith("HTTP_") || detail.startsWith("SOAP_") -> R.string.error_http_code
         else -> R.string.error_protocol
     }

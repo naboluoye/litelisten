@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,9 +58,16 @@ fun SourcesScreen(
     val scanState by viewModel.scanState.collectAsStateWithLifecycle()
     val hint by viewModel.hint.collectAsStateWithLifecycle()
     val scanRange by viewModel.scanRange.collectAsStateWithLifecycle()
+    val message by viewModel.message.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<String?>(null) }
     val deniedText = stringResource(R.string.permission_denied)
+    LaunchedEffect(message) {
+        message?.let { text ->
+            onMessage(text)
+            viewModel.consumeMessage()
+        }
+    }
     val scanPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->

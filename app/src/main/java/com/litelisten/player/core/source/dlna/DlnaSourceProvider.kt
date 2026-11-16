@@ -77,49 +77,91 @@ class DlnaSourceProvider @Inject constructor(
 
     override suspend fun close(configId: String) = Unit
 
+    /**
+     * SOAP Browse。群晖 DSM 等设备的 ContentDirectory 对请求格式很挑剔，
+     * 常见 500 来源是 SortCriteria 非空、SOAPACTION 引号有无、Content-Type charset 引号。
+     * 准备两种兼容变体：标准写法与「宽松写法」（去排序、SOAPACTION 不带引号、charset 无引号），
+     * 首个返回 5xx 时自动换第二个重试一次，避免用户看到笼统的「服务器拒绝（HTTP 500）」。
+     */
     private fun browseXml(controlUrl: String, objectId: String, start: Int, count: Int): String {
         if (controlUrl.isBlank()) throw SourceError.Protocol("NO_CONTROL_URL")
-        val envelope = "<?xml version=\"1.0\"?>" +
+        // 变体二/三针对群晖：去 SortCriteria（它常对 +dc:title 返回 500）。
+        val variants = listOf(
+            SoapVariant(sort = "+dc:title", quotedAction = true, quotedCharset = true),
+            SoapVariant(sort = "", quotedAction = true, quotedCharset = true),
+            SoapVariant(sort = "", quotedAction = false, quotedCharset = false),
+        )
+        var lastCode = 0
+        for ((index, variant) in variants.withIndex()) {
+            val envelope = buildEnvelope(objectId, start, count, variant)
+            val action = "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+                .let { if (variant.quotedAction) "\"$it\"" else it }
+            val contentType = if (variant.quotedCharset) {
+                "text/xml; charset=\"utf-8\""
+            } else {
+                "text/xml; charset=utf-8"
+            }
+            val request = Request.Builder()
+                .url(controlUrl)
+                .header("SOAPACTION", action)
+                .header("User-Agent", "LiteListen/1.0 UPnP/1.1 DLNADOC/1.50")
+                .header("Accept", "*/*")
+                .header("Connection", "close")
+                .post(envelope.toRequestBody(contentType.toMediaType()))
+                .build()
+            val response = runCatching { client.newCall(request).execute() }.getOrNull()
+                ?: if (index == variants.lastIndex) {
+                    throw SourceError.NetworkUnreachable(controlUrl)
+                } else {
+                    continue
+                }
+            val raw = response.use { res ->
+                if (!res.isSuccessful) {
+                    lastCode = res.code
+                    return@use null
+                }
+                res.body?.string().orEmpty()
+            }
+            if (raw != null) return parseResult(raw)
+        }
+        throw SourceError.Protocol("SOAP_$lastCode")
+    }
+
+    private data class SoapVariant(
+        val sort: String,
+        val quotedAction: Boolean,
+        val quotedCharset: Boolean,
+    )
+
+    private fun buildEnvelope(objectId: String, start: Int, count: Int, variant: SoapVariant): String =
+        "<?xml version=\"1.0\"?>" +
             "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
             "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body>" +
             "<u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">" +
             "<ObjectID>$objectId</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag>" +
             "<Filter>*</Filter><StartingIndex>$start</StartingIndex>" +
-            "<RequestedCount>$count</RequestedCount><SortCriteria>+dc:title</SortCriteria>" +
+            "<RequestedCount>$count</RequestedCount><SortCriteria>${variant.sort}</SortCriteria>" +
             "</u:Browse></s:Body></s:Envelope>"
-        val request = Request.Builder()
-            .url(controlUrl)
-            .header("SOAPACTION", "\"urn:schemas-upnp-org:service:ContentDirectory:1#Browse\"")
-            .header("User-Agent", "LiteListen/1.0 UPnP/1.1 DLNADOC/1.50")
-            .header("Accept", "*/*")
-            .header("Connection", "close")
-            .post(envelope.toRequestBody("text/xml; charset=utf-8".toMediaType()))
-            .build()
-        val response = runCatching { client.newCall(request).execute() }.getOrElse {
-            throw SourceError.NetworkUnreachable(controlUrl)
-        }
-        return response.use { res ->
-            val raw = res.body?.string().orEmpty()
-            if (!res.isSuccessful) throw SourceError.Protocol("SOAP_${res.code}")
-            if (raw.isBlank() || !raw.trimStart().startsWith("<")) {
-                throw SourceError.Protocol("NO_DIDL_RESULT")
-            }
-            val parser = Xml.newPullParser()
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
-            parser.setInput(StringReader(raw))
-            var event = parser.eventType
-            while (event != XmlPullParser.END_DOCUMENT) {
-                if (event == XmlPullParser.START_TAG &&
-                    parser.name?.substringAfterLast(':')?.equals("Result", true) == true
-                ) {
-                    return@use parser.nextText()
-                }
-                event = parser.next()
-            }
-            // 空目录的设备只回 BrowseResponse 不带 Result，按空目录处理而不是报协议错。
-            if (raw.contains("BrowseResponse", true)) return@use ""
+
+    private fun parseResult(raw: String): String {
+        if (raw.isBlank() || !raw.trimStart().startsWith("<")) {
             throw SourceError.Protocol("NO_DIDL_RESULT")
         }
+        val parser = Xml.newPullParser()
+        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
+        parser.setInput(StringReader(raw))
+        var event = parser.eventType
+        while (event != XmlPullParser.END_DOCUMENT) {
+            if (event == XmlPullParser.START_TAG &&
+                parser.name?.substringAfterLast(':')?.equals("Result", true) == true
+            ) {
+                return parser.nextText()
+            }
+            event = parser.next()
+        }
+        // 空目录的设备只回 BrowseResponse 不带 Result，按空目录处理而不是报协议错。
+        if (raw.contains("BrowseResponse", true)) return ""
+        throw SourceError.Protocol("NO_DIDL_RESULT")
     }
 
     private fun parseDidl(didl: String): List<RemoteEntry> {

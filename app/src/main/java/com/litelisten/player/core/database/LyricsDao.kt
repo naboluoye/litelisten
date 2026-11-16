@@ -29,4 +29,11 @@ interface LyricsDao {
 
     @Query("DELETE FROM manual_lyrics WHERE trackId NOT IN (SELECT id FROM tracks)")
     suspend fun deleteManualOrphans()
+
+    /** 按歌词正文搜索，返回命中的曲目 id（内嵌歌词 + 手动歌词两处都查）。 */
+    @Query(
+        "SELECT trackId FROM lyrics WHERE content LIKE '%' || :q || '%' " +
+            "UNION SELECT trackId FROM manual_lyrics WHERE content LIKE '%' || :q || '%'"
+    )
+    suspend fun searchByContent(q: String): List<String>
 }

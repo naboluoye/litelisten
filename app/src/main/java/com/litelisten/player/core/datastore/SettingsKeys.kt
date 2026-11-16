@@ -25,6 +25,8 @@ object SettingsKeys {
     const val CONNECT_TIMEOUT_S = "connect_timeout_s"
     const val WIFI_ONLY = "wifi_only"
     const val SHOW_SHORT_AUDIO = "show_short_audio"
+    const val MIN_DURATION_SEC = "min_duration_sec"
+    const val MAX_DURATION_SEC = "max_duration_sec"
     const val SEARCH_HISTORY = "search_history"
     const val QUEUE_SNAPSHOT = "queue_snapshot"
     const val LAST_SCAN_AT = "last_scan_at"
@@ -54,6 +56,8 @@ object SettingsKeys {
     val CONNECT_TIMEOUT_S_KEY = intPreferencesKey(CONNECT_TIMEOUT_S)
     val WIFI_ONLY_KEY = booleanPreferencesKey(WIFI_ONLY)
     val SHOW_SHORT_AUDIO_KEY = booleanPreferencesKey(SHOW_SHORT_AUDIO)
+    val MIN_DURATION_SEC_KEY = intPreferencesKey(MIN_DURATION_SEC)
+    val MAX_DURATION_SEC_KEY = intPreferencesKey(MAX_DURATION_SEC)
     val SEARCH_HISTORY_KEY = stringPreferencesKey(SEARCH_HISTORY)
     val QUEUE_SNAPSHOT_KEY = stringPreferencesKey(QUEUE_SNAPSHOT)
     val LAST_SCAN_AT_KEY = longPreferencesKey(LAST_SCAN_AT)

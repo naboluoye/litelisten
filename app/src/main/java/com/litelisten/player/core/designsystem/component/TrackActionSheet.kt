@@ -28,6 +28,7 @@ fun TrackActionSheet(
     onInfo: () -> Unit,
     onRemove: () -> Unit,
     onAddToPlaylist: (() -> Unit)? = null,
+    onQuickFavorite: (() -> Unit)? = null,
     removeLabelRes: Int = R.string.action_remove_from_library,
     showFavorite: Boolean = true,
 ) {
@@ -47,6 +48,9 @@ fun TrackActionSheet(
             )
             ActionItem(R.string.action_play_next, onDismiss, onPlayNext)
             ActionItem(R.string.action_add_to_queue, onDismiss, onAddToQueue)
+            if (onQuickFavorite != null) {
+                ActionItem(R.string.playlist_quick_add, onDismiss, onQuickFavorite)
+            }
             if (onAddToPlaylist != null) {
                 ActionItem(R.string.playlist_add_to, onDismiss, onAddToPlaylist)
             }

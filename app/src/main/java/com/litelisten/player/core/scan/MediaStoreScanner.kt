@@ -4,6 +4,7 @@ import android.content.ContentUris
 import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
+import com.litelisten.player.core.common.DurationFilter
 import com.litelisten.player.core.common.MimeTypes
 import com.litelisten.player.core.common.Pinyin
 import com.litelisten.player.core.database.TrackEntity
@@ -24,7 +25,16 @@ data class ScannedTrack(
 class MediaStoreScanner @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    suspend fun scan(showShortAudio: Boolean, onProgress: (Int) -> Unit): List<ScannedTrack> {
+    /**
+     * @param minMs 最短时长（毫秒，0=不限制）；@param maxMs 最长时长（毫秒，0=不限制）。
+     * showShortAudio 兼容旧开关：开启时忽略时长下限（但仍受 maxMs 上限约束）。
+     */
+    suspend fun scan(
+        showShortAudio: Boolean,
+        onProgress: (Int) -> Unit,
+        minMs: Long = 0L,
+        maxMs: Long = 0L,
+    ): List<ScannedTrack> {
         val hasRelativePath = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
         val projection = mutableListOf(
             MediaStore.Audio.Media._ID,
@@ -77,7 +87,8 @@ class MediaStoreScanner @Inject constructor(
                 val size = c.getLong(sizeCol)
                 val path = c.getString(pathCol).orEmpty()
                 if (size <= 0L) continue
-                if (!showShortAudio && duration in 1..29_999L) continue
+                val effectiveMin = if (showShortAudio) 0L else minMs
+                if (!DurationFilter.keep(duration, effectiveMin, maxMs)) continue
                 if (isSystemSound(path)) continue
 
                 val mediaId = c.getLong(idCol)

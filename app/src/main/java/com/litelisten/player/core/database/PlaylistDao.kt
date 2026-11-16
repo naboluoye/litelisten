@@ -64,10 +64,13 @@ interface PlaylistDao {
     suspend fun count(): Int
 
     /**
-     * 曲库清空或曲目被移除后，清掉指向不存在曲目的残留条目。
-     * 曲库为空时 NOT IN 空集合恒为真，等于全部清空，正是需要的行为。
+     * 只清掉「既找不到曲目、又没有快照」的历史残留条目（v4 之前的老数据）。
+     * 有快照的条目一律保留——曲目记录暂时对不上时用快照显示，歌单里的歌不凭空消失。
      */
-    @Query("DELETE FROM playlist_tracks WHERE trackId NOT IN (SELECT id FROM tracks)")
+    @Query(
+        "DELETE FROM playlist_tracks WHERE (snapUri IS NULL OR snapUri = '') " +
+            "AND trackId NOT IN (SELECT id FROM tracks)"
+    )
     suspend fun deleteOrphanEntries()
 
     @Query("DELETE FROM playlist_tracks")

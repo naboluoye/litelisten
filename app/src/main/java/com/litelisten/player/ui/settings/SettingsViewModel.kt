@@ -63,9 +63,6 @@ class SettingsViewModel @Inject constructor(
 
     fun scanNow() = scanner.scanLocal()
 
-    /** 权限已授予且本地曲库为空时自动扫描，装完第一次打开就有歌。 */
-    fun autoScanIfEmpty() = scanner.scanLocalIfEmpty()
-
     fun rebuildIndex() {
         scanner.rebuild()
         _cacheCleared.value = -1L

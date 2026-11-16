@@ -16,6 +16,7 @@
     <string name="action_confirm">确定</string>
     <string name="action_ok">知道了</string>
     <string name="action_retry">重试</string>
+    <string name="action_back">返回</string>
     <string name="action_refresh">刷新</string>
     <string name="action_close">关闭</string>
     <string name="action_save">保存</string>
@@ -88,6 +89,10 @@
     <string name="playlist_tab">歌单</string>
     <string name="playlist_count">%1$d 个歌单</string>
     <string name="playlist_new">新建歌单</string>
+    <string name="playlist_quick_name">我喜欢的</string>
+    <string name="playlist_quick_add">一键收藏</string>
+    <string name="playlist_quick_done">已加入「我喜欢的」</string>
+    <string name="playlist_quick_duplicate">已经在「我喜欢的」里了</string>
     <string name="playlist_name_hint">歌单名称</string>
     <string name="playlist_empty">这个歌单还是空的</string>
     <string name="playlist_empty_desc">还没有歌单。切到「歌单」标签就能新建，长按单曲或整张专辑、整个文件夹也能一次加进去。</string>
@@ -336,6 +341,18 @@
     <string name="ai_lyrics_user_question_no_text">我这儿暂时没有《%1$s》（演唱者：%2$s）的歌词原文，请凭你的了解讲讲这首歌大致在唱什么、情绪怎么走，再给两条唱这首歌的建议。千万不要编造具体歌词句子，拿不准就直说。</string>
     <string name="ai_action_close">关闭</string>
     <string name="ai_action_retry">再试一次</string>
+    <string name="lyrics_search">搜索歌词</string>
+    <string name="lyrics_search_local">搜索本地歌词</string>
+    <string name="lyrics_search_ai">用 AI 联网搜索</string>
+    <string name="lyrics_search_ai_hint">只有点这一项才会联网。AI 凭记忆生成歌词，可能与原唱不一致，请核对后使用。</string>
+    <string name="lyrics_search_query_hint">输入一句歌词或关键词</string>
+    <string name="lyrics_search_ai_loading">正在请 AI 查找，请稍候…</string>
+    <string name="lyrics_search_ai_warning">以下内容由 AI 生成，可能不准确，请与原唱核对</string>
+    <string name="lyrics_search_ai_save">存为这首歌的歌词</string>
+    <string name="lyrics_search_ai_saved">已保存为手动歌词</string>
+    <string name="lyrics_search_ai_empty">AI 没有给出歌词内容</string>
+    <string name="ai_search_lyrics_system_prompt">你是音乐播放器的歌词助手。请根据用户给出的歌名和演唱者，尽量输出带 [mm:ss.xx] 时间轴的 LRC 格式歌词。如果无法可靠回忆完整歌词，就只输出你确定的部分，并在最后单独一行写明「以上可能不完整或不准确」。不要编造不存在的歌词句子，拿不准就直说。只输出歌词本身，不要解释。</string>
+    <string name="ai_search_lyrics_question">请给出歌曲《%1$s》（演唱者：%2$s）的 LRC 格式歌词，每行以 [mm:ss.xx] 开头。</string>
     <string name="about_contact_email">联系邮箱</string>
     <string name="about_contact_email_value" translatable="false">9336193@qq.com</string>
     <string name="about_mailto_uri" translatable="false">mailto:9336193@qq.com</string>
@@ -361,6 +378,11 @@
     <string name="settings_rebuild_index">重建曲库索引</string>
     <string name="settings_clear_artwork_cache">清理封面缓存</string>
     <string name="settings_show_short_audio">显示短音频</string>
+    <string name="settings_min_duration">最短时长</string>
+    <string name="settings_max_duration">最长时长</string>
+    <string name="settings_duration_value">%1$d 秒（0=不限）</string>
+    <string name="settings_duration_max_value">%1$d 秒（0=不限）</string>
+    <string name="settings_duration_notice">太短的提示音或太长的录音可在这里排除。改完需重新扫描曲库才生效，歌单里已有的歌不受影响。</string>
     <string name="settings_wifi_only">仅 Wi-Fi 播放</string>
     <string name="settings_connect_timeout">连接超时</string>
     <string name="settings_cache_limit">缓存上限</string>
@@ -423,6 +445,7 @@
     <string name="error_not_webdav">这个地址不是 WebDAV 目录，请检查端口和路径后再试。</string>
     <string name="error_dlna_no_control">这台设备没提供媒体目录地址，建议改用 SMB / WebDAV 连接。</string>
     <string name="error_dlna_no_result">设备返回的目录内容无法解析，可能不支持浏览。</string>
+    <string name="error_dlna_rejected">设备在线，但拒绝了这个浏览请求。请到群晖「控制面板 → 媒体服务器」确认媒体库已启用并重建过索引，然后重试；或改用 SMB 连接。</string>
     <string name="error_non_lan_host">只支持局域网地址，请填写 192.168.x.x 这类内网 IP。</string>
     <string name="error_shares_unavailable">读不到这台电脑的共享列表，请在添加服务器时手动填写共享名。</string>
     <string name="error_host_unresolved">解析不了这个设备名，请改填局域网 IP（例如 192.168.1.10）。</string>

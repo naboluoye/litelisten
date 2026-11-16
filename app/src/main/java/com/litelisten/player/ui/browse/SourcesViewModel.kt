@@ -1,8 +1,10 @@
 package com.litelisten.player.ui.browse
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.litelisten.player.R
+import com.litelisten.player.core.common.UiMessage
 import com.litelisten.player.core.database.TrackDao
 import com.litelisten.player.core.model.DiscoveredDevice
 import com.litelisten.player.core.model.Source
@@ -13,6 +15,7 @@ import com.litelisten.player.core.source.dlna.DlnaDiscovery
 import com.litelisten.player.data.repository.SourceRepositoryImpl
 import com.litelisten.player.ui.navigation.Routes
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,6 +32,7 @@ class SourcesViewModel @Inject constructor(
     private val discovery: DlnaDiscovery,
     private val lanHostScanner: LanHostScanner,
     private val scanner: LibraryScanner,
+    @ApplicationContext private val context: Context,
     trackDao: TrackDao,
 ) : ViewModel() {
     val sources: StateFlow<List<Source>> = repository.sources()
@@ -90,6 +94,15 @@ class SourcesViewModel @Inject constructor(
         viewModelScope.launch {
             val result = repository.add(discovery.configFor(device), null)
             result.onSuccess { onNavigate(Routes.browser(it.id)) }
+                .onFailure { error ->
+                    // 以前失败完全静默：用户点「连接」没反应，以为卡死退不出去。
+                    // 现在把真实原因写到 message，由页面以明确提示显示。
+                    _message.value = if (error is com.litelisten.player.core.model.SourceError) {
+                        context.getString(UiMessage.of(error), UiMessage.argOf(error))
+                    } else {
+                        context.getString(R.string.error_generic)
+                    }
+                }
         }
     }
 

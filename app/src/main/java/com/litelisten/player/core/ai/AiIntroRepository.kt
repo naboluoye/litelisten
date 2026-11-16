@@ -95,6 +95,27 @@ class AiIntroRepository @Inject constructor(
         }
     }
 
+    /**
+     * 按当前歌曲联网找歌词：只有用户主动点击才会调用到这个方法（一次请求）。
+     * 模型是凭记忆生成，不保证准确，UI 必须展示「AI 生成请核对」提示。
+     */
+    suspend fun searchLyrics(track: Track): AiLyricsState {
+        val system = context.getString(R.string.ai_search_lyrics_system_prompt)
+        val question = context.getString(
+            R.string.ai_search_lyrics_question,
+            track.title,
+            track.displayArtist,
+        )
+        val result = client.chat(
+            message = context.getString(R.string.ai_intro_message_template, system, question),
+            systemPrompt = system,
+        )
+        return when (result) {
+            is AiChatResult.Success -> AiLyricsState.Success(result.reply.trim())
+            is AiChatResult.Failure -> AiLyricsState.Failure(result.code)
+        }
+    }
+
     private companion object {
         const val MAX_LYRICS_CHARS = 1_200
     }

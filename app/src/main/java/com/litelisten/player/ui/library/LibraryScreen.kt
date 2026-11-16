@@ -40,7 +40,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -96,15 +95,14 @@ fun LibraryScreen(
     var creatingPlaylist by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
 
-    // 兜底：从任何入口进入曲库页，只要已授权且本地曲库为空就自动扫一次。
-    LaunchedEffect(Unit) { viewModel.autoScanIfEmpty() }
-
     val deniedText = stringResource(R.string.permission_denied)
     val playNextText = stringResource(R.string.action_play_next)
     val queuedText = stringResource(R.string.action_add_to_queue)
     val removedText = stringResource(R.string.action_remove_from_library)
     val favoritesText = stringResource(R.string.action_favorite)
     val alreadyText = stringResource(R.string.playlist_added_none)
+    val quickDoneText = stringResource(R.string.playlist_quick_done)
+    val quickDupText = stringResource(R.string.playlist_quick_duplicate)
     val resetDoneText = stringResource(R.string.library_reset_done)
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -411,6 +409,11 @@ fun LibraryScreen(
             },
             onRemove = { viewModel.remove(track); onMessage(removedText) },
             onAddToPlaylist = { playlistTarget = listOf(track) },
+            onQuickFavorite = {
+                viewModel.quickFavorite(track) { added ->
+                    onMessage(if (added > 0) quickDoneText else quickDupText)
+                }
+            },
         )
     }
 

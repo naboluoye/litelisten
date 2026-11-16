@@ -1,11 +1,25 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.8（曲库管理测试版：重置 / 按文件夹 / 自建歌单）** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.8 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.8) ｜ [v2.0.5（正式版，推荐稳定使用）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.7](https://github.com/naboluoye/litelisten/releases/tag/v2.0.7) ｜ [v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) ｜ [v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v2.0.2](https://github.com/naboluoye/litelisten/releases/tag/v2.0.2) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.0.9（体验优化测试版：不自动扫描 / 歌单不丢 / 时长筛选 / 三语）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.0.9 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.9) ｜ [v2.0.8](https://github.com/naboluoye/litelisten/releases/tag/v2.0.8) ｜ [v2.0.5（正式版，推荐稳定使用）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.7](https://github.com/naboluoye/litelisten/releases/tag/v2.0.7) ｜ [v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) ｜ [v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
-> 零账号、零广告、零遥测；本地/局域网音乐播放与曲库管理全程离线。可选的联网功能只有两个，都必须由你**主动点击**才发一次请求：播放页「AI 介绍」（v2.0.6 起）与歌词页「AI 讲解歌词」（v2.0.7 起），不点就完全离线；服务配置由构建期注入，仓库与文档不含任何服务信息。
+> 零账号、零广告、零遥测；本地/局域网音乐播放与曲库管理全程离线。可选的联网功能都必须由你**主动点击**才发一次请求：播放页「AI 介绍」（v2.0.6 起）、歌词页「AI 讲解歌词」（v2.0.7 起）、歌词页「AI 联网搜歌词」（v2.0.9 起），不点就完全离线；服务配置由构建期注入，仓库与文档不含任何服务信息。
 
-**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是**稳定的正式版**；v2.0.6 增加播放页「AI 介绍」按钮；v2.0.7 让歌词更准、能跟着唱、AI 能讲歌词；**v2.0.8 是曲库管理测试版：一键重置重扫、按文件夹整理、自建歌单并按歌单播放**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是**稳定的正式版**；v2.0.6 增加播放页「AI 介绍」按钮；v2.0.7 让歌词更准、能跟着唱、AI 能讲歌词；v2.0.8 是曲库管理测试版：一键重置重扫、按文件夹整理、自建歌单并按歌单播放；**v2.0.9 是体验优化测试版：不再自动扫描、歌单不再莫名消失、加歌单更省事、时长筛选、简繁英三语、DLNA 连接修复、歌词页可搜歌词**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.0.9 新增（测试版 · 体验优化）
+
+| 改进 | 说明 |
+|---|---|
+| 不再自动扫描 | 关掉全部三处「曲库一空就自动全盘扫描」的入口。装好后请你自己点「扫描本机音乐」，扫多扫少完全由你决定，不再一进来就灌满 |
+| 歌单不再消失 | 修掉一个真 bug：以前重建索引会物理删除曲目，歌单只存 id 就变成"悬空引用"、打开即空。现在歌单条目会同时存一份歌曲快照（歌名/歌手/播放地址），曲目暂时对不上时用快照显示，歌不会凭空消失；重建索引也改为增量替换 |
+| 加歌单更省事 | 单曲菜单新增「一键收藏」——一步就加进固定的「我喜欢的」歌单，不用再新建、命名、选目标 |
+| 时长筛选 | 设置 → 曲库新增「最短时长 / 最长时长」（0=不限）。几十秒的提示音、超长的录音可从扫描中排除。**改完需重新扫描曲库才生效**，歌单里已有的歌不受影响 |
+| 三语 | 界面按手机系统语言自动切换简体中文 / 繁体中文 / English，没有手动切换项（跟随系统即可） |
+| DLNA 修复 | 添加 DLNA 服务器报「HTTP 500 服务器拒绝」的问题：/browse 请求做了协议兼容并自动重试；失败会给出针对性提示和明确的「返回」按钮，不再卡在错误页退不出去 |
+| 搜索歌词 | 歌词页新增搜索入口：①「搜索本地歌词」——输入一句词，在已存进曲库的歌词里找出是哪首歌（纯离线）；②「用 AI 联网搜索」——只有点它才发一次请求，按当前歌曲找歌词，结果明确标注"AI 生成请核对"，可一键存为手动歌词 |
+
+边界说明（如实）：AI 是凭记忆生成歌词，**不保证与原唱一致**，请核对后再用；本版仍不做联网自动抓歌词站（红线与版权）。本地歌词搜索只能查到已存进曲库的歌词，没存过的歌搜不到。
 
 ### v2.0.8 新增（测试版 · 曲库管理）
 
@@ -96,7 +110,7 @@
 
 | 问题 | 影响 | 修复 |
 |---|---|---|
-| 授权成功后不自动扫描 | 装完打开曲库一直是空的，必须自己找到「扫描」按钮 —— 正是上一版实机退货的复现路径 | 授权回调、冷启动、进入曲库页三处都会检查「已授权且本地曲库为空」并自动建库 |
+| 授权成功后不自动扫描 | 装完打开曲库一直是空的，必须自己找到「扫描」按钮 —— 正是上一版实机退货的复现路径 | 授权回调、冷启动、进入曲库页三处都会检查「已授权且本地曲库为空」并自动建库（**注：v2.0.9 起按用户要求已全部关闭自动扫描，改为手动**） |
 | WebDAV 二级目录路径丢父层级 | 进入子文件夹后点歌 404、整目录导入路径错位 | `href` 统一相对 `config.url` 的 path 计算，与 SMB 累积路径坐标系对齐 |
 | 只认 IP / `.local`，短主机名被当公网拦截 | 填 `nas`、`DISKSTATION` 这类常见设备名时测试连接必失败 | 短主机名先解析，全部地址落在私网段才放行；解析到公网仍拒绝 |
 | 冷启动网络源异步恢复时的竞态 | 从曲库点已入库的 SMB / WebDAV 歌曲偶发失败或 401 | 播放网络曲目与恢复队列前等待 hydrate 完成（带超时兜底） |
@@ -105,12 +119,12 @@
 
 ---
 
-## 扫码下载（v2.0.8 测试版）
+## 扫码下载（v2.0.9 测试版）
 
-![轻听 v2.0.8 扫码下载](docs/qr-download.png)
+![轻听 v2.0.9 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.8/LiteListen-v2.0.8.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.8](https://github.com/naboluoye/litelisten/releases/tag/v2.0.8)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.9/LiteListen-v2.0.9.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.0.9](https://github.com/naboluoye/litelisten/releases/tag/v2.0.9)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -120,7 +134,7 @@
 
 | 模块 | 实际功能 |
 |---|---|
-| 本机曲库 | 首次进入申请读取音频权限；扫描 MediaStore 全部音乐，过滤系统音/0 字节/短音频（可开关）；按**歌曲 / 专辑 / 艺术家 / 文件夹 / 歌单**五视图浏览，支持排序、升降序、按来源筛选、一键重置 |
+| 本机曲库 | 首次进入申请读取音频权限；**手动**扫描 MediaStore 音乐，过滤系统音/0 字节，并可按最短/最长时长筛选（v2.0.9）；按**歌曲 / 专辑 / 艺术家 / 文件夹 / 歌单**五视图浏览，支持排序、升降序、按来源筛选、一键重置 |
 | 目录扫描 | 「⋮ → 扫描指定文件夹」选一个文件夹，通过 SAF 递归索引（不修改、不删除用户文件）；曲库页常驻「重新扫描」按钮，随时可重扫 |
 | 自建歌单 | 新建 / 重命名 / 删除歌单；单曲、整张专辑、整个文件夹都能一次加入；歌单详情可播放全部、随机播放、移出单曲；队列页可「载入歌单」替换队列 |
 | 播放 | Media3 `MediaSessionService` 后台播放，通知栏 / 锁屏 / 蓝牙按键控制；队列拖拽与删除、随机、单曲/列表循环、0.5–2× 倍速、10 秒快进退、睡眠定时（最后 10 秒淡出）、杀进程后恢复队列与进度；**无缝播放**（跳过首尾静音）与 **ReplayGain 响度均衡**（按标签拉平音量，只压低不放大） |
@@ -137,7 +151,7 @@
 
 ## 2. 上手四步（用户视角）
 
-1. **装好打开**：首次启动是 3 页引导，完成后按提示授予「读取音频」权限；**授权成功即自动扫描本机音乐**，曲库直接就有歌，不用再找扫描按钮。
+1. **装好打开**：首次启动是 3 页引导，完成后按提示授予「读取音频」权限；授权后**不会自动扫描**，请自己点曲库页「扫描本机音乐」（v2.0.9 起不再擅自全盘扫描，扫多扫少由你决定）。
 2. **想重扫或只加某个目录**：曲库页右上角的 ⟳ 是重新扫描，空曲库时也有「扫描本机音乐」按钮；「⋮ → 扫描指定文件夹」可只索引一个目录。扫描到一半想推倒重来，用「⋮ → 清空曲库（重置）」，清空后可以重新扫或按文件夹一个个加。
 3. **整理成歌单**：「歌单」标签新建歌单 → 回「歌曲 / 专辑 / 文件夹」长按某首歌（或点专辑页、文件夹页的「加入歌单」）把歌收进去；播放时在队列页右上角「载入歌单」，整单按你的顺序播放。
 4. **加网络服务器**：底部「来源」页**进入即自动扫描本机 Wi-Fi 子网**，「发现的设备」里会列出开着文件共享的电脑 / NAS 和 Jellyfin 媒体服务器；点右侧「添加」会带着 IP 跳到添加向导。**先填用户名和密码**（就是你在 NAS / Jellyfin 上设置的账号），再点「自动查找共享」选共享名，最后「测试连接」→「保存」。保存后进目录即可播放，或「加入曲库」整目录导入，之后在「搜索」页就能搜到服务器里的歌。也可以右上角 ＋ 手动添加 SMB / WebDAV / Jellyfin。
@@ -148,17 +162,18 @@
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.8）
+## 3. 已真实跑通的验证（v2.0.9）
 
 | 项目 | 结果 |
 |---|---|
 | `./gradlew :app:assembleDebug` | ✅ BUILD SUCCESSFUL |
-| `./gradlew :app:testDebugUnitTest` | ✅ **15 个测试类 / 89 条用例，0 失败**（本轮新增文件夹路径归一化 10 条单测） |
+| `./gradlew :app:testDebugUnitTest` | ✅ **16 个测试类 / 95 条用例，0 失败**（本轮新增时长筛选 6 条单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error |
-| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.8](https://github.com/naboluoye/litelisten/releases/tag/v2.0.8) |
+| 三语资源合并（values / values-zh-rTW / values-en） | ✅ 446 条全部覆盖，占位符零不匹配 |
+| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.9](https://github.com/naboluoye/litelisten/releases/tag/v2.0.9) |
 | `apksigner verify --verbose`（云端流水线） | ✅ 沿用同一把 RSA 4096 密钥，证书 SHA-256 `cc7b03e7…e7ac`，与 v1.0.0 一致，可覆盖升级 |
 | `ci_guard.py --check all` / `--check apk` | ✅ PASS，合并后 Manifest 权限仍为 11 项主动申请 + 2 项已审计库注入（**未新增麦克风权限**） |
-| GitHub Actions `CI` / `Release` | tag `v2.0.8` 触发签名发版，结果见仓库 Actions |
+| GitHub Actions `CI` / `Release` | tag `v2.0.9` 触发签名发版，结果见仓库 Actions |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -217,9 +232,9 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 ### 每次发版 SOP
 
 ```bash
-python3 scripts/bump_version.py 2.0.8     # versionCode 自动 +1
-git add version.properties && git commit -m "release: 2.0.8"
-git tag -a v2.0.8 -m "Release 2.0.8"
+python3 scripts/bump_version.py 2.0.9     # versionCode 自动 +1
+git add version.properties && git commit -m "release: 2.0.9"
+git tag -a v2.0.9 -m "Release 2.0.9"
 git push origin main --tags               # 推 tag 后 release.yml 自动跑
 ```
 
@@ -288,7 +303,7 @@ litelisten/
 ├─ docs/{qr-download.png, qr-download-card.png}  扫码下载图（随版本更新）
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
-├─ version.properties                          versionCode=10 / versionName=2.0.8
+├─ version.properties                          versionCode=11 / versionName=2.0.9
 ├─ app/proguard-rules.pro                      R8 / kotlinx.serialization 规则
 └─ app/src/main/java/com/litelisten/player/
    ├─ core/{model, common, designsystem, database, datastore, network, scan, player}

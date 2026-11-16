@@ -1,9 +1,13 @@
 package com.litelisten.player.data.repository
 
+import android.content.Context
+import com.litelisten.player.R
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.litelisten.player.core.database.PlaylistDao
 import com.litelisten.player.core.database.PlaylistEntity
 import com.litelisten.player.core.database.PlaylistTrackEntity
 import com.litelisten.player.core.database.TrackDao
+import com.litelisten.player.core.database.snapshotTrack
 import com.litelisten.player.core.database.toModel
 import com.litelisten.player.core.model.Playlist
 import com.litelisten.player.core.model.Track
@@ -20,12 +24,17 @@ import javax.inject.Singleton
 class PlaylistRepository @Inject constructor(
     private val dao: PlaylistDao,
     private val trackDao: TrackDao,
+    @ApplicationContext private val context: Context,
 ) {
     fun playlists(): Flow<List<Playlist>> = dao.observeAll().map { rows ->
         rows.map { Playlist(id = it.id, name = it.name, trackCount = it.trackCount, createdAt = it.createdAt) }
     }
 
-    /** 曲目按 playlist_tracks.position 排序；已从曲库删掉的歌自动跳过。 */
+    /**
+     * 曲目按 playlist_tracks.position 排序。
+     * 曲目记录暂时对不上（重新扫描 / 来源移除导致 id 变化）时，用条目里的快照还原，
+     * 歌不会「凭空消失」；快照也为空的老数据才跳过。
+     */
     fun tracks(playlistId: Long): Flow<List<Track>> =
         dao.observeEntries(playlistId).mapLatest { entries ->
             if (entries.isEmpty()) return@mapLatest emptyList()
@@ -33,7 +42,9 @@ class PlaylistRepository @Inject constructor(
             val byId = entries.map { it.trackId }.chunked(400)
                 .flatMap { ids -> trackDao.byIds(ids) }
                 .associateBy { it.id }
-            entries.mapNotNull { entry -> byId[entry.trackId]?.toModel() }
+            entries.mapNotNull { entry ->
+                byId[entry.trackId]?.toModel() ?: entry.snapshotTrack()
+            }
         }
 
     fun playlist(playlistId: Long): Flow<Playlist?> = dao.observePlaylist(playlistId).map { row ->
@@ -73,10 +84,38 @@ class PlaylistRepository @Inject constructor(
         tracks.forEach { track ->
             if (!existing.add(track.id)) return@forEach
             position += 1
-            rows.add(PlaylistTrackEntity(playlistId, track.id, position, now))
+            rows.add(
+                PlaylistTrackEntity(
+                    playlistId = playlistId,
+                    trackId = track.id,
+                    position = position,
+                    addedAt = now,
+                    snapTitle = track.title,
+                    snapArtist = track.artist,
+                    snapAlbum = track.album,
+                    snapUri = track.uri,
+                    snapPath = track.path,
+                    snapSourceType = track.sourceType.name,
+                    snapSourceId = track.sourceId,
+                    snapDurationMs = track.durationMs,
+                    snapMimeType = track.mimeType,
+                )
+            )
         }
         if (rows.isNotEmpty()) dao.insertEntries(rows)
         return rows.size
+    }
+
+    /**
+     * 一键收藏：确保存在一个固定名的「我喜欢的」歌单，把歌曲直接加进去。
+     * 名字固定所以重复调用只会复用同一个歌单，不会每次新建。
+     */
+    suspend fun quickFavorite(tracks: List<Track>): Int {
+        if (tracks.isEmpty()) return 0
+        val name = context.getString(R.string.playlist_quick_name)
+        val existing = dao.all().firstOrNull { it.name == name }
+        val id = existing?.id ?: create(name)
+        return addTracks(id, tracks)
     }
 
     suspend fun count(): Int = dao.count()

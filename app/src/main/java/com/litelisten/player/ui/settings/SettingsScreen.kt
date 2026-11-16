@@ -170,6 +170,26 @@ fun SettingsScreen(
             stringResource(R.string.settings_show_short_audio),
             prefs[SettingsKeys.SHOW_SHORT_AUDIO_KEY] ?: false,
         ) { viewModel.set(SettingsKeys.SHOW_SHORT_AUDIO_KEY, it) }
+        ValueRow(
+            stringResource(R.string.settings_min_duration),
+            stringResource(
+                R.string.settings_duration_value,
+                prefs[SettingsKeys.MIN_DURATION_SEC_KEY] ?: 30,
+            ),
+        ) { dialog = "min_duration" }
+        ValueRow(
+            stringResource(R.string.settings_max_duration),
+            stringResource(
+                R.string.settings_duration_max_value,
+                prefs[SettingsKeys.MAX_DURATION_SEC_KEY] ?: 0,
+            ),
+        ) { dialog = "max_duration" }
+        Text(
+            stringResource(R.string.settings_duration_notice),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+        )
 
         SectionHeader(title = stringResource(R.string.settings_group_network))
         SwitchRow(
@@ -294,6 +314,28 @@ fun SettingsScreen(
             onDismiss = { dialog = null },
             onSelect = { value ->
                 viewModel.set(SettingsKeys.CACHE_LIMIT_MB_KEY, value as Int)
+                dialog = null
+            },
+        )
+        "min_duration" -> ChoiceDialog(
+            title = stringResource(R.string.settings_min_duration),
+            options = listOf(0, 10, 20, 30, 60, 120).map {
+                stringResource(R.string.settings_duration_value, it) to it
+            },
+            onDismiss = { dialog = null },
+            onSelect = { value ->
+                viewModel.set(SettingsKeys.MIN_DURATION_SEC_KEY, value as Int)
+                dialog = null
+            },
+        )
+        "max_duration" -> ChoiceDialog(
+            title = stringResource(R.string.settings_max_duration),
+            options = listOf(0, 180, 600, 1200, 3600, 7200).map {
+                stringResource(R.string.settings_duration_max_value, it) to it
+            },
+            onDismiss = { dialog = null },
+            onSelect = { value ->
+                viewModel.set(SettingsKeys.MAX_DURATION_SEC_KEY, value as Int)
                 dialog = null
             },
         )

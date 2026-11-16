@@ -6,6 +6,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +23,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -158,6 +162,12 @@ fun LyricsScreen(
     }
 
     var showPaste by remember { mutableStateOf(false) }
+    var showSearchChoice by remember { mutableStateOf(false) }
+    var searchMode by remember { mutableStateOf<SearchMode?>(null) } // LOCAL / AI
+    var searchQuery by remember { mutableStateOf("") }
+    var localHits by remember { mutableStateOf<List<com.litelisten.player.core.model.Track>>(emptyList()) }
+    var localSearched by remember { mutableStateOf(false) }
+    val aiSearchState by playerViewModel.aiLyricsSearch.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -169,6 +179,12 @@ fun LyricsScreen(
             onNavigateUp = onBack,
         ) {
             if (track != null) {
+                IconButton(onClick = { showSearchChoice = true }) {
+                    Icon(
+                        Icons.Filled.Search,
+                        contentDescription = stringResource(R.string.lyrics_search),
+                    )
+                }
                 TextButton(onClick = { lyricsViewModel.setSingAlong(!singAlong) }) {
                     Text(
                         text = stringResource(R.string.lyrics_sing_along),
@@ -281,6 +297,184 @@ fun LyricsScreen(
     }
 
     LyricsAiDialog(state = aiState, onDismiss = { playerViewModel.resetLyricsExplanation() })
+
+    if (showSearchChoice) {
+        AlertDialog(
+            onDismissRequest = { showSearchChoice = false },
+            title = { Text(stringResource(R.string.lyrics_search)) },
+            text = {
+                Column {
+                    TextButton(
+                        onClick = {
+                            showSearchChoice = false
+                            searchQuery = ""
+                            localHits = emptyList()
+                            localSearched = false
+                            searchMode = SearchMode.LOCAL
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.lyrics_search_local)) }
+                    TextButton(
+                        onClick = {
+                            showSearchChoice = false
+                            searchMode = SearchMode.AI
+                            track?.let { playerViewModel.requestLyricsSearch(it) }
+                        },
+                        enabled = playerViewModel.aiEnabled,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.lyrics_search_ai)) }
+                    Text(
+                        stringResource(R.string.lyrics_search_ai_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSearchChoice = false }) {
+                    Text(stringResource(R.string.action_close))
+                }
+            },
+        )
+    }
+
+    if (searchMode == SearchMode.LOCAL) {
+        LocalLyricsSearchDialog(
+            query = searchQuery,
+            onQuery = { searchQuery = it },
+            hits = localHits,
+            searched = localSearched,
+            onSearch = {
+                localSearched = true
+                lyricsViewModel.searchLocal(searchQuery) { localHits = it }
+            },
+            onPick = { hit ->
+                searchMode = null
+                playerViewModel.play(hit)
+            },
+            onDismiss = { searchMode = null },
+        )
+    }
+
+    if (searchMode == SearchMode.AI) {
+        LyricsAiSearchDialog(
+            state = aiSearchState,
+            onDismiss = { searchMode = null; playerViewModel.resetLyricsSearch() },
+            onSave = { text ->
+                track?.let { current ->
+                    lyricsViewModel.attachText(current.id, text) { ok ->
+                        if (ok) {
+                            onMessage(context.getString(R.string.lyrics_search_ai_saved))
+                            searchMode = null
+                            playerViewModel.resetLyricsSearch()
+                        } else {
+                            onMessage(context.getString(R.string.lyrics_paste_failed))
+                        }
+                    }
+                }
+            },
+        )
+    }
+}
+
+private enum class SearchMode { LOCAL, AI }
+
+@Composable
+private fun LocalLyricsSearchDialog(
+    query: String,
+    onQuery: (String) -> Unit,
+    hits: List<com.litelisten.player.core.model.Track>,
+    searched: Boolean,
+    onSearch: () -> Unit,
+    onPick: (com.litelisten.player.core.model.Track) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.lyrics_search_local)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = onQuery,
+                    singleLine = true,
+                    placeholder = { Text(stringResource(R.string.lyrics_search_query_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (searched) {
+                    if (hits.isEmpty()) {
+                        Text(
+                            stringResource(R.string.search_no_result, query),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    } else {
+                        Column(modifier = Modifier.heightIn(max = 320.dp).padding(top = 8.dp)) {
+                            hits.forEach { hit ->
+                                TextButton(onClick = { onPick(hit) }, modifier = Modifier.fillMaxWidth()) {
+                                    Text(hit.title + (hit.displayArtist?.let { " · $it" } ?: ""))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onSearch) { Text(stringResource(R.string.search_title)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
+    )
+}
+
+@Composable
+private fun LyricsAiSearchDialog(
+    state: AiLyricsState,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.lyrics_search_ai)) },
+        text = {
+            Column {
+                when (state) {
+                    AiLyricsState.Loading -> Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.width(24.dp).height(24.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.lyrics_search_ai_loading))
+                    }
+                    is AiLyricsState.Success -> {
+                        Text(
+                            stringResource(R.string.lyrics_search_ai_warning),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        Text(
+                            state.text,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .heightIn(max = 360.dp)
+                                .verticalScroll(rememberScrollState())
+                                .padding(top = 8.dp),
+                        )
+                    }
+                    is AiLyricsState.Failure -> Text(
+                        aiErrorRes(state.code).let { stringResource(it) },
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    AiLyricsState.Idle -> Unit
+                }
+            }
+        },
+        confirmButton = {
+            if (state is AiLyricsState.Success) {
+                TextButton(onClick = { onSave(state.text) }) {
+                    Text(stringResource(R.string.lyrics_search_ai_save))
+                }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
+    )
 }
 
 @Composable

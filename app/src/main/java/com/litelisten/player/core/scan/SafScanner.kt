@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import com.litelisten.player.core.common.DurationFilter
 import com.litelisten.player.core.common.MimeTypes
 import com.litelisten.player.core.common.Pinyin
 import com.litelisten.player.core.database.TrackEntity
@@ -22,11 +23,16 @@ class SafScanner @Inject constructor(
     /** 同一个目录树必须复用同一个 sourceId，空目录时也要能定位到旧记录。 */
     fun sourceId(treeUri: Uri): String = "saf:" + sha1(treeUri.toString())
 
-    suspend fun scan(treeUri: Uri, onProgress: (Int) -> Unit): List<TrackEntity> {
+    suspend fun scan(
+        treeUri: Uri,
+        onProgress: (Int) -> Unit,
+        minMs: Long = 0L,
+        maxMs: Long = 0L,
+    ): List<TrackEntity> {
         val sourceId = sourceId(treeUri)
         val root = DocumentFile.fromTreeUri(context, treeUri) ?: return emptyList()
         val result = ArrayList<TrackEntity>()
-        walk(root, sourceId, "", 0, result, onProgress)
+        walk(root, sourceId, "", 0, result, onProgress, minMs, maxMs)
         onProgress(result.size)
         return result
     }
@@ -38,6 +44,8 @@ class SafScanner @Inject constructor(
         depth: Int,
         out: MutableList<TrackEntity>,
         onProgress: (Int) -> Unit,
+        minMs: Long,
+        maxMs: Long,
     ) {
         if (depth > 12) return
         val children = runCatching { dir.listFiles() }.getOrDefault(emptyArray())
@@ -46,11 +54,12 @@ class SafScanner @Inject constructor(
             val relativePath = if (relativeDir.isEmpty()) name else "$relativeDir/$name"
             if (child.isDirectory) {
                 if (name.startsWith(".") || name.equals("Android", true)) continue
-                walk(child, sourceId, relativePath, depth + 1, out, onProgress)
+                walk(child, sourceId, relativePath, depth + 1, out, onProgress, minMs, maxMs)
                 yield()
             } else if (MimeTypes.isSupported(name)) {
                 val uri = child.uri.toString()
                 val meta = readMetadata(uri, name)
+                if (!DurationFilter.keep(meta.durationMs, minMs, maxMs)) continue
                 val entity = TrackEntity(
                     id = "saf:" + sha1(uri),
                     sourceId = sourceId,

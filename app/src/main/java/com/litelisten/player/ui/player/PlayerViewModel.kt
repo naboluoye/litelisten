@@ -78,6 +78,22 @@ class PlayerViewModel @Inject constructor(
         _aiLyricsState.value = AiLyricsState.Idle
     }
 
+    private val _aiLyricsSearch = MutableStateFlow<AiLyricsState>(AiLyricsState.Idle)
+    val aiLyricsSearch: StateFlow<AiLyricsState> = _aiLyricsSearch.asStateFlow()
+
+    /** 联网搜歌词：只在用户点「用 AI 联网搜索」时发一次请求，不点绝不联网。 */
+    fun requestLyricsSearch(track: Track) {
+        if (_aiLyricsSearch.value is AiLyricsState.Loading) return
+        _aiLyricsSearch.value = AiLyricsState.Loading
+        viewModelScope.launch {
+            _aiLyricsSearch.value = aiIntro.searchLyrics(track)
+        }
+    }
+
+    fun resetLyricsSearch() {
+        _aiLyricsSearch.value = AiLyricsState.Idle
+    }
+
     fun play(track: Track, context: List<Track> = listOf(track)) {
         viewModelScope.launch { controller.play(track, context) }
     }

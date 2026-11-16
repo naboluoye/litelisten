@@ -35,6 +35,14 @@ class LyricsViewModel @Inject constructor(
 
     suspend fun load(track: Track?): LoadedLyrics = repository.loadAuto(track)
 
+    /** 本地歌词全文搜索（离线），回调命中曲目。 */
+    fun searchLocal(query: String, onResult: (List<Track>) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val tracks = repository.searchLocal(query)
+            withContext(Dispatchers.Main) { onResult(tracks) }
+        }
+    }
+
     fun attach(trackId: String, uri: Uri, onResult: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val ok = repository.attachFile(trackId, uri)

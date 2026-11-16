@@ -1,17 +1,14 @@
 package com.litelisten.player.core.scan
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import androidx.annotation.StringRes
-import androidx.core.content.ContextCompat
 import com.litelisten.player.R
 import com.litelisten.player.core.database.LyricsDao
 import com.litelisten.player.core.database.LyricsEntity
 import com.litelisten.player.core.database.TrackDao
 import com.litelisten.player.core.database.TrackEntity
+import com.litelisten.player.core.common.DurationFilter
 import com.litelisten.player.core.datastore.SettingsKeys
 import com.litelisten.player.core.datastore.SettingsRepository
 import com.litelisten.player.core.metadata.MediaTags
@@ -55,15 +52,11 @@ class LibraryScanner @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
     private var currentJob: Job? = null
-    /** 用户主动「重置」后置真：避免下次进入曲库页把刚清空的库又自动扫回来。 */
-    @Volatile private var autoScanBlocked = false
     private val _state = MutableStateFlow<ScanState>(ScanState.Idle)
     val state: StateFlow<ScanState> = _state.asStateFlow()
 
     /** 所有入口统一从设置读取「显示短音频」，避免不同页面扫描结果不一致。 */
     fun scanLocal() {
-        // 用户手动扫描是明确的意愿，先解除「重置后不自动扫」的抑制。
-        autoScanBlocked = false
         currentJob?.cancel()
         currentJob = scope.launch {
             val showShort = settings.observe(SettingsKeys.SHOW_SHORT_AUDIO_KEY, false).first()
@@ -75,29 +68,12 @@ class LibraryScanner @Inject constructor(
      * 装完第一次授权后自动扫一次：曲库为空时不等用户自己去找「扫描」按钮。
      * 权限与「本地曲库是否为空」两个条件都在内部判断，调用点可以无条件、重复调用。
      */
-    fun scanLocalIfEmpty() {
-        if (autoScanBlocked) return
-        if (_state.value is ScanState.Running) return
-        if (!hasAudioPermission()) return
-        currentJob?.cancel()
-        currentJob = scope.launch {
-            val existing = runCatching { trackDao.countLocal() }.getOrDefault(-1)
-            if (existing > 0) return@launch
-            val showShort = settings.observe(SettingsKeys.SHOW_SHORT_AUDIO_KEY, false).first()
-            mutex.withLock { runScanLocked(showShort) }
-        }
-    }
-
-    private fun hasAudioPermission(): Boolean {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_AUDIO
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
-        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-    }
-
-    /** 重建索引：先全量重扫，成功后才清空并替换，扫描失败不会留下空曲库。 */
+    /**
+     * 重建索引：全量重扫后增量替换。
+     * 关键：不能物理 deleteAll——那会让歌单里只存 id 的条目变成悬空引用。
+     * replace() 对消失的曲目用 markUnavailable 软删除（保留行与 id），
+     * 再加上歌单条目的快照，双重保证歌单里的歌不凭空消失。
+     */
     fun rebuild() {
         currentJob?.cancel()
         currentJob = scope.launch {
@@ -105,10 +81,10 @@ class LibraryScanner @Inject constructor(
             mutex.withLock {
                 _state.value = ScanState.Running(0, 0)
                 runCatching {
-                    val scanned = mediaStoreScanner.scan(showShort) { count ->
+                    val (minMs, maxMs) = durationRange()
+                    val scanned = mediaStoreScanner.scan(showShort, { count ->
                         _state.value = ScanState.Running(count, count)
-                    }
-                    trackDao.deleteAll()
+                    }, minMs, maxMs)
                     replace("local", scanned.map { it.entity })
                     _state.value = ScanState.Done(scanned.size)
                     fillArtwork(scanned)
@@ -127,9 +103,10 @@ class LibraryScanner @Inject constructor(
             mutex.withLock {
                 runCatching {
                     _state.value = ScanState.Running(0, 0)
-                    val items = safScanner.scan(treeUri) { count ->
+                    val (minMs, maxMs) = durationRange()
+                    val items = safScanner.scan(treeUri, { count ->
                         _state.value = ScanState.Running(count, count)
-                    }
+                    }, minMs, maxMs)
                     // 空目录也要替换：否则用户移走文件后，曲库里仍留着旧记录。
                     replace(safScanner.sourceId(treeUri), items)
                     _state.value = ScanState.Done(items.size)
@@ -156,7 +133,6 @@ class LibraryScanner @Inject constructor(
         currentJob?.cancel()
         mutex.withLock {
             runCatching {
-                autoScanBlocked = true
                 trackDao.deleteAll()
                 lyricsDao.deleteOrphans()
                 lyricsDao.deleteManualOrphans()
@@ -169,12 +145,20 @@ class LibraryScanner @Inject constructor(
         }
     }
 
+    /** 从设置读取时长上下限（毫秒）。MIN 默认 30 秒以延续旧版「过滤短音频」行为，MAX 默认不限。 */
+    private suspend fun durationRange(): Pair<Long, Long> {
+        val minSec = settings.observe(SettingsKeys.MIN_DURATION_SEC_KEY, 30).first()
+        val maxSec = settings.observe(SettingsKeys.MAX_DURATION_SEC_KEY, 0).first()
+        return DurationFilter.secondsToMs(minSec) to DurationFilter.secondsToMs(maxSec)
+    }
+
     private suspend fun runScanLocked(showShort: Boolean) {
         runCatching {
             _state.value = ScanState.Running(0, 0)
-            val scanned = mediaStoreScanner.scan(showShort) { count ->
+            val (minMs, maxMs) = durationRange()
+            val scanned = mediaStoreScanner.scan(showShort, { count ->
                 _state.value = ScanState.Running(count, count)
-            }
+            }, minMs, maxMs)
             replace("local", scanned.map { it.entity })
             _state.value = ScanState.Done(scanned.size)
             fillArtwork(scanned)

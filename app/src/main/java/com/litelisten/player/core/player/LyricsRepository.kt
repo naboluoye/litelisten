@@ -10,6 +10,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.litelisten.player.core.database.LyricsDao
 import com.litelisten.player.core.database.ManualLyricsEntity
 import com.litelisten.player.core.database.TrackDao
+import com.litelisten.player.core.database.toModel
 import com.litelisten.player.core.metadata.TagParseUtil
 import com.litelisten.player.core.model.SourceType
 import com.litelisten.player.core.model.Track
@@ -61,6 +62,17 @@ class LyricsRepository @Inject constructor(
 ) {
     private val _manual = MutableStateFlow<Map<String, List<LyricLine>>>(emptyMap())
     val manual: StateFlow<Map<String, List<LyricLine>>> = _manual.asStateFlow()
+
+    /** 本地歌词全文搜索：按输入的一句词找出曲库里哪些歌存了含这句的歌词。纯离线。 */
+    suspend fun searchLocal(query: String): List<Track> = withContext(Dispatchers.IO) {
+        val q = query.trim()
+        if (q.length < 2) return@withContext emptyList()
+        val ids = runCatching { lyricsDao.searchByContent(q) }.getOrDefault(emptyList())
+        ids.chunked(400)
+            .flatMap { part -> trackDao.byIds(part) }
+            .filter { it.isAvailable }
+            .map { it.toModel() }
+    }
 
     /** SMB 命中的歌词按曲目缓存（进歌词页会反复读），未命中同样记住，避免每首都去探一次。 */
     private val smbHits: MutableMap<String, String> =

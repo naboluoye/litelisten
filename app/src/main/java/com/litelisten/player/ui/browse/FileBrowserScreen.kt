@@ -43,9 +43,16 @@ fun FileBrowserScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val addedText = stringResource(R.string.source_scan_result)
 
-    BackHandler(enabled = state.path.trim('/').isNotEmpty()) {
-        val parent = state.path.trim('/').substringBeforeLast('/', "")
-        viewModel.load(if (parent.isBlank()) "" else "/$parent")
+    // 有上级目录时系统返回键回退一级；已在根目录（含加载失败停留根目录）时直接退出页面，
+    // 避免出错后按返回键没有反应、看似「卡在错误页退不出去」。
+    BackHandler {
+        val trimmed = state.path.trim('/')
+        if (trimmed.isEmpty()) {
+            onBack()
+        } else {
+            val parent = trimmed.substringBeforeLast('/', "")
+            viewModel.load(if (parent.isBlank()) "" else "/$parent")
+        }
     }
 
     LaunchedEffect(state.scanResult) {
@@ -87,8 +94,13 @@ fun FileBrowserScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
             )
-            TextButton(onClick = { viewModel.load(state.path) }, modifier = Modifier.padding(horizontal = spacing.l)) {
-                Text(stringResource(R.string.action_retry))
+            Row(modifier = Modifier.padding(horizontal = spacing.l)) {
+                TextButton(onClick = { viewModel.load(state.path) }) {
+                    Text(stringResource(R.string.action_retry))
+                }
+                TextButton(onClick = onBack) {
+                    Text(stringResource(R.string.action_back))
+                }
             }
         }
         if (state.entries.isEmpty() && !state.loading) {

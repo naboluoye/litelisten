@@ -111,6 +111,15 @@ private fun TrackListPage(
             onInfo = { onMessage(track.path) },
             onRemove = { viewModel.remove(track) },
             onAddToPlaylist = { playlistTarget = listOf(track) },
+            onQuickFavorite = {
+                viewModel.quickFavorite(track) { added ->
+                    onMessage(
+                        context.getString(
+                            if (added > 0) R.string.playlist_quick_done else R.string.playlist_quick_duplicate
+                        )
+                    )
+                }
+            },
         )
     }
 

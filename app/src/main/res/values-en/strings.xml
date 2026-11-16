@@ -1,4 +1,490 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- i18n 预留：留空即回落到 values/strings.xml，P5 再补英文。 -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
+    <string name="app_name">LiteListen</string>
+
+    <!-- 导航 -->
+    <string name="tab_library">Library</string>
+    <string name="tab_sources">Sources</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_settings">Settings</string>
+    <string name="nav_back">Back</string>
+    <string name="nav_close">Collapse</string>
+    <string name="nav_more">More</string>
+
+    <!-- 通用动作 -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">OK</string>
+    <string name="action_ok">Got it</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_back">Back</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_close">Close</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_next">Next</string>
+    <string name="action_start">Get started</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_loading">Loading</string>
+    <string name="action_yes">Yes</string>
+    <string name="action_no">No</string>
+    <string name="settings_value_on">On</string>
+    <string name="settings_value_off">Off</string>
+    <string name="settings_value_default">Default</string>
+
+    <!-- 音乐库 -->
+    <string name="library_title">Library</string>
+    <string name="library_tab_songs">Songs</string>
+    <string name="library_tab_albums">Albums</string>
+    <string name="library_tab_artists">Artists</string>
+    <string name="library_tab_folders">Folders</string>
+    <string name="empty_library_title">No music yet</string>
+    <string name="empty_library_desc">Scan your phone\'s songs, or connect a home NAS</string>
+    <string name="action_scan_local">Scan this device</string>
+    <string name="action_add_server">Add server</string>
+    <string name="action_add_folder">Add folder</string>
+    <string name="action_sort">Sort</string>
+    <string name="action_play_all">Play all</string>
+    <string name="action_favorite">Favorite</string>
+    <string name="action_unfavorite">Unfavorite</string>
+    <string name="action_play_next">Play next</string>
+    <string name="action_add_to_queue">Add to queue</string>
+    <string name="action_track_info">Track info</string>
+    <string name="action_remove_from_library">Remove from library</string>
+    <string name="sort_title">Title</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_duration">Duration</string>
+    <string name="sort_date_added">Date added</string>
+    <string name="sort_last_played">Last played</string>
+    <string name="sort_asc">Ascending</string>
+    <string name="sort_desc">Descending</string>
+    <string name="filter_all">All</string>
+    <string name="library_scan_start">Start scan</string>
+    <string name="library_scanning">Scanning %1$d songs</string>
+    <string name="library_scan_done">Scan complete, %1$d songs</string>
+    <string name="library_scan_failed">Scan failed. Check audio permission and try again</string>
+    <string name="cd_rescan">Rescan this device</string>
+    <string name="library_songs_count">%1$d songs</string>
+    <string name="album_count">%1$d albums · %2$d songs</string>
+    <string name="track_count">%1$d songs</string>
+    <string name="folder_empty">No music in this folder</string>
+    <string name="permission_needed_title">Audio permission needed</string>
+    <string name="permission_needed_desc">LiteListen only reads your music files and never uploads anything.</string>
+    <string name="action_grant">Grant permission</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="permission_denied">No audio permission; can\'t scan this device</string>
+    <string name="library_reindex_done">Clearing and rescanning library…</string>
+    <string name="library_tab_playlists">Playlists</string>
+    <string name="library_folders_empty">No folder info yet. Scan this device, or use the top-right "⋮ → Scan a folder" to add one.</string>
+    <string name="action_scan_folder">Scan a folder</string>
+    <string name="action_reset_library">Clear library (reset)</string>
+    <string name="reset_library_title">Clear the library?</string>
+    <string name="reset_library_message">This clears scanned songs, lyrics, and the song entries in playlists. It never deletes any music on your phone or NAS; playlist names are kept. You can rescan or add folders afterwards.</string>
+    <string name="library_reset_done">Library cleared. You can rescan or add folders</string>
+    <string name="library_reset_failed">Failed to clear library, please retry</string>
+
+    <!-- 歌单 -->
+    <string name="playlist_tab">Playlists</string>
+    <string name="playlist_count">%1$d playlists</string>
+    <string name="playlist_new">New playlist</string>
+    <string name="playlist_quick_name">Favorites</string>
+    <string name="playlist_quick_add">Quick favorite</string>
+    <string name="playlist_quick_done">Added to Favorites</string>
+    <string name="playlist_quick_duplicate">Already in Favorites</string>
+    <string name="playlist_name_hint">Playlist name</string>
+    <string name="playlist_empty">This playlist is empty</string>
+    <string name="playlist_empty_desc">No playlists yet. Open the "Playlists" tab to create one; long-press a song, album, or folder to add them at once.</string>
+    <string name="playlist_add_to">Add to playlist</string>
+    <string name="playlist_add_count">%1$d songs selected</string>
+    <string name="playlist_added">Added to playlist: %1$d songs</string>
+    <string name="playlist_added_none">These songs are already in the playlist</string>
+    <string name="playlist_created">Created playlist "%1$s"</string>
+    <string name="playlist_renamed">Renamed to "%1$s"</string>
+    <string name="playlist_rename">Rename playlist</string>
+    <string name="playlist_delete">Delete playlist</string>
+    <string name="playlist_remove_track">Remove from playlist</string>
+    <string name="playlist_track_removed">Removed from playlist</string>
+    <string name="playlist_shuffle">Shuffle</string>
+    <string name="confirm_delete_playlist">Delete playlist "%1$s"? Only the playlist is removed; no music files are deleted.</string>
+    <string name="queue_load_playlist">Load playlist</string>
+    <string name="queue_load_playlist_hint">This replaces the current queue and plays from the first song.</string>
+    <string name="queue_load_playlist_from_empty">Queue is empty. Load a playlist to start</string>
+    <string name="playlist_loaded">Loaded playlist "%1$s", %2$d songs</string>
+    <string name="album_add_to_playlist">Add whole album</string>
+    <string name="folder_add_to_playlist">Add whole folder</string>
+
+    <!-- 来源 -->
+    <string name="sources_title">Sources</string>
+    <string name="sources_group_local">This device</string>
+    <string name="sources_group_servers">My servers</string>
+    <string name="sources_group_discovered">Discovered devices</string>
+    <string name="sources_local_card">Music on this device</string>
+    <string name="sources_local_card_sub">%1$d songs</string>
+    <string name="sources_placeholder_desc">Connect a NAS or a shared folder on your computer</string>
+    <string name="sources_add_smb">Add SMB server</string>
+    <string name="sources_add_webdav">Add WebDAV</string>
+    <string name="sources_scan_lan">Scan LAN devices</string>
+    <string name="sources_empty_server">No servers added yet</string>
+    <string name="sources_discovering">Searching for LAN devices…</string>
+    <string name="sources_no_device">No devices found. You can add a server manually</string>
+    <string name="sources_discovery_hint">Searches this Wi-Fi network for computer shares, WebDAV, DLNA, and Jellyfin servers. Scanning stays on your local network only.</string>
+    <string name="sources_scan_range">Scan range: %1$s</string>
+    <string name="sources_device_smb">File share · port %1$s</string>
+    <string name="sources_device_webdav">WebDAV · port %1$s</string>
+    <string name="sources_device_dlna">DLNA media server</string>
+    <string name="sources_device_address">Address %1$s</string>
+    <string name="sources_add_shortcut_smb">Add SMB manually</string>
+    <string name="sources_add_shortcut_webdav">Add WebDAV manually</string>
+    <string name="sources_scan_no_wifi">Not on Wi-Fi, can\'t scan the LAN. Connect to Wi-Fi or add a server manually.</string>
+    <string name="sources_scan_no_host">Scan complete, no devices with sharing or media services found. Make sure your phone and computer share the same Wi-Fi and the service is running; for Jellyfin you can tap "+" to add it manually.</string>
+    <string name="action_add_device">Add</string>
+    <string name="action_scan_now">Scan now</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_browse">Browse</string>
+    <string name="action_add_to_library">Add to library</string>
+    <string name="action_remove_from_library_source">Remove from library</string>
+    <string name="action_delete_source">Delete server</string>
+    <string name="confirm_delete_source">Delete "%1$s"? Only the index and saved config are removed; files on the server are untouched.</string>
+    <string name="source_saved">Saved, opening…</string>
+    <string name="source_scan_result">Added %1$d songs to library</string>
+    <string name="source_tracks">%1$d songs</string>
+    <string name="source_status_connected">Connected</string>
+    <string name="source_status_idle">Not connected</string>
+    <string name="source_not_in_library">Not in library</string>
+
+    <!-- 添加服务器向导 -->
+    <string name="add_smb_title">Add SMB server</string>
+    <string name="add_webdav_title">Add WebDAV server</string>
+    <string name="field_name">Name</string>
+    <string name="field_host">Address (IP or device name)</string>
+    <string name="field_port">Port</string>
+    <string name="field_share">Share name</string>
+    <string name="field_username">Username</string>
+    <string name="field_password">Password</string>
+    <string name="field_domain">Domain (optional)</string>
+    <string name="field_base_path">Start path</string>
+    <string name="field_url">Server address (full URL)</string>
+    <string name="field_anonymous">This server needs no login (anonymous)</string>
+    <string name="field_advanced">Advanced options</string>
+    <string name="field_show_password">Show password</string>
+    <string name="action_query_shares">Query shares</string>
+    <string name="action_test_connection">Test connection</string>
+    <string name="test_success">Connected: %1$s</string>
+    <string name="test_failed">Connection failed: %1$s</string>
+    <string name="validation_host_empty">Enter the server address</string>
+    <string name="validation_port_invalid">Port must be 1 to 65535</string>
+    <string name="validation_username_empty">Enter a username, or check "This server needs no login"</string>
+    <string name="validation_url_invalid">Enter a full http:// or https:// address</string>
+    <string name="validation_share_empty">Enter a share name, or tap "Find shares" below</string>
+    <string name="action_detect_shares">Find shares</string>
+    <string name="shares_found_hint">Found these shares, tap one to fill it in:</string>
+    <string name="shares_none_hint">No common share names found; enter it manually. On Windows you can check a folder\'s "Properties → Sharing"; on a NAS see "Shared Folders" in the admin panel.</string>
+    <string name="webdav_https_notice">Self-signed HTTPS certificates aren\'t supported; use a valid certificate or a LAN HTTP address.</string>
+    <string name="digest_not_supported">Digest auth isn\'t supported yet; please use Basic auth.</string>
+
+    <!-- 文件浏览 -->
+    <string name="browser_title">File browser</string>
+    <string name="browser_empty">This folder is empty</string>
+    <string name="browser_unsupported">Unsupported</string>
+    <string name="browser_root">Root</string>
+    <string name="browser_loading">Reading folder…</string>
+    <string name="browser_added_to_library">Added to library</string>
+
+    <!-- 搜索 -->
+    <string name="search_title">Search</string>
+    <string name="search_hint">Search songs, albums, artists, file names</string>
+    <string name="search_recent">Recent searches</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_empty_title">Nothing searched yet</string>
+    <string name="search_empty_desc">Try a song title, artist, or initials</string>
+    <string name="search_no_result">No results for "%1$s"</string>
+    <string name="search_group_songs">Songs</string>
+    <string name="search_group_albums">Albums</string>
+    <string name="search_group_artists">Artists</string>
+    <string name="search_group_folders">Folders</string>
+    <string name="search_group_network">Network results</string>
+    <string name="search_network_pending">Searching %1$s…</string>
+    <string name="search_network_error">%1$s did not respond</string>
+    <string name="search_hint_example">Try: album / artist / file name</string>
+
+    <!-- 播放页 / MiniPlayer -->
+    <string name="player_not_playing">Not playing</string>
+    <string name="player_unknown_artist">Unknown artist</string>
+    <string name="player_previous">Previous</string>
+    <string name="player_play">Play</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_next">Next</string>
+    <string name="player_queue">Queue</string>
+    <string name="player_lyrics">Lyrics</string>
+    <string name="player_equalizer">Sound</string>
+    <string name="player_sleep_timer">Sleep timer</string>
+    <string name="player_more">More</string>
+    <string name="player_shuffle">Shuffle</string>
+    <string name="player_repeat">Repeat mode</string>
+    <string name="player_repeat_off">No repeat</string>
+    <string name="player_repeat_one">Repeat one</string>
+    <string name="player_repeat_all">Repeat all</string>
+    <string name="player_speed">Playback speed</string>
+    <string name="player_speed_value">%1$.2f×</string>
+    <string name="player_sleep_title">Sleep timer</string>
+    <string name="player_sleep_15">15 minutes</string>
+    <string name="player_sleep_30">30 minutes</string>
+    <string name="player_sleep_45">45 minutes</string>
+    <string name="player_sleep_60">60 minutes</string>
+    <string name="player_sleep_90">90 minutes</string>
+    <string name="player_sleep_end_of_track">After this track</string>
+    <string name="player_sleep_cancel">Cancel timer</string>
+    <string name="player_sleep_remaining">%1$d′</string>
+    <string name="player_error_retry">Retry</string>
+    <string name="player_error_unsupported">This audio format isn\'t supported</string>
+    <string name="player_error_missing">File no longer exists</string>
+    <string name="player_error_network">Network disconnected, check your connection</string>
+    <string name="player_error_auth">Wrong username or password</string>
+    <string name="player_error_other">Playback error: %1$s</string>
+    <string name="player_error_not_ready">Player is starting, tap play again</string>
+    <string name="player_buffering">Buffering…</string>
+    <string name="player_track_info">Track info</string>
+    <string name="player_track_info_path">Path: %1$s</string>
+    <string name="player_track_info_format">Format: %1$s</string>
+    <string name="player_track_info_duration">Duration: %1$s</string>
+    <string name="player_track_info_size">Size: %1$s</string>
+
+    <!-- 队列 -->
+    <string name="queue_title">Play queue</string>
+    <string name="queue_now_playing">Now playing</string>
+    <string name="queue_next">Up next: %1$d</string>
+    <string name="queue_empty">Queue is empty</string>
+    <string name="action_clear_queue">Clear queue</string>
+    <string name="action_shuffle_queue">Shuffle queue</string>
+    <string name="queue_removed">Removed · Undo</string>
+    <string name="confirm_clear_queue">Clear the play queue? No music files are deleted.</string>
+
+    <!-- 歌词 -->
+    <string name="lyrics_none">No lyrics</string>
+    <string name="lyrics_none_desc">It auto-matches a same-name .lrc beside the song (local and shared folders), or you can pick, batch import, or paste lyrics.</string>
+    <string name="lyrics_pick">Choose an .lrc file</string>
+    <string name="lyrics_pick_failed">Failed to read lyrics file</string>
+    <string name="lyrics_back_to_current">Back to current</string>
+    <string name="lyrics_import_folder">Import lyrics folder</string>
+    <string name="lyrics_import_result">Matched lyrics for %1$d songs (scanned %2$d .lrc files)</string>
+    <string name="lyrics_import_empty">No matches; check that lyric file names match song names</string>
+    <string name="lyrics_paste">Paste lyrics</string>
+    <string name="lyrics_paste_hint">Copy full lyrics from a web page here. Text with [00:12.30] timestamps scrolls line by line and supports sing-along; plain text is browse-only.</string>
+    <string name="lyrics_paste_placeholder">[00:12.30]First lyric line</string>
+    <string name="lyrics_paste_confirm">Save</string>
+    <string name="lyrics_paste_cancel">Cancel</string>
+    <string name="lyrics_paste_failed">No lyrics detected, check that the content is complete</string>
+    <string name="lyrics_remove_manual">Remove manual lyrics for this song</string>
+    <string name="lyrics_sing_along">Sing along</string>
+    <string name="lyrics_loop_line">Loop one line</string>
+    <string name="lyrics_speed_slow">0.75×</string>
+    <string name="lyrics_speed_mid">0.9×</string>
+    <string name="lyrics_speed_normal">1.0×</string>
+    <string name="lyrics_offset_minus">−0.1 s</string>
+    <string name="lyrics_offset_plus">+0.1 s</string>
+    <string name="lyrics_offset_value">Offset %1$d ms</string>
+    <string name="lyrics_offset_reset">Reset</string>
+    <string name="lyrics_source_manual">Manually imported lyrics</string>
+    <string name="lyrics_source_side_car">Lyrics file beside the song</string>
+    <string name="lyrics_source_shared">Lyrics file in shared folder</string>
+    <string name="lyrics_source_embedded">Embedded lyrics</string>
+
+    <!-- 均衡器 -->
+    <string name="equalizer_title">Equalizer</string>
+    <string name="equalizer_unsupported">Sound effects aren\'t supported on this device</string>
+    <string name="equalizer_enable">Enable sound effects</string>
+    <string name="equalizer_preset">Preset</string>
+    <string name="equalizer_bass">Bass boost</string>
+    <string name="equalizer_bluetooth_notice">Some Bluetooth devices don\'t support sound effects</string>
+    <string name="equalizer_band_label">%1$d Hz · %2$.1f dB</string>
+    <string name="equalizer_preset_flat">Flat</string>
+    <string name="equalizer_preset_rock">Rock</string>
+    <string name="equalizer_preset_pop">Pop</string>
+    <string name="equalizer_preset_jazz">Jazz</string>
+    <string name="equalizer_preset_classical">Classical</string>
+    <string name="equalizer_preset_custom">Custom</string>
+
+    <!-- 设置 -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_group_appearance">Appearance</string>
+    <string name="settings_group_playback">Playback</string>
+    <string name="settings_group_audio">Sound</string>
+    <string name="settings_group_library">Library</string>
+    <string name="settings_group_network">Network</string>
+    <string name="settings_group_about">About</string>
+    <string name="about_credit">Brought to you by Feng Qi Shi. Made for playing your local music — free and ad-free. Use it if you like.</string>
+    <string name="ai_button">AI intro</string>
+    <string name="ai_intro_title">AI song intro</string>
+    <string name="ai_intro_loading">Asking AI, please wait…</string>
+    <string name="ai_section_background">[Song background]</string>
+    <string name="ai_section_artist">[About the artist]</string>
+    <string name="ai_section_lyrics">[Lyrics overview]</string>
+    <string name="ai_section_header_background">Song background</string>
+    <string name="ai_section_header_artist">About the artist</string>
+    <string name="ai_section_header_lyrics">Lyrics overview</string>
+    <string name="ai_intro_system_prompt">You are a music chat assistant inside a music player. Answer in relaxed, colloquial Chinese, like a friend chatting—use short sentences, no academic tone. Reply in exactly three paragraphs, each starting with 【歌曲背景】【演唱者介绍】【歌词简介】. If you\'re unsure, say so; never make things up. Keep all three paragraphs under 300 Chinese characters.</string>
+    <string name="ai_intro_user_question">Please introduce the song "%1$s" (artist: %2$s). Paragraph 1: the song\'s background and style. Paragraph 2: about the artist. Paragraph 3: what the lyrics are about.</string>
+    <string name="ai_intro_message_template">[System] %1$s
+
+[Question] %2$s</string>
+    <string name="ai_error_auth">AI service is misconfigured; please tell the admin</string>
+    <string name="ai_error_rate">Too many questions, wait a minute</string>
+    <string name="ai_error_bad_request">Content too long or badly formatted; please be brief</string>
+    <string name="ai_error_server">AI is tired, try again later</string>
+    <string name="ai_error_network">Network failed, check your connection and retry</string>
+    <string name="ai_error_empty">AI returned nothing, try again later</string>
+    <string name="ai_error_disabled">AI feature not configured</string>
+    <string name="ai_lyrics_button">Explain lyrics with AI</string>
+    <string name="ai_lyrics_title">Lyrics explanation</string>
+    <string name="ai_lyrics_system_prompt">You are a lyrics-explaining assistant inside a music player. Explain in relaxed, colloquial Chinese, like a friend chatting—short sentences, no academic tone. Reply in three paragraphs starting with 【歌词大意】【值得注意的句子】【怎么唱好】: (1) what the whole song is about and how the mood moves; (2) pick two or three key lines and explain their meaning and craft; (3) give two practical sing-along tips such as breathing spots, diction, and emotional emphasis. Don\'t recite the full lyrics, don\'t invent song facts, and say so when unsure.</string>
+    <string name="ai_lyrics_user_question">Please explain the lyrics of "%1$s" (artist: %2$s). Lyrics:
+%3$s</string>
+    <string name="ai_lyrics_user_question_no_text">I don\'t have the original lyrics for "%1$s" (artist: %2$s) right now. Based on what you know, describe roughly what the song is about and how the mood flows, then give two tips for singing it. Never invent specific lyric lines; say so when unsure.</string>
+    <string name="ai_action_close">Close</string>
+    <string name="ai_action_retry">Try again</string>
+    <string name="lyrics_search">Search lyrics</string>
+    <string name="lyrics_search_local">Search local lyrics</string>
+    <string name="lyrics_search_ai">Search online with AI</string>
+    <string name="lyrics_search_ai_hint">Only this option goes online. AI generates lyrics from memory and may not match the original; please verify before use.</string>
+    <string name="lyrics_search_query_hint">Enter a lyric line or keyword</string>
+    <string name="lyrics_search_ai_loading">Asking AI, please wait…</string>
+    <string name="lyrics_search_ai_warning">Generated by AI and may be inaccurate. Please check against the original song.</string>
+    <string name="lyrics_search_ai_save">Save as this song\'s lyrics</string>
+    <string name="lyrics_search_ai_saved">Saved as manual lyrics</string>
+    <string name="lyrics_search_ai_empty">AI returned no lyrics</string>
+    <string name="ai_search_lyrics_system_prompt">You are a lyrics assistant in a music player. Try to output LRC-format lyrics with [mm:ss.xx] timestamps for the given song title and artist. If you can\'t reliably recall the full lyrics, output only the part you\'re sure of and add a line at the end saying "may be incomplete or inaccurate". Never invent lyric lines; say so when unsure. Output only the lyrics, no explanation.</string>
+    <string name="ai_search_lyrics_question">Please give LRC-format lyrics for the song "%1$s" (artist: %2$s), each line starting with [mm:ss.xx].</string>
+    <string name="about_contact_email">Contact email</string>
+    <string name="about_contact_email_value" translatable="false">9336193@qq.com</string>
+    <string name="about_mailto_uri" translatable="false">mailto:9336193@qq.com</string>
+    <string name="about_check_updates">Check for updates</string>
+    <string name="about_check_updates_value">Open the download page for the latest version</string>
+    <string name="about_releases_url" translatable="false">https://github.com/naboluoye/litelisten/releases/latest</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_black">Black</string>
+    <string name="theme_dialog_title">Choose theme</string>
+    <string name="settings_headset_unplug">Pause when unplugging headphones</string>
+    <string name="settings_resume_on_start">Restore queue on startup</string>
+    <string name="settings_auto_play_on_start">Auto-play on startup</string>
+    <string name="settings_skip_on_error">Skip to next on error</string>
+    <string name="settings_fade_enabled">Fade in/out</string>
+    <string name="settings_playback_speed">Playback speed</string>
+    <string name="settings_equalizer">Equalizer</string>
+    <string name="settings_scan_now">Scan this device now</string>
+    <string name="settings_manage_folders">Manage folders</string>
+    <string name="settings_rebuild_index">Rebuild library index</string>
+    <string name="settings_clear_artwork_cache">Clear artwork cache</string>
+    <string name="settings_show_short_audio">Show short audio</string>
+    <string name="settings_min_duration">Minimum duration</string>
+    <string name="settings_max_duration">Maximum duration</string>
+    <string name="settings_duration_value">%1$d s (0 = no limit)</string>
+    <string name="settings_duration_max_value">%1$d s (0 = no limit)</string>
+    <string name="settings_duration_notice">Exclude very short sound bites or very long recordings here. Changes require a rescan to take effect; songs already in playlists aren\'t affected.</string>
+    <string name="settings_wifi_only">Play on Wi-Fi only</string>
+    <string name="settings_connect_timeout">Connection timeout</string>
+    <string name="settings_cache_limit">Cache limit</string>
+    <string name="settings_buffer_seconds">Read-ahead buffer</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_open_licenses">Open-source licenses</string>
+    <string name="settings_export_diagnostics">Export diagnostic log</string>
+    <string name="settings_battery_settings">Background run settings</string>
+    <string name="settings_notifications_off">Notifications are off; turn them on</string>
+    <string name="confirm_rebuild_index">This clears the library index, not your music files. Continue?</string>
+    <string name="settings_cache_cleared">Artwork cache cleared: %1$s</string>
+    <string name="settings_timeout_seconds">%1$d s</string>
+    <string name="settings_cache_mb">%1$d MB</string>
+    <string name="settings_buffer_value">%1$d s</string>
+    <string name="licenses_title">Open-source licenses</string>
+    <string name="licenses_body">Media3 / OkHttp / smbj / jmdns / Coil / TinyPinyin and others use Apache-2.0 or MIT licenses.</string>
+
+    <!-- 引导 -->
+    <string name="onboarding_1_title">Your music, in your hands</string>
+    <string name="onboarding_1_desc">LiteListen only plays music on your phone and on your home LAN NAS—no account, no uploading anything.</string>
+    <string name="onboarding_2_title">Audio permission needed</string>
+    <string name="onboarding_2_desc">Scanning this device asks for audio read permission. You can turn it off anytime in system settings.</string>
+    <string name="onboarding_3_title">Connect your home NAS</string>
+    <string name="onboarding_3_desc">Add an SMB, WebDAV, or Jellyfin server in the "Sources" tab to play music from your computer or NAS without downloading it first.</string>
+
+    <!-- 徽标 / contentDescription -->
+    <string name="badge_local">Local</string>
+    <string name="badge_saf">Folder</string>
+    <string name="badge_smb">SMB</string>
+    <string name="badge_webdav">WEBDAV</string>
+    <string name="badge_dlna">DLNA</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_add">Add</string>
+    <string name="cd_cover">Cover</string>
+    <string name="cd_mini_player">Open now playing</string>
+    <string name="cd_navigate_up">Go back</string>
+    <string name="cd_more">More actions</string>
+    <string name="cd_sort">Sort</string>
+    <string name="cd_folder">Folder</string>
+    <string name="cd_audio_file">Audio file</string>
+    <string name="cd_favorite">Favorite</string>
+
+    <!-- 错误文案 -->
+    <string name="error_network_unreachable">Can\'t reach %1$s. Check that the device is on and on the same Wi-Fi.</string>
+    <string name="error_auth_failed">Wrong username or password, try again.</string>
+    <string name="error_share_not_found">Share "%1$s" not found; it may have been renamed.</string>
+    <string name="error_path_not_found">This folder no longer exists; it may have been moved or deleted.</string>
+    <string name="error_timeout">Connection timed out. The network may be slow; try again later.</string>
+    <string name="error_protocol">The server returned something unrecognized.</string>
+    <string name="error_unsupported">This audio format isn\'t supported.</string>
+    <string name="error_not_found">File no longer exists; skipped to the next track.</string>
+    <string name="error_unknown">Something went wrong and was logged. Retry or view diagnostics.</string>
+    <string name="error_non_lan">Only LAN addresses are supported; public addresses are blocked.</string>
+    <string name="error_no_network">Network unavailable, check Wi-Fi.</string>
+    <string name="error_generic">Something went wrong, please retry.</string>
+    <string name="error_missing_host">No server address entered; enter an IP or device name first.</string>
+    <string name="error_http_code">The server rejected this request (HTTP %1$s). Check the port, path, and permissions.</string>
+    <string name="error_empty_response">The server returned nothing; make sure the address is a share folder, not a web page.</string>
+    <string name="error_not_webdav">This address isn\'t a WebDAV folder; check the port and path and retry.</string>
+    <string name="error_dlna_no_control">This device gave no media directory address; try SMB / WebDAV instead.</string>
+    <string name="error_dlna_no_result">The device\'s folder listing couldn\'t be parsed; it may not support browsing.</string>
+    <string name="error_dlna_rejected">The device is online but rejected this browse request. In Synology "Control Panel → Media Server", confirm the media library is enabled and re-indexed, then retry; or use SMB instead.</string>
+    <string name="error_non_lan_host">Only LAN addresses are supported; enter a private IP like 192.168.x.x.</string>
+    <string name="error_shares_unavailable">Can\'t read this computer\'s share list; enter the share name manually when adding the server.</string>
+    <string name="error_host_unresolved">Can\'t resolve this device name; enter a LAN IP instead (e.g. 192.168.1.10).</string>
+    <string name="error_smb_status">The server denied access (%1$s). Check the share name, account, and permissions.</string>
+    <string name="error_browse_failed">Failed to read the folder (%1$s). Check the address, share name, and permissions, then retry.</string>
+
+    <!-- v2.0.3：Jellyfin 媒体服务器 -->
+    <string name="sources_add_jellyfin">Add Jellyfin media server</string>
+    <string name="sources_add_shortcut_jellyfin">Add Jellyfin</string>
+    <string name="sources_device_jellyfin">Jellyfin media server · port %1$s</string>
+    <string name="add_jellyfin_title">Add Jellyfin server</string>
+    <string name="add_jellyfin_hint">Jellyfin\'s default port is 8096 (8920 for HTTPS). Log in with an account from the server; credentials are stored only on your phone. Songs play from the original server files and aren\'t transcoded.</string>
+    <string name="add_dlna_title">Add DLNA media server</string>
+    <string name="add_dlna_hint">DLNA servers need no login; just tap "Test connection". If it fails, make sure your phone and server are on the same Wi-Fi and AP isolation is off; you can also enter the device\'s control URL manually (like http://192.168.x.x:port/…/Control).</string>
+    <string name="badge_jellyfin">JELLYFIN</string>
+    <string name="add_credentials_title">Login</string>
+    <string name="add_credentials_hint">Most NAS and media servers need a username and password—the ones you set on the computer or server. Fill them in before testing or finding shares.</string>
+    <string name="validation_jellyfin_login">Jellyfin needs an account; enter a username</string>
+    <string name="validation_password_empty">Enter a password, or check "This server needs no login"</string>
+    <string name="error_not_jellyfin">This address isn\'t a Jellyfin server. Confirm the port is 8096 (8920 for HTTPS), not the NAS web home page.</string>
+    <string name="error_jellyfin_auth">Jellyfin returned no login info; check that the username and password are correct and this account may log in.</string>
+
+    <!-- v2.0.3：高保真输出 -->
+    <string name="settings_hifi_output">Hi-Fi output</string>
+    <string name="settings_gapless">Gapless playback</string>
+    <string name="settings_gapless_notice">Skip silence at the start and end of songs for smoother continuous play</string>
+    <string name="settings_replaygain">ReplayGain loudness</string>
+    <string name="settings_replaygain_notice">Even out volume between songs using loudness tags; only lowers, never boosts, so no clipping</string>
+    <string name="settings_hifi_notice">Output audio as 32-bit float so lossless music (FLAC/WAV, 24-bit, 96 kHz+) isn\'t downconverted to 16-bit. With EQ or speed changes audio is still reprocessed—turn off sound effects for the original quality.</string>
+    <string name="player_quality_unknown">Audio</string>
+    <string name="player_quality_spec_full">%1$s · %2$.1f kHz · %3$d bit · %4$d ch</string>
+    <string name="player_quality_spec_basic">%1$s · %2$.1f kHz · %3$d ch</string>
+    <string name="player_quality_hires">Hi-Res</string>
+    <string name="player_quality_lossless">Lossless</string>
+    <string name="player_quality_float">High-precision float output</string>
+
+    <!-- 其它 -->
+    <string name="browser_size_kb">%1$d KB</string>
 </resources>

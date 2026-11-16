@@ -49,8 +49,7 @@ class MainActivity : ComponentActivity() {
             val audioLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestPermission(),
             ) { granted ->
-                // 授权成功立刻自动扫一次：装完就有歌，不用用户自己去找扫描按钮。
-                if (granted) settingsViewModel.autoScanIfEmpty()
+                // 不自动扫描：曲库整理完全由用户主动发起，避免全盘扫描把曲库冲乱。
                 // 两个系统弹窗不能同时发起，音频权限回来后再申请通知权限。
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -69,8 +68,7 @@ class MainActivity : ComponentActivity() {
                     this@MainActivity, audioPermission,
                 ) == PackageManager.PERMISSION_GRANTED
                 if (granted) {
-                    // 已有权限（覆盖升级 / 权限被系统保留）时同样补一次空库扫描。
-                    settingsViewModel.autoScanIfEmpty()
+                    // 已有权限也不自动扫描：只申请通知权限，扫描交给用户在曲库页主动发起。
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         ContextCompat.checkSelfPermission(
                             this@MainActivity, Manifest.permission.POST_NOTIFICATIONS,

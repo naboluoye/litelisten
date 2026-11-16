@@ -106,12 +106,26 @@ data class PlaylistEntity(
     val createdAt: Long,
 )
 
+/**
+ * 歌单条目：除曲目 id 外冗余保存一份入歌单时的关键信息快照。
+ * 曲目记录因重新扫描 / 来源移除而暂时对不上时，用快照继续显示与播放，
+ * 避免歌单里的歌「凭空消失」。老数据这些字段为空，读取时自动跳过。
+ */
 @Entity(tableName = "playlist_tracks", primaryKeys = ["playlistId", "trackId"])
 data class PlaylistTrackEntity(
     val playlistId: Long,
     val trackId: String,
     val position: Int,
     val addedAt: Long,
+    val snapTitle: String = "",
+    val snapArtist: String? = null,
+    val snapAlbum: String? = null,
+    val snapUri: String = "",
+    val snapPath: String = "",
+    val snapSourceType: String = "",
+    val snapSourceId: String = "",
+    val snapDurationMs: Long = 0L,
+    val snapMimeType: String? = null,
 )
 
 data class AlbumRow(

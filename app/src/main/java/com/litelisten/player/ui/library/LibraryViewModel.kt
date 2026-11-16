@@ -66,8 +66,6 @@ class LibraryViewModel @Inject constructor(
 
     fun scanLocal() = scanner.scanLocal()
 
-    fun autoScanIfEmpty() = scanner.scanLocalIfEmpty()
-
     fun addFolder(uri: Uri) = scanner.scanTree(uri)
 
     fun rebuildIndex() = scanner.rebuild()
@@ -95,6 +93,11 @@ class LibraryViewModel @Inject constructor(
     fun addToPlaylist(playlistId: Long, tracks: List<Track>, onDone: (Int) -> Unit) {
         if (tracks.isEmpty()) return
         viewModelScope.launch { onDone(playlistRepository.addTracks(playlistId, tracks)) }
+    }
+
+    /** 一键收藏到「我喜欢的」：省去新建与选歌单的步骤。 */
+    fun quickFavorite(track: Track, onDone: (Int) -> Unit) {
+        viewModelScope.launch { onDone(playlistRepository.quickFavorite(listOf(track))) }
     }
 
     fun play(track: Track, context: List<Track>) {
