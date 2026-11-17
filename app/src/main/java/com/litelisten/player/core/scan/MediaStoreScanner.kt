@@ -82,12 +82,12 @@ class MediaStoreScanner @Inject constructor(
             )
 
             var batch = 0
+            val effectiveMin = if (showShortAudio) 0L else minMs
             while (c.moveToNext()) {
                 val duration = c.getLong(durationCol)
                 val size = c.getLong(sizeCol)
                 val path = c.getString(pathCol).orEmpty()
                 if (size <= 0L) continue
-                val effectiveMin = if (showShortAudio) 0L else minMs
                 if (!DurationFilter.keep(duration, effectiveMin, maxMs)) continue
                 if (isSystemSound(path)) continue
 

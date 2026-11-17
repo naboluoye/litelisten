@@ -1,8 +1,6 @@
 package com.litelisten.player.core.database
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Fts4
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -80,23 +78,6 @@ data class ManualLyricsEntity(
     val trackId: String,
     val content: String,
     val updatedAt: Long,
-)
-
-/**
- * 契约保留的 FTS4 外部内容表定义，当前**未注册进 AppDatabase**、数据库中不建此表。
- * 原因：FTS4 external content 要求内容表用 INTEGER rowid，而 TrackEntity.id 是 String，
- * 注册会直接编译失败；强行改写主键会波及全部 DAO 与播放队列。
- * 实际搜索走 norm 列的 LIKE：中文 / 全拼 / 首字母已拼进同一列，子串即可命中，
- * 且规避了 MATCH 语法注入面。文件名前缀搜索的性能优化留待后续单独处理。
- */
-@Fts4(contentEntity = TrackEntity::class)
-@Entity(tableName = "tracks_fts")
-data class TrackFts(
-    @PrimaryKey @ColumnInfo(name = "rowid") val rowId: Int,
-    val titleNorm: String,
-    val artistNorm: String?,
-    val albumNorm: String?,
-    val path: String,
 )
 
 @Entity(tableName = "playlists")

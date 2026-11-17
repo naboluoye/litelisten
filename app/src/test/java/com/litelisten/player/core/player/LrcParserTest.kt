@@ -36,6 +36,15 @@ class LrcParserTest {
     }
 
     @Test
+    fun parsesLongFractionTimestamps() {
+        // 少数编码器输出 4~6 位小数，统一按前三位换算毫秒，不能整行丢弃。
+        val lines = LrcParser.parse("[00:12.3456]four digits\n[00:20.123456]six digits")
+        assertThat(lines).hasSize(2)
+        assertThat(lines[0].timeMs).isEqualTo(12_345L)
+        assertThat(lines[1].timeMs).isEqualTo(20_123L)
+    }
+
+    @Test
     fun emptyContentProducesNoLines() {
         assertThat(LrcParser.parse("")).isEmpty()
         assertThat(LrcParser.parse("[ti:x]")).isEmpty()

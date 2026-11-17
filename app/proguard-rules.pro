@@ -6,7 +6,6 @@
 # Room
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep @androidx.room.Entity class * { *; }
--dontwarn androidx.room.paging.**
 
 # Hilt / Dagger
 -keep class dagger.hilt.** { *; }
@@ -23,11 +22,6 @@
 # R8 严格模式会把它当 missing class 直接失败；只压制这一类，不关闭混淆。
 -dontwarn javax.el.**
 -dontwarn net.engio.mbassy.dispatch.el.**
-
-# jmdns（P4）
--keep class javax.jmdns.** { *; }
--keep class net.sf.jmDNS.** { *; }
--dontwarn javax.jmdns.**
 
 # kotlinx.serialization
 -keepattributes *Annotation*, InnerClasses

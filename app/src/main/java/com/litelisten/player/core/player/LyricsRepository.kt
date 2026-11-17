@@ -209,32 +209,52 @@ class LyricsRepository @Inject constructor(
     }
 
     private fun readLocalSideCar(track: Track): String? {
-        val lrcName = "${baseNameOf(track.title)}.lrc"
-        directSibling(track, lrcName)?.let { return it }
-        if (track.sourceType == SourceType.LOCAL || track.sourceType == SourceType.SAF) {
-            mediaStoreSibling(track, lrcName)?.let { return it }
+        // 候选歌词名：真实磁盘文件名优先，path 末段其次，title 兜底。
+        // 旧实现只用 title，标题与文件名不一致时（如"晴天" 对应 "周杰伦 - 晴天.flac"）必然匹配失败。
+        val candidates = LinkedHashSet<String>()
+        audioDisplayName(track.uri)?.let { candidates.add(baseNameOf(it) + ".lrc") }
+        val leaf = track.path.substringAfterLast('/')
+        if (leaf.contains('.')) candidates.add(baseNameOf(leaf) + ".lrc")
+        candidates.add(baseNameOf(track.title) + ".lrc")
+
+        for (name in candidates) {
+            if (name.isBlank() || name == ".lrc") continue
+            directSibling(track, name)?.let { return it }
+            if (track.sourceType == SourceType.LOCAL || track.sourceType == SourceType.SAF) {
+                mediaStoreSibling(track, name)?.let { return it }
+            }
         }
         return null
+    }
+
+    /** MediaStore 音频条目的真实文件名（DISPLAY_NAME），用于推导同名 .lrc。 */
+    private fun audioDisplayName(audioUri: String): String? {
+        val uri = runCatching { Uri.parse(audioUri) }.getOrNull() ?: return null
+        return context.contentResolver.query(
+            uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null,
+        )?.use { cursor ->
+            if (!cursor.moveToFirst()) return null
+            val index = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+            if (index < 0) null else cursor.getString(index)
+        }
     }
 
     /** 有真实绝对路径时直接找同目录同名文件；读不到就返回 null，不抛异常。 */
     private fun directSibling(track: Track, lrcName: String): String? {
         val path = track.path
         if (path.isBlank()) return null
-        val candidates = ArrayList<File>()
-        if (path.startsWith("/")) {
-            candidates.add(File(path).parentFile?.let { File(it, lrcName) } ?: return null)
+        val file = if (path.startsWith("/")) {
+            File(File(path).parentFile ?: return null, lrcName)
         } else {
-            candidates.add(
-                File(Environment.getExternalStorageDirectory(), "${path.trimEnd('/')}/$lrcName"),
-            )
-            // MediaStore 的 RELATIVE_PATH 常包含首级目录，补一次常见的 Music 前缀猜测。
-            candidates.add(File(Environment.getExternalStorageDirectory(), "Music/${path.trimEnd('/')}/$lrcName"))
+            // SAF 的 path 末段是文件名而非目录，不能拿外部存储根目录去拼；
+            // MediaStore Q+ 的 RELATIVE_PATH 才是相对外部存储的目录（如 Music/周杰伦/）。
+            if (track.sourceType == SourceType.SAF) return null
+            val relative = path.trimEnd('/')
+            if (relative.isEmpty()) return null
+            File(Environment.getExternalStorageDirectory(), "$relative/$lrcName")
         }
-        return candidates.firstNotNullOfOrNull { file ->
-            runCatching { if (file.isFile && file.canRead()) decode(file.readBytes()) else null }
-                .getOrNull()
-        }?.takeIf { it.isNotBlank() }
+        return runCatching { if (file.isFile && file.canRead()) decode(file.readBytes()) else null }
+            .getOrNull()?.takeIf { it.isNotBlank() }
     }
 
     /** 通过 MediaStore.Files 找同名 .lrc；系统不返回非媒体文件时自动降级到手动选择。 */

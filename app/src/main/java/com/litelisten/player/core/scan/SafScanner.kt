@@ -99,7 +99,7 @@ class SafScanner @Inject constructor(
 
     private fun readMetadata(uri: String, fileName: String): Meta {
         val fallbackTitle = fileName.substringBeforeLast('.', fileName)
-            .replace(Regex("^\\d{1,3}[\\s._-]+"), "").ifBlank { fileName }
+            .replace(TRACK_NO_PREFIX, "").ifBlank { fileName }
         val retriever = MediaMetadataRetriever()
         return runCatching {
             retriever.setDataSource(context, Uri.parse(uri))
@@ -123,4 +123,9 @@ class SafScanner @Inject constructor(
     private fun sha1(input: String): String =
         MessageDigest.getInstance("SHA-1").digest(input.toByteArray())
             .joinToString("") { "%02x".format(it) }
+
+    private companion object {
+        /** 去掉文件名开头的曲目序号（如 "03 晴天" → "晴天"）。 */
+        val TRACK_NO_PREFIX = Regex("^\\d{1,3}[\\s._-]+")
+    }
 }

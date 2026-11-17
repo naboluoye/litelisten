@@ -1,6 +1,5 @@
 package com.litelisten.player.data.repository
 
-import androidx.paging.PagingData
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.litelisten.player.core.common.FolderPaths
 import com.litelisten.player.core.database.AlbumRow
@@ -21,9 +20,6 @@ import javax.inject.Singleton
 class TrackRepositoryImpl @Inject constructor(
     private val dao: TrackDao,
 ) : TrackRepository {
-    override fun tracks(sort: SortKey, order: SortOrder, sourceId: String?): Flow<PagingData<Track>> =
-        allTracks(sort, order, sourceId).map { PagingData.from(it) }
-
     /** 列表走 Room Flow + LazyColumn(key=id)；排序片段只来自枚举，不拼接用户输入。 */
     fun allTracks(sort: SortKey, order: SortOrder, sourceId: String?): Flow<List<Track>> =
         dao.observeSorted(buildQuery(sort, order, sourceId))

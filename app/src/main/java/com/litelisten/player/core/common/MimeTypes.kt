@@ -22,6 +22,7 @@ object MimeTypes {
 
     /** 无损容器的扩展名；用于音质标签，不决定是否可播放。 */
     private val lossless = setOf("flac", "wav", "aiff", "aif", "alac")
+    private val losslessMime = setOf("audio/flac", "audio/wav", "audio/aiff")
 
     private val labels = mapOf(
         "audio/flac" to "FLAC",
@@ -54,9 +55,7 @@ object MimeTypes {
     }
 
     fun isLosslessMime(mimeType: String?): Boolean =
-        mimeType != null && mimeType.lowercase(Locale.ROOT) in setOf(
-            "audio/flac", "audio/wav", "audio/aiff",
-        )
+        mimeType != null && mimeType.lowercase(Locale.ROOT) in losslessMime
 
     /** 高于 CD 规格（16 bit / 44.1 kHz）即视为高解析。 */
     fun isHiRes(sampleRateHz: Int?, bitDepth: Int?): Boolean =

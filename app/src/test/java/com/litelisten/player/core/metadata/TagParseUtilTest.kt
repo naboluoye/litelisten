@@ -59,6 +59,12 @@ class TagParseUtilTest {
         assertNull(tags.lyrics)
     }
 
+    @Test
+    fun looksSyncedAcceptsLongFractionStamps() {
+        assertTrue(TagParseUtil.looksSynced("[00:12.3456]line"))
+        assertTrue(TagParseUtil.looksSynced("[01:02:03]frame-based stamp"))
+    }
+
     // ---------- MP3 / ID3v2 ----------
 
     @Test

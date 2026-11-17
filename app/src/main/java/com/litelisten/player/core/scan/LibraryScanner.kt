@@ -11,7 +11,6 @@ import com.litelisten.player.core.database.TrackEntity
 import com.litelisten.player.core.common.DurationFilter
 import com.litelisten.player.core.datastore.SettingsKeys
 import com.litelisten.player.core.datastore.SettingsRepository
-import com.litelisten.player.core.metadata.MediaTags
 import com.litelisten.player.core.metadata.TagParseUtil
 import com.litelisten.player.data.repository.PlaylistRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,7 +25,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -110,6 +108,8 @@ class LibraryScanner @Inject constructor(
                     // 空目录也要替换：否则用户移走文件后，曲库里仍留着旧记录。
                     replace(safScanner.sourceId(treeUri), items)
                     _state.value = ScanState.Done(items.size)
+                    // SAF 来源同样要解析内嵌歌词 / ReplayGain（以前完全漏掉）。
+                    fillTags(items)
                 }.onFailure { error ->
                     if (error is kotlinx.coroutines.CancellationException) throw error
                     _state.value = ScanState.Failed(R.string.library_scan_failed)
@@ -191,25 +191,31 @@ class LibraryScanner @Inject constructor(
         seen.forEach { (albumId, uri) ->
             artworkCache.extract(albumId, uri)?.let { keys[albumId] = it }
         }
+        // 直接用扫描得到的 entity 回填，不再逐条 byId 查库（原来是每首一次 DB 往返）。
         scanned.mapNotNull { item ->
             val key = keys[item.albumId] ?: return@mapNotNull null
-            trackDao.byId(item.entity.id)?.let { it.copy(artworkKey = key) }
+            item.entity.copy(artworkKey = key)
         }.chunked(500).forEach { chunk -> trackDao.upsertAll(chunk) }
     }
 
     /**
-     * 本地文件（有绝对路径的）低优先级补齐 ReplayGain 与内嵌歌词。
-     * 只做有界读取，解析失败按无标签处理；远程来源（Jellyfin/SMB 等）暂不解析。
+     * 低优先级补齐 ReplayGain 与内嵌歌词。
+     *
+     * 关键修复：一律通过 content uri 读取文件头，不再用 File(path)。
+     * Android 10+ 的 MediaStore 只给 RELATIVE_PATH（相对目录，不以 / 开头，也不是完整文件路径），
+     * SAF 给的是 content uri 且 path 是相对所选目录——两种都不是可 File 打开的绝对路径。
+     * 旧实现 `path.startsWith("/")` 把所有 Q+ 曲目都挡掉，导致 lyrics 表从未写入。
+     * 用 uri + ContentResolver 则本地 / SAF 都能稳定读取，且有界，不触碰用户文件。
+     * 远程来源（Jellyfin/SMB/WebDAV/DLNA）没有本地 uri，跳过（其歌词走在线/同目录路径）。
      */
     private suspend fun fillTags(entities: List<TrackEntity>) {
         val updated = ArrayList<TrackEntity>()
         val lyricsRows = ArrayList<LyricsEntity>()
         entities.forEach { entity ->
-            val path = entity.path
-            if (path.isBlank() || !path.startsWith("/")) return@forEach
-            val file = File(path)
-            if (!file.isFile) return@forEach
-            val tags = runCatching { TagParseUtil.parse(file) }.getOrDefault(MediaTags())
+            val format = tagFormat(entity) ?: return@forEach
+            val cap = if (format == "flac") FLAC_HEAD_CAP else ID3_HEAD_CAP
+            val head = readHead(entity.uri, cap) ?: return@forEach
+            val tags = TagParseUtil.parse(head, format)
             if (!tags.hasTags) return@forEach
             var row = entity
             tags.replayGainDb?.let { row = row.copy(replayGainDb = it) }
@@ -224,7 +230,38 @@ class LibraryScanner @Inject constructor(
         lyricsDao.deleteOrphans()
     }
 
+    /** 只处理可本地读取的容器；扩展名优先，MIME 兜底。 */
+    private fun tagFormat(entity: TrackEntity): String? {
+        val ext = entity.path.substringAfterLast('.', "").lowercase()
+        if (ext == "flac" || ext == "mp3") return ext
+        return when {
+            entity.mimeType?.contains("flac", ignoreCase = true) == true -> "flac"
+            entity.mimeType?.contains("mpeg", ignoreCase = true) == true -> "mp3"
+            else -> null
+        }
+    }
+
+    /** 通过 content uri 有界读取文件头；远程 http uri 一律跳过。 */
+    private fun readHead(uriString: String, cap: Int): ByteArray? {
+        if (!uriString.startsWith("content://")) return null
+        val uri = runCatching { Uri.parse(uriString) }.getOrNull() ?: return null
+        return runCatching {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                val buffer = ByteArray(cap)
+                var total = 0
+                while (total < cap) {
+                    val n = input.read(buffer, total, cap - total)
+                    if (n <= 0) break
+                    total += n
+                }
+                if (total > 0) buffer.copyOf(total) else null
+            }
+        }.getOrNull()
+    }
+
     private companion object {
         const val LYRICS_MAX_CHARS = 65536
+        const val FLAC_HEAD_CAP = 1 shl 20
+        const val ID3_HEAD_CAP = 4 shl 20
     }
 }

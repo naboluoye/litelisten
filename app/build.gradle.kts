@@ -147,11 +147,9 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.google.material)
     implementation(libs.core.splashscreen)
-    implementation(libs.palette)
 
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.session)
-    implementation(libs.media3.ui)
     implementation(libs.media3.common)
     implementation(libs.media3.datasource.okhttp)
 
@@ -161,24 +159,17 @@ dependencies {
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    implementation(libs.room.paging)
     ksp(libs.room.compiler)
-    implementation(libs.paging.runtime)
-    implementation(libs.paging.compose)
     implementation(libs.datastore.preferences)
 
     implementation(libs.coil.compose)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.work.runtime.ktx)
-    implementation(libs.security.crypto)
     implementation(libs.timber)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    // P3/P4/P6 才会真正调用，P0 先锁定版本确保解析通过。
     implementation(libs.smbj)
-    implementation(libs.jmdns)
     implementation(libs.tinypinyin)
     runtimeOnly(libs.slf4j.nop)
 

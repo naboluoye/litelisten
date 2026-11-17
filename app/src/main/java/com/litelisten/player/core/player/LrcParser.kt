@@ -24,12 +24,21 @@ data class LyricLine(
  * 非法行直接跳过。解析完成后统一回填行尾时间与逐字时长，供卡拉 OK 式染色与单句循环使用。
  */
 object LrcParser {
-    private val tagRegex = Regex("\\[(\\d{1,3}):(\\d{1,2})(?:[.:](\\d{1,3}))?]")
-    private val wordTagRegex = Regex("<(\\d{1,3}):(\\d{1,2})(?:[.:](\\d{1,3}))?>")
+    // 小数位放宽到 1~6 位：少数编码器会输出 [00:12.3456]，统一取前 3 位换算成毫秒。
+    private val tagRegex = Regex("\\[(\\d{1,3}):(\\d{1,2})(?:[.:](\\d{1,6}))?]")
+    private val wordTagRegex = Regex("<(\\d{1,3}):(\\d{1,2})(?:[.:](\\d{1,6}))?>")
     private val offsetRegex = Regex("\\[offset:\\s*([+-]?\\d+)\\s*]", RegexOption.IGNORE_CASE)
     private val metaRegex = Regex("\\[(ti|ar|al|by|re|ve):.*?]", RegexOption.IGNORE_CASE)
 
     private const val ESTIMATED_WORD_MS = 220L
+
+    /** 小数部分换算毫秒：1 位=百位，2 位=十位，>=3 位取前三位。 */
+    private fun fractionMs(raw: String): Long = when {
+        raw.isEmpty() -> 0L
+        raw.length == 1 -> raw.toLongOrNull()?.times(100) ?: 0L
+        raw.length == 2 -> raw.toLongOrNull()?.times(10) ?: 0L
+        else -> raw.take(3).toLongOrNull() ?: 0L
+    }
 
     fun parse(content: String): List<LyricLine> {
         val offset = offsetRegex.find(content)?.groupValues?.get(1)?.toLongOrNull() ?: 0L
@@ -43,13 +52,7 @@ object LrcParser {
             matches.forEach { match ->
                 val minutes = match.groupValues[1].toLongOrNull() ?: return@forEach
                 val seconds = match.groupValues[2].toLongOrNull() ?: return@forEach
-                val fractionRaw = match.groupValues[3]
-                val fraction = when (fractionRaw.length) {
-                    0 -> 0L
-                    1 -> fractionRaw.toLongOrNull()?.times(100) ?: 0L
-                    2 -> fractionRaw.toLongOrNull()?.times(10) ?: 0L
-                    else -> fractionRaw.take(3).toLongOrNull() ?: 0L
-                }
+                val fraction = fractionMs(match.groupValues[3])
                 val time = (minutes * 60_000L + seconds * 1000L + fraction - offset).coerceAtLeast(0L)
                 lines.add(buildLine(time, body, offset))
             }
@@ -111,13 +114,6 @@ object LrcParser {
     private fun parseWordTime(match: MatchResult): Long? {
         val minutes = match.groupValues[1].toLongOrNull() ?: return null
         val seconds = match.groupValues[2].toLongOrNull() ?: return null
-        val fractionRaw = match.groupValues[3]
-        val fraction = when (fractionRaw.length) {
-            0 -> 0L
-            1 -> fractionRaw.toLongOrNull()?.times(100) ?: 0L
-            2 -> fractionRaw.toLongOrNull()?.times(10) ?: 0L
-            else -> fractionRaw.take(3).toLongOrNull() ?: 0L
-        }
-        return minutes * 60_000L + seconds * 1000L + fraction
+        return minutes * 60_000L + seconds * 1000L + fractionMs(match.groupValues[3])
     }
 }

@@ -23,17 +23,30 @@ class SearchRepositoryImpl @Inject constructor(
             return@flow
         }
         val tokens = Pinyin.searchTokens(trimmed)
-        var local: List<Track> = emptyList()
-        tokens.forEachIndexed { index, token ->
+        // 多词搜索取交集：用 Set 的 id 求交替代 O(n×m) 的 list.any 线性扫描；
+        // 只查询一次每个 token，首个结果保留顺序用于展示。
+        var firstHits: List<Track> = emptyList()
+        var commonIds: Set<String>? = null
+        tokens.forEach { token ->
             val hits = tracks.search(token, 200)
-            local = if (index == 0) hits else local.filter { candidate -> hits.any { it.id == candidate.id } }
+            if (commonIds == null) firstHits = hits
+            val ids = hits.mapTo(HashSet(hits.size)) { it.id }
+            commonIds = if (commonIds == null) ids else commonIds!! intersect ids
         }
+        val finalIds = commonIds ?: emptySet()
+        val local: List<Track> = firstHits.filter { it.id in finalIds }
+
         val lowered = trimmed.lowercase()
+        // normalize 含拼音转换，预计算一次，别在 filter 谓词里对每个 token 重复算。
+        fun matches(name: String): Boolean {
+            val norm = Pinyin.normalize(name)
+            return name.lowercase().contains(lowered) || tokens.any { norm.contains(it) }
+        }
         val albums: List<Album> = runCatching { tracks.albums().first() }.getOrDefault(emptyList())
-            .filter { it.name.lowercase().contains(lowered) || tokens.any { t -> Pinyin.normalize(it.name).contains(t) } }
+            .filter { matches(it.name) }
             .take(20)
         val artists: List<Artist> = runCatching { tracks.artists().first() }.getOrDefault(emptyList())
-            .filter { it.name.lowercase().contains(lowered) || tokens.any { t -> Pinyin.normalize(it.name).contains(t) } }
+            .filter { matches(it.name) }
             .take(20)
         emit(SearchResult(localTracks = local.take(100), localAlbums = albums, localArtists = artists))
     }

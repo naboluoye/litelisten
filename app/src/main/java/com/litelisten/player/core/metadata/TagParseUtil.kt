@@ -21,7 +21,7 @@ object TagParseUtil {
     private const val FLAC_READ_CAP = 1 shl 20
     private const val ID3_READ_CAP = 4 shl 20
     private val gainRegex = Regex("^([+-]?\\d+(?:\\.\\d+)?)\\s*d?B?$", RegexOption.IGNORE_CASE)
-    private val lrcStampRegex = Regex("\\[\\d{1,3}:\\d{1,2}(?:[.:]\\d{1,3})?]")
+    private val lrcStampRegex = Regex("\\[\\d{1,3}:\\d{1,2}(?:[.:]\\d{1,6})?]")
 
     fun parse(file: File): MediaTags = runCatching {
         when (file.extension.lowercase()) {

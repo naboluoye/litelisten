@@ -5,7 +5,6 @@ import java.util.Locale
 
 object Pinyin {
     private val whitespace = Regex("\\s+")
-    private val ftsSpecial = Regex("[\"*()\\-:^]")
     private const val MAX_NORM = 200
 
     /** 输出 原名|全拼|首字母，三个变体同列，LIKE 子串即可命中。 */
@@ -23,20 +22,6 @@ object Pinyin {
         }.lowercase(Locale.ROOT)
         val compact = raw.replace(whitespace, "")
         return listOf(compact, full, initials).distinct().joinToString("|").take(MAX_NORM)
-    }
-
-    fun normalizeLower(input: String): String = input.lowercase(Locale.ROOT).replace(whitespace, "")
-
-    /** FTS4 MATCH 串：先按空白分词再加引号与前缀通配符，防止特殊字符注入。 */
-    fun buildFtsQuery(input: String): String {
-        val tokens = input.lowercase(Locale.ROOT)
-            .replace(ftsSpecial, " ")
-            .split(whitespace)
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .distinct()
-        if (tokens.isEmpty()) return ""
-        return tokens.joinToString(" OR ") { "\"$it\"*" }
     }
 
     /** 空格分词后每个词都能命中（AND 语义由调用方逐词过滤实现）。 */

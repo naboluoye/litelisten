@@ -5,5 +5,4 @@ data class PlayableMedia(
     val uri: String,
     val headers: Map<String, String> = emptyMap(),
     val mimeType: String? = null,
-    val isSeekable: Boolean = true,
 )
