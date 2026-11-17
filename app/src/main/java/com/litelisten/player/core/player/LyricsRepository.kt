@@ -158,12 +158,20 @@ class LyricsRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             val keys = runCatching { trackDao.lyricKeys() }.getOrDefault(emptyList())
             if (keys.isEmpty()) return@withContext LyricsImportResult(0, 0)
-            val byName = HashMap<String, MutableList<String>>()
-            keys.forEach { key ->
-                val normalized = LyricsNaming.normalize(key.title)
-                if (normalized.isNotEmpty()) {
-                    byName.getOrPut(normalized) { ArrayList() }.add(key.id)
-                }
+            // 每首歌生成多级候选名（真实文件名 / path 末段 / 标题），统一归一化后建索引；
+            // 旧实现只索引 title，标题与文件名不一致（如带歌手前缀）时必然匹配失败。
+            data class Indexed(val id: String, val candidates: List<String>)
+            val indexed = keys.map { key ->
+                val display = audioDisplayName(key.uri)
+                val leaf = key.path.substringAfterLast('/')
+                Indexed(
+                    key.id,
+                    LyricsNaming.songCandidates(
+                        display ?: "",
+                        if (leaf.contains('.')) leaf else "",
+                        key.title,
+                    ),
+                )
             }
             val root = runCatching { DocumentFile.fromTreeUri(context, treeUri) }.getOrNull()
                 ?: return@withContext LyricsImportResult(0, 0)
@@ -176,13 +184,15 @@ class LyricsRepository @Inject constructor(
             files.forEachIndexed { index, doc ->
                 val name = doc.name.orEmpty()
                 if (!name.endsWith(".lrc", ignoreCase = true)) return@forEachIndexed
-                val ids = byName[LyricsNaming.normalize(name.substringBeforeLast('.'))]
-                    ?: return@forEachIndexed
+                val lyricBase = name.substringBeforeLast('.')
+                val hitIds = indexed.filter { LyricsNaming.matches(lyricBase, it.candidates) }
+                    .map { it.id }
+                if (hitIds.isEmpty()) return@forEachIndexed
                 val text = readDocument(doc.uri) ?: return@forEachIndexed
                 if (!TagParseUtil.looksSynced(text)) return@forEachIndexed
                 if (LrcParser.parse(text).isEmpty()) return@forEachIndexed
-                ids.forEach { id -> batch.add(ManualLyricsEntity(id, text, now)) }
-                matched += ids.size
+                hitIds.forEach { id -> batch.add(ManualLyricsEntity(id, text, now)) }
+                matched += hitIds.size
                 if (batch.size >= 40) {
                     runCatching { lyricsDao.upsertManual(batch) }
                     batch.clear()
@@ -227,6 +237,36 @@ class LyricsRepository @Inject constructor(
         return null
     }
 
+    /**
+     * 为系统文件选择器提供初始目录：把歌曲所在的 RELATIVE_PATH（如 Music/周杰伦/）
+     * 转成 externalstorage documents provider 的 tree uri，让用户打开选择器时
+     * 直接落在歌曲所在文件夹，而不是每次都从「最近」开始、找不到同目录歌词。
+     * 仅对本机 MediaStore 歌曲有效；网络来源或解析失败时返回 null（退回默认目录）。
+     */
+    fun initialFolderUri(track: Track): Uri? {
+        if (track.sourceType != SourceType.LOCAL) return null
+        val audioUri = runCatching { Uri.parse(track.uri) }.getOrNull() ?: return null
+        val relative = context.contentResolver.query(
+            audioUri, arrayOf(MediaStore.MediaColumns.RELATIVE_PATH), null, null, null,
+        )?.use { cursor ->
+            if (!cursor.moveToFirst()) {
+                null
+            } else {
+                val index = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
+                if (index >= 0) cursor.getString(index) else null
+            }
+        }?.takeIf { it.isNotBlank() }
+            ?: return null
+        val folderId = relative.trimEnd('/')
+        if (folderId.isEmpty()) return null
+        // ACTION_OPEN_DOCUMENT 的 EXTRA_INITIAL_URI 要的是 document uri（非 tree uri）。
+        // document id 中的 / 与中文都需编码，否则部分 ROM 会认为 URI 非法。
+        val encodedId = Uri.encode("primary:$folderId")
+        return Uri.parse(
+            "content://com.android.externalstorage.documents/document/$encodedId",
+        )
+    }
+
     /** MediaStore 音频条目的真实文件名（DISPLAY_NAME），用于推导同名 .lrc。 */
     private fun audioDisplayName(audioUri: String): String? {
         val uri = runCatching { Uri.parse(audioUri) }.getOrNull() ?: return null
@@ -257,7 +297,12 @@ class LyricsRepository @Inject constructor(
             .getOrNull()?.takeIf { it.isNotBlank() }
     }
 
-    /** 通过 MediaStore.Files 找同名 .lrc；系统不返回非媒体文件时自动降级到手动选择。 */
+    /**
+     * 通过 MediaStore.Files 找同名 .lrc。
+     * 旧实现要求 RELATIVE_PATH 与歌曲完全相等且 DISPLAY_NAME 完全一致，条件太苛刻：
+     * 部分 ROM 不返回 RELATIVE_PATH、歌词名带序号或歌手前缀时就永远找不到。
+     * 现在按文件名变体匹配、同目录优先，仍失败再降级到手动选择。
+     */
     private fun mediaStoreSibling(track: Track, lrcName: String): String? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
         val audioUri = runCatching { Uri.parse(track.uri) }.getOrNull() ?: return null
@@ -265,29 +310,59 @@ class LyricsRepository @Inject constructor(
             MediaStore.MediaColumns.RELATIVE_PATH,
             MediaStore.MediaColumns.DISPLAY_NAME,
         )
-        val folder = context.contentResolver.query(audioUri, projection, null, null, null)?.use { cursor ->
-            if (!cursor.moveToFirst()) return null
-            val index = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
-            if (index < 0) return null
-            cursor.getString(index).orEmpty()
-        } ?: return null
-        if (folder.isBlank()) return null
-        val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} = ? AND " +
-            "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
+        val (folder, _) = context.contentResolver.query(audioUri, projection, null, null, null)
+            ?.use { cursor ->
+                if (!cursor.moveToFirst()) {
+                    "" to ""
+                } else {
+                    val fi = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
+                    val di = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                    (if (fi >= 0) cursor.getString(fi).orEmpty() else "") to
+                        (if (di >= 0) cursor.getString(di).orEmpty() else "")
+                }
+            } ?: ("" to "")
+
+        val lyricBase = LyricsNaming.baseName(lrcName)
+        // 用 .lrc 结尾先粗筛，再在 Kotlin 侧用变体匹配，避免 SQL LIKE 转义中文/标点的坑。
         val files = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        val found = context.contentResolver.query(
-            files,
-            arrayOf(MediaStore.MediaColumns._ID),
-            selection,
-            arrayOf(folder, lrcName),
-            null,
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-            } else null
-        } ?: return null
+        val candidates = runCatching {
+            context.contentResolver.query(
+                files,
+                arrayOf(
+                    MediaStore.MediaColumns._ID,
+                    MediaStore.MediaColumns.DISPLAY_NAME,
+                    MediaStore.MediaColumns.RELATIVE_PATH,
+                ),
+                "${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?",
+                arrayOf("%.lrc"),
+                null,
+            )?.use { cursor ->
+                val out = ArrayList<Pair<Long, Boolean>>() // id to sameFolder
+                val idCol = cursor.getColumnIndex(MediaStore.MediaColumns._ID)
+                val nameCol = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                val relCol = cursor.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
+                if (idCol < 0 || nameCol < 0) return@use out
+                var scanned = 0
+                while (cursor.moveToNext() && scanned < MEDIA_LRC_SCAN_CAP) {
+                    scanned++
+                    val display = cursor.getString(nameCol).orEmpty()
+                    if (!LyricsNaming.matches(
+                            LyricsNaming.baseName(display),
+                            listOf(lyricBase),
+                        )
+                    ) continue
+                    val rel = if (relCol >= 0) cursor.getString(relCol).orEmpty() else ""
+                    val same = folder.isNotBlank() && rel.equals(folder, ignoreCase = true)
+                    out.add(cursor.getLong(idCol) to same)
+                }
+                out
+            }
+        }.getOrDefault(emptyList()) ?: emptyList()
+        if (candidates.isEmpty()) return null
+        // 同目录优先，其次任意一个同名 .lrc。
+        val chosen = candidates.firstOrNull { it.second }?.first ?: candidates.first().first
         return runCatching {
-            context.contentResolver.openInputStream(ContentUris.withAppendedId(files, found))
+            context.contentResolver.openInputStream(ContentUris.withAppendedId(files, chosen))
                 ?.use { decode(it.readBytes()) }
         }.getOrNull()?.takeIf { it.isNotBlank() }
     }
@@ -381,5 +456,6 @@ class LyricsRepository @Inject constructor(
         const val MAX_IMPORT_FILES = 20_000
         const val MAX_DIR_DEPTH = 8
         const val SMB_CACHE_SIZE = 32
+        const val MEDIA_LRC_SCAN_CAP = 5000
     }
 }

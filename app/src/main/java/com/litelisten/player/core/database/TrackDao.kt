@@ -13,8 +13,8 @@ interface TrackDao {
     @RawQuery(observedEntities = [TrackEntity::class])
     fun observeSorted(query: SupportSQLiteQuery): Flow<List<TrackEntity>>
 
-    /** 批量导入歌词时只需 id 与标题，避免把整张表实体读进内存。 */
-    @Query("SELECT id, title FROM tracks WHERE isAvailable = 1")
+    /** 批量导入歌词时只需 id、标题与来源路径，避免把整张表实体读进内存。 */
+    @Query("SELECT id, title, uri, path FROM tracks WHERE isAvailable = 1")
     suspend fun lyricKeys(): List<TrackLyricKey>
 
     @Query("SELECT * FROM tracks WHERE id = :id")
@@ -96,5 +96,10 @@ interface TrackDao {
     suspend fun deleteAll()
 }
 
-/** 歌词匹配用的轻量投影。 */
-data class TrackLyricKey(val id: String, val title: String)
+/** 歌词匹配用的轻量投影：title + uri/path 推导的真实文件名，多级候选都要用。 */
+data class TrackLyricKey(
+    val id: String,
+    val title: String,
+    val uri: String,
+    val path: String,
+)

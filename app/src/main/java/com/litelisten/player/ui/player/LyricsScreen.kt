@@ -1,5 +1,6 @@
 package com.litelisten.player.ui.player
 
+import android.content.Intent
 import android.os.SystemClock
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -137,9 +138,9 @@ fun LyricsScreen(
     }
 
     val pickFile = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        val uri = result.data?.data ?: return@rememberLauncherForActivityResult
         val current = track ?: return@rememberLauncherForActivityResult
         lyricsViewModel.attach(current.id, uri) { ok ->
             if (!ok) onMessage(context.getString(R.string.lyrics_pick_failed))
@@ -216,7 +217,21 @@ fun LyricsScreen(
             EmptyLyrics(
                 artworkKey = track?.artworkKey,
                 hasManual = hasManual,
-                onPickFile = { pickFile.launch(arrayOf("*/*")) },
+                onPickFile = {
+                    lyricsViewModel.initialFolderUri(track) { folder ->
+                        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "*/*"
+                            if (folder != null) {
+                                putExtra(
+                                    android.provider.DocumentsContract.EXTRA_INITIAL_URI,
+                                    folder,
+                                )
+                            }
+                        }
+                        pickFile.launch(intent)
+                    }
+                },
                 onPickFolder = { pickFolder.launch(null) },
                 onPaste = { showPaste = true },
                 onRemoveManual = { track?.id?.let { lyricsViewModel.removeManual(it) } },

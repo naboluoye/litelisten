@@ -50,6 +50,18 @@ class LyricsViewModel @Inject constructor(
         }
     }
 
+    /** 查询歌曲所在目录的文档 uri，供系统文件选择器定位；无结果时回调 null。 */
+    fun initialFolderUri(track: Track?, onResult: (Uri?) -> Unit) {
+        if (track == null) {
+            onResult(null)
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val uri = repository.initialFolderUri(track)
+            withContext(Dispatchers.Main) { onResult(uri) }
+        }
+    }
+
     fun attachText(trackId: String, text: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val ok = repository.attachText(trackId, text)
