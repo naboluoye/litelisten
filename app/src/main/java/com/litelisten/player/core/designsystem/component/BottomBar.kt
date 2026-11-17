@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.litelisten.player.R
 import com.litelisten.player.ui.navigation.Routes
 
@@ -51,12 +52,21 @@ fun LiteListenBottomBar(
     onSelect: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    NavigationBar(modifier = modifier, containerColor = MaterialTheme.colorScheme.surface) {
+    NavigationBar(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp,
+    ) {
         TopLevelDestination.entries.forEach { destination ->
             NavigationBarItem(
                 selected = selected == destination,
                 onClick = { onSelect(destination) },
                 alwaysShowLabel = true,
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
                 icon = {
                     Icon(
                         imageVector = if (selected == destination) destination.selectedIcon

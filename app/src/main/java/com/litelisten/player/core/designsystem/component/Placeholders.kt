@@ -2,7 +2,6 @@ package com.litelisten.player.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +15,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,44 +35,6 @@ import com.litelisten.player.R
 import com.litelisten.player.core.designsystem.theme.LocalSpacing
 import com.litelisten.player.ui.player.PlayerViewModel
 
-@Composable
-fun TrackRowPlaceholder(modifier: Modifier = Modifier) {
-    val spacing = LocalSpacing.current
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.l, vertical = spacing.s),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.m),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(8.dp),
-                ),
-        )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(spacing.s),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .height(14.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp)),
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.4f)
-                    .height(10.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp)),
-            )
-        }
-    }
-}
-
 /** 常驻 MiniPlayer：显示真实播放状态，点击进播放页。 */
 @Composable
 fun MiniPlayer(
@@ -88,11 +50,13 @@ fun MiniPlayer(
     } else 0f
 
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium,
+        tonalElevation = 1.dp,
+        shadowElevation = 2.dp,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.s)
+            .padding(horizontal = spacing.l, vertical = spacing.xs)
             .height(64.dp)
             .clickable(onClickLabel = stringResource(R.string.cd_mini_player), onClick = onClick),
     ) {
@@ -139,7 +103,7 @@ fun MiniPlayer(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                IconButton(onClick = { viewModel.toggle() }, enabled = track != null) {
+                FilledIconButton(onClick = { viewModel.toggle() }, enabled = track != null) {
                     Icon(
                         imageVector = if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                         contentDescription = stringResource(

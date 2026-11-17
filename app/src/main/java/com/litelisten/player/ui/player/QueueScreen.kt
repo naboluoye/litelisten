@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,7 +62,7 @@ fun QueueScreen(
             actions = {
                 IconButton(onClick = { pickingPlaylist = true }) {
                     Icon(
-                        Icons.Filled.PlaylistPlay,
+                        Icons.AutoMirrored.Filled.PlaylistPlay,
                         contentDescription = stringResource(R.string.queue_load_playlist),
                     )
                 }

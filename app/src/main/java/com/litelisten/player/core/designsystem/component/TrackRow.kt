@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MoreVert
@@ -39,6 +38,7 @@ fun TrackArtwork(
     artworkKey: String?,
     modifier: Modifier = Modifier,
     sizeDp: Int = 48,
+    shape: androidx.compose.ui.graphics.Shape = MaterialTheme.shapes.small,
 ) {
     val context = LocalContext.current
     val model = remember(artworkKey) {
@@ -51,13 +51,13 @@ fun TrackArtwork(
         model = ImageRequest.Builder(context)
             .data(model)
             .size(sizeDp * 3)
-            .crossfade(false)
+            .crossfade(true)
             .build(),
         contentDescription = stringResource(R.string.cd_cover),
         contentScale = ContentScale.Crop,
         modifier = modifier
             .size(sizeDp.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceVariant),
     )
 }
@@ -74,8 +74,12 @@ fun TrackRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .background(
+                if (playing) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                else androidx.compose.ui.graphics.Color.Transparent,
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = spacing.l, vertical = spacing.s),
+            .padding(horizontal = spacing.l, vertical = spacing.m),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.m),
     ) {

@@ -6,12 +6,15 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -19,12 +22,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -33,7 +38,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
@@ -151,7 +155,7 @@ fun LibraryScreen(
                     Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.cd_rescan))
                 }
                 IconButton(onClick = { sortMenu = true }) {
-                    Icon(Icons.Filled.Sort, contentDescription = stringResource(R.string.cd_sort))
+                    Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(R.string.cd_sort))
                 }
                 IconButton(onClick = { moreMenu = true }) {
                     Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.cd_more))
@@ -278,16 +282,29 @@ fun LibraryScreen(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(albums, key = { it.key }) { album ->
-                    OutlinedCard(
+                    androidx.compose.material3.Card(
                         onClick = { onNavigate(Routes.album(album.name)) },
+                        colors = androidx.compose.material3.CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        ),
                         modifier = Modifier.padding(spacing.s),
                     ) {
                         Column(modifier = Modifier.padding(spacing.m)) {
-                            TrackArtwork(album.artworkKey, sizeDp = 96)
-                            Text(album.name, style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                            TrackArtwork(
+                                album.artworkKey,
+                                sizeDp = 96,
+                                shape = MaterialTheme.shapes.medium,
+                            )
+                            Text(
+                                album.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                maxLines = 1,
+                                modifier = Modifier.padding(top = spacing.s),
+                            )
                             Text(
                                 stringResource(R.string.track_count, album.trackCount),
                                 style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -299,21 +316,25 @@ fun LibraryScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = spacing.l, vertical = spacing.s),
+                            .clickable { onNavigate(Routes.artist(artist.name)) }
+                            .padding(horizontal = spacing.l, vertical = spacing.m),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(spacing.m),
                     ) {
-                        TrackArtwork(artist.artworkKey, sizeDp = 48)
+                        TrackArtwork(artist.artworkKey, sizeDp = 48, shape = MaterialTheme.shapes.medium)
                         Column(modifier = Modifier.weight(1f)) {
                             Text(artist.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1)
                             Text(
                                 stringResource(R.string.album_count, artist.albumCount, artist.trackCount),
                                 style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        TextButton(onClick = { onNavigate(Routes.artist(artist.name)) }) {
-                            Text(stringResource(R.string.action_browse))
-                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }
@@ -333,15 +354,22 @@ fun LibraryScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = spacing.l, vertical = spacing.s),
+                            .clickable { onNavigate(Routes.folder(folder)) }
+                            .padding(horizontal = spacing.l, vertical = spacing.m),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(spacing.m),
                     ) {
-                        Icon(Icons.Filled.Folder, contentDescription = null)
+                        Icon(
+                            Icons.Filled.Folder,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                         Text(folder, modifier = Modifier.weight(1f), maxLines = 1)
-                        TextButton(onClick = { onNavigate(Routes.folder(folder)) }) {
-                            Text(stringResource(R.string.action_browse))
-                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }
@@ -356,8 +384,14 @@ fun LibraryScreen(
                         )
                         Button(
                             onClick = { newPlaylistName = ""; creatingPlaylist = true },
-                            modifier = Modifier.padding(top = spacing.s),
+                            modifier = Modifier.fillMaxWidth().padding(top = spacing.s),
                         ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.size(spacing.s))
                             Text(stringResource(R.string.playlist_new))
                         }
                     }
@@ -376,21 +410,29 @@ fun LibraryScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = spacing.l, vertical = spacing.s),
+                            .clickable { onNavigate(Routes.playlist(playlist.id)) }
+                            .padding(horizontal = spacing.l, vertical = spacing.m),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(spacing.m),
                     ) {
-                        Icon(Icons.Filled.PlaylistPlay, contentDescription = null)
+                        Icon(
+                            Icons.AutoMirrored.Filled.PlaylistPlay,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(playlist.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1)
                             Text(
                                 stringResource(R.string.track_count, playlist.trackCount),
                                 style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        TextButton(onClick = { onNavigate(Routes.playlist(playlist.id)) }) {
-                            Text(stringResource(R.string.action_browse))
-                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }

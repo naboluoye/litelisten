@@ -1,5 +1,7 @@
 package com.litelisten.player.ui.player
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,10 +22,10 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Lyrics
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.QueueMusic
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
@@ -47,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -105,14 +108,31 @@ fun NowPlayingScreen(
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            IconButton(onClick = { dialog = "more" }) {
-                Icon(Icons.Filled.MoreHoriz, contentDescription = stringResource(R.string.nav_more))
-            }
         }
 
+        Spacer(Modifier.height(spacing.l))
+        androidx.compose.foundation.layout.Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.l),
+        ) {
+            // 柔和底色托住封面，营造专辑舞台感（参考主流播放器）。
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .size(268.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                        shape = MaterialTheme.shapes.extraLarge,
+                    ),
+            )
+            TrackArtwork(
+                artworkKey = track?.artworkKey,
+                sizeDp = 220,
+                shape = MaterialTheme.shapes.large,
+            )
+        }
         Spacer(Modifier.height(spacing.xl))
-        TrackArtwork(track?.artworkKey, sizeDp = 220)
-        Spacer(Modifier.height(spacing.xxl))
 
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
@@ -234,31 +254,47 @@ fun NowPlayingScreen(
             }
         }
 
-        Spacer(Modifier.height(spacing.l))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Spacer(Modifier.height(spacing.m))
+        Row(modifier = Modifier.fillMaxWidth()) {
             if (viewModel.aiEnabled) {
-                IconButton(
-                    onClick = { track?.let { viewModel.requestAiIntro(it) } },
+                PlayerAction(
+                    icon = Icons.Filled.AutoAwesome,
+                    label = stringResource(R.string.ai_button),
                     enabled = track != null,
-                ) {
-                    Icon(Icons.Filled.AutoAwesome, contentDescription = stringResource(R.string.ai_button))
-                }
+                    onClick = { track?.let { viewModel.requestAiIntro(it) } },
+                    modifier = Modifier.weight(1f),
+                )
             }
-            IconButton(onClick = { onNavigate(Routes.QUEUE) }) {
-                Icon(Icons.Filled.QueueMusic, contentDescription = stringResource(R.string.player_queue))
-            }
-            IconButton(onClick = { onNavigate(Routes.LYRICS) }) {
-                Icon(Icons.Filled.GraphicEq, contentDescription = stringResource(R.string.player_lyrics))
-            }
-            IconButton(onClick = { onNavigate(Routes.EQUALIZER) }) {
-                Icon(Icons.Filled.GraphicEq, contentDescription = stringResource(R.string.player_equalizer))
-            }
-            IconButton(onClick = { dialog = "sleep" }) {
-                Icon(Icons.Filled.Timer, contentDescription = stringResource(R.string.player_sleep_timer))
-            }
-            IconButton(onClick = { dialog = "more" }) {
-                Icon(Icons.Filled.Speed, contentDescription = stringResource(R.string.nav_more))
-            }
+            PlayerAction(
+                icon = Icons.AutoMirrored.Filled.QueueMusic,
+                label = stringResource(R.string.player_queue),
+                onClick = { onNavigate(Routes.QUEUE) },
+                modifier = Modifier.weight(1f),
+            )
+            PlayerAction(
+                icon = Icons.Filled.Lyrics,
+                label = stringResource(R.string.player_lyrics),
+                onClick = { onNavigate(Routes.LYRICS) },
+                modifier = Modifier.weight(1f),
+            )
+            PlayerAction(
+                icon = Icons.Filled.GraphicEq,
+                label = stringResource(R.string.player_equalizer),
+                onClick = { onNavigate(Routes.EQUALIZER) },
+                modifier = Modifier.weight(1f),
+            )
+            PlayerAction(
+                icon = Icons.Filled.Timer,
+                label = stringResource(R.string.player_sleep_timer),
+                onClick = { dialog = "sleep" },
+                modifier = Modifier.weight(1f),
+            )
+            PlayerAction(
+                icon = Icons.Filled.Speed,
+                label = stringResource(R.string.settings_playback_speed),
+                onClick = { dialog = "more" },
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 
@@ -368,6 +404,41 @@ fun NowPlayingScreen(
                 }
             },
             confirmButton = { TextButton(onClick = { dialog = null }) { Text(stringResource(R.string.action_close)) } },
+        )
+    }
+}
+
+/** 播放页功能入口：图标 + 小字，均分宽度，让每个功能一眼可辨。 */
+@Composable
+private fun PlayerAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    val spacing = LocalSpacing.current
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(vertical = spacing.s),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(spacing.xs),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+            modifier = Modifier.size(22.dp),
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+            maxLines = 1,
         )
     }
 }
