@@ -1,11 +1,22 @@
 # 轻听 LiteListen · Android 局域网音乐播放器
 
-> **当前版本：v2.0.9（体验优化测试版：不自动扫描 / 歌单不丢 / 时长筛选 / 三语）** ｜ 仓库：https://github.com/naboluoye/litelisten
-> [v2.0.9 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.0.9) ｜ [v2.0.8](https://github.com/naboluoye/litelisten/releases/tag/v2.0.8) ｜ [v2.0.5（正式版，推荐稳定使用）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.7](https://github.com/naboluoye/litelisten/releases/tag/v2.0.7) ｜ [v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) ｜ [v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
+> **当前版本：v2.1.0（正式版：界面焕新 / 歌词识别修复 / 更快更小）** ｜ 仓库：https://github.com/naboluoye/litelisten
+> [v2.1.0 Release 下载页](https://github.com/naboluoye/litelisten/releases/tag/v2.1.0) ｜ [v2.0.9](https://github.com/naboluoye/litelisten/releases/tag/v2.0.9) ｜ [v2.0.8](https://github.com/naboluoye/litelisten/releases/tag/v2.0.8) ｜ [v2.0.5（旧稳定版）](https://github.com/naboluoye/litelisten/releases/tag/v2.0.5) ｜ [v2.0.7](https://github.com/naboluoye/litelisten/releases/tag/v2.0.7) ｜ [v2.0.6](https://github.com/naboluoye/litelisten/releases/tag/v2.0.6) ｜ [v2.0.4](https://github.com/naboluoye/litelisten/releases/tag/v2.0.4) ｜ [v2.0.3](https://github.com/naboluoye/litelisten/releases/tag/v2.0.3) ｜ [v1.0.0（历史骨架版）](https://github.com/naboluoye/litelisten/releases/tag/v1.0.0)
 > 包名 `com.litelisten.player` ｜ minSdk 26（Android 8.0）/ targetSdk 35 ｜ Kotlin 2.1.0 + Compose + Media3 + Room
 > 零账号、零广告、零遥测；本地/局域网音乐播放与曲库管理全程离线。可选的联网功能都必须由你**主动点击**才发一次请求：播放页「AI 介绍」（v2.0.6 起）、歌词页「AI 讲解歌词」（v2.0.7 起）、歌词页「AI 联网搜歌词」（v2.0.9 起），不点就完全离线；服务配置由构建期注入，仓库与文档不含任何服务信息。
 
-**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是**稳定的正式版**；v2.0.6 增加播放页「AI 介绍」按钮；v2.0.7 让歌词更准、能跟着唱、AI 能讲歌词；v2.0.8 是曲库管理测试版：一键重置重扫、按文件夹整理、自建歌单并按歌单播放；**v2.0.9 是体验优化测试版：不再自动扫描、歌单不再莫名消失、加歌单更省事、时长筛选、简繁英三语、DLNA 连接修复、歌词页可搜歌词**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+**版本沿革**：v1.0.0 只是 P0 工程骨架；**v2.0.0 把 P1–P7 全部实现为真实功能**；v2.0.1 修掉「装完曲库为空」「WebDAV 子目录 404」等运行时缺陷；v2.0.2 修复局域网设备发现与根目录浏览；v2.0.3 新增 Jellyfin 媒体服务器接入、把账号密码前置到添加向导、并加入无损高保真播放；v2.0.4 修复 Jellyfin 扫描到 0 首、DLNA/群晖连接失败，并加入出品方文案；v2.0.5 加入无缝播放、ReplayGain 响度均衡、内嵌歌词与逐字歌词，是**稳定的正式版**；v2.0.6 增加播放页「AI 介绍」按钮；v2.0.7 让歌词更准、能跟着唱、AI 能讲歌词；v2.0.8 是曲库管理测试版：一键重置重扫、按文件夹整理、自建歌单并按歌单播放；**v2.0.9 是体验优化测试版：不再自动扫描、歌单不再莫名消失、加歌单更省事、时长筛选、简繁英三语、DLNA 连接修复、歌词页可搜歌词**；**v2.1.0 是正式版：界面全面焕新（雾蓝主题 / 留白层级 / 按钮逻辑更清晰），并修复歌词扫描识别、精简代码与依赖、安装包更小**。所有版本使用同一把签名密钥，**已装旧版可直接覆盖升级，数据不丢**。
+
+### v2.1.0 正式版（界面焕新 · 歌词修复 · 更省空间）
+
+| 改进 | 说明 |
+|---|---|
+| 界面焕新 | 整体换成沉稳的雾蓝主题，补齐文字与容器色阶；列表行更透气、正在播放的歌曲整行高亮；空状态带图标容器、小播放器改为悬浮卡片、底部导航选中态更清晰；封面与分区排版重新梳理 |
+| 按钮更好认 | 修复"歌词"和"均衡器"用了同一个图标的问题；播放页底部功能改成"图标 + 小字"，一眼就知道每个按钮做什么；删掉重复的"更多"入口 |
+| 歌词扫描修复 | 修掉一个真 bug：以前本机扫描的歌曲歌词识别不到（相对路径判断错误），现在改为按文件真实路径读取文件头、并按真实文件名去找同名 .lrc，扫描更准 |
+| 更快更省空间 | 精简了搜索、封面加载等算法与多处无用代码，移除 8 个没用到的依赖；安装包从约 8.7 MB 降到约 8 MB |
+
+边界说明（如实）：本版只改界面观感与底层识别/性能逻辑，**播放、歌单、曲库、网络来源等既有功能全部保留**，操作方式与 v2.0.9 一致；歌词是否显示仍取决于你手机或 NAS 上是否有对应歌词文件。零账号、零广告、零遥测与局域网私网闸口等红线全部保持不变。
 
 ### v2.0.9 新增（测试版 · 体验优化）
 
@@ -119,12 +130,12 @@
 
 ---
 
-## 扫码下载（v2.0.9 测试版）
+## 扫码下载（v2.1.0 正式版）
 
-![轻听 v2.0.9 扫码下载](docs/qr-download.png)
+![轻听 v2.1.0 扫码下载](docs/qr-download.png)
 
-- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.0.9/LiteListen-v2.0.9.apk>
-- 版本说明与 SHA-256：[GitHub Release v2.0.9](https://github.com/naboluoye/litelisten/releases/tag/v2.0.9)
+- **扫码直达 APK**：<https://github.com/naboluoye/litelisten/releases/download/v2.1.0/LiteListen-v2.1.0.apk>
+- 版本说明与 SHA-256：[GitHub Release v2.1.0](https://github.com/naboluoye/litelisten/releases/tag/v2.1.0)
 - 可转发的下载卡片：[docs/qr-download-card.png](docs/qr-download-card.png)
 - 下载后在系统里允许「安装未知来源」即可安装。二维码采用 30% 纠错等级并保留静默区，缩放或打印后仍可识别（已用解码器实测校验）。
 
@@ -162,7 +173,7 @@
 
 ---
 
-## 3. 已真实跑通的验证（v2.0.9）
+## 3. 已真实跑通的验证（v2.1.0）
 
 | 项目 | 结果 |
 |---|---|
@@ -170,10 +181,10 @@
 | `./gradlew :app:testDebugUnitTest` | ✅ **16 个测试类 / 95 条用例，0 失败**（本轮新增时长筛选 6 条单测） |
 | `./gradlew :app:lintDebug` | ✅ 0 error |
 | 三语资源合并（values / values-zh-rTW / values-en） | ✅ 446 条全部覆盖，占位符零不匹配 |
-| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ BUILD SUCCESSFUL；云端正式签名产物体积与 SHA-256 见 [Release v2.0.9](https://github.com/naboluoye/litelisten/releases/tag/v2.0.9) |
+| `./gradlew :app:assembleRelease`（R8 混淆 + 资源压缩） | ✅ 云端签名产物已发布；体积与 SHA-256 见 [Release v2.1.0](https://github.com/naboluoye/litelisten/releases/tag/v2.1.0) |
 | `apksigner verify --verbose`（云端流水线） | ✅ 沿用同一把 RSA 4096 密钥，证书 SHA-256 `cc7b03e7…e7ac`，与 v1.0.0 一致，可覆盖升级 |
 | `ci_guard.py --check all` / `--check apk` | ✅ PASS，合并后 Manifest 权限仍为 11 项主动申请 + 2 项已审计库注入（**未新增麦克风权限**） |
-| GitHub Actions `CI` / `Release` | tag `v2.0.9` 触发签名发版，结果见仓库 Actions |
+| GitHub Actions `CI` / `Release` | tag `v2.1.0` 触发签名发版，结果见仓库 Actions |
 
 本机验证使用 JDK 21 + 临时安装的 Android 35 SDK；云端流水线使用 Temurin 17 与 GitHub Secrets 中的正式密钥。
 
@@ -232,9 +243,9 @@ release.yml ──> 版本一致性校验 → 红线守卫 → 单测门禁
 ### 每次发版 SOP
 
 ```bash
-python3 scripts/bump_version.py 2.0.9     # versionCode 自动 +1
-git add version.properties && git commit -m "release: 2.0.9"
-git tag -a v2.0.9 -m "Release 2.0.9"
+python3 scripts/bump_version.py 2.1.0     # versionCode 自动 +1
+git add version.properties && git commit -m "release: 2.1.0"
+git tag -a v2.1.0 -m "Release 2.1.0"
 git push origin main --tags               # 推 tag 后 release.yml 自动跑
 ```
 
@@ -303,7 +314,7 @@ litelisten/
 ├─ docs/{qr-download.png, qr-download-card.png}  扫码下载图（随版本更新）
 ├─ scripts/{ci_guard.py, bump_version.py}      红线守卫 / 版本自增
 ├─ gradle/libs.versions.toml                   唯一依赖版本源
-├─ version.properties                          versionCode=11 / versionName=2.0.9
+├─ version.properties                          versionCode=12 / versionName=2.1.0
 ├─ app/proguard-rules.pro                      R8 / kotlinx.serialization 规则
 └─ app/src/main/java/com/litelisten/player/
    ├─ core/{model, common, designsystem, database, datastore, network, scan, player}
