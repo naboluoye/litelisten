@@ -2,6 +2,7 @@ package com.litelisten.player.ui.player
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,6 +72,9 @@ import com.litelisten.player.core.model.PlaybackError
 import com.litelisten.player.core.model.RepeatMode
 import com.litelisten.player.ui.navigation.Routes
 
+/** 封面上下滑切歌的触发距离（px），避免轻微误触。 */
+private const val SWIPE_THRESHOLD = 90f
+
 @Composable
 fun NowPlayingScreen(
     onBack: () -> Unit,
@@ -81,9 +86,16 @@ fun NowPlayingScreen(
     val spacing = LocalSpacing.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val aiState by viewModel.aiIntroState.collectAsStateWithLifecycle()
+    val queue by viewModel.queue.collectAsStateWithLifecycle()
     val track = state.current
+    // 队列里当前曲目之后的第一首，作为「接下来播放」预览。
+    val upNext = remember(queue, track) {
+        val idx = queue.indexOfFirst { it.id == track?.id }
+        if (idx >= 0) queue.getOrNull(idx + 1) else queue.firstOrNull()
+    }
     var sliderValue by remember { mutableStateOf<Float?>(null) }
     var dialog by remember { mutableStateOf<String?>(null) }
+    var swipeY by remember { mutableStateOf(0f) }
     val progress = if (state.durationMs > 0) {
         (state.positionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f)
     } else 0f
@@ -115,12 +127,27 @@ fun NowPlayingScreen(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = spacing.l),
+                .padding(horizontal = spacing.l)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragEnd = { swipeY = 0f },
+                        onDragCancel = { swipeY = 0f },
+                    ) { _, dragAmount ->
+                        if (track == null) return@detectVerticalDragGestures
+                        swipeY += dragAmount
+                        // 上滑（负）下一首，下滑（正）上一首；一次手势只触发一次，达到阈值即清零。
+                        if (swipeY <= -SWIPE_THRESHOLD) {
+                            viewModel.next(); swipeY = 0f
+                        } else if (swipeY >= SWIPE_THRESHOLD) {
+                            viewModel.previous(); swipeY = 0f
+                        }
+                    }
+                },
         ) {
             // 柔和底色托住封面，营造专辑舞台感（参考主流播放器）。
             androidx.compose.foundation.layout.Box(
                 modifier = Modifier
-                    .size(268.dp)
+                    .size(232.dp)
                     .background(
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
                         shape = MaterialTheme.shapes.extraLarge,
@@ -128,11 +155,11 @@ fun NowPlayingScreen(
             )
             TrackArtwork(
                 artworkKey = track?.artworkKey,
-                sizeDp = 220,
+                sizeDp = 192,
                 shape = MaterialTheme.shapes.large,
             )
         }
-        Spacer(Modifier.height(spacing.xl))
+        Spacer(Modifier.height(spacing.l))
 
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
@@ -295,6 +322,44 @@ fun NowPlayingScreen(
                 onClick = { dialog = "more" },
                 modifier = Modifier.weight(1f),
             )
+        }
+
+        Spacer(Modifier.height(spacing.m))
+        // 「接下来播放」预览：一眼看到将播内容，点进去查看/调整完整队列。
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .clickable { onNavigate(Routes.QUEUE) }
+                .padding(horizontal = spacing.m, vertical = spacing.s),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.AutoMirrored.Filled.QueueMusic,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                Column(modifier = Modifier.weight(1f).padding(horizontal = spacing.s)) {
+                    Text(
+                        stringResource(R.string.queue_next_one),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        upNext?.title ?: stringResource(R.string.queue_next_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(
+                    stringResource(R.string.queue_view_all),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 

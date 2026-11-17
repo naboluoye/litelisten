@@ -1,6 +1,8 @@
 package com.litelisten.player.ui.player
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,13 +22,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.litelisten.player.R
@@ -50,6 +60,10 @@ fun QueueScreen(
     var confirmClear by remember { mutableStateOf(false) }
     var pickingPlaylist by remember { mutableStateOf(false) }
     val currentId = state.current?.id
+    // 拖拽排序：记录起始位置与累计位移，松手后按跨过的行数一次性移动。
+    var dragFrom by remember { mutableIntStateOf(-1) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    val rowHeightPx = with(LocalDensity.current) { 64.dp.toPx() }
 
     Column(
         modifier = modifier
@@ -86,11 +100,41 @@ fun QueueScreen(
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
             )
+            Text(
+                stringResource(R.string.queue_drag_hint),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.xs),
+            )
             LazyColumn(modifier = Modifier.weight(1f)) {
                 itemsIndexed(queue, key = { index, track -> "$index-${track.id}" }) { index, track ->
+                    val beingDragged = dragFrom == index
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            // 长按拖动：整行跟随手指上下移动，松手后按跨过的行数重排。
+                            .graphicsLayer { translationY = if (beingDragged) dragOffset else 0f }
+                            .background(
+                                if (beingDragged) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+                                else Color.Transparent,
+                            )
+                            .pointerInput(index) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = { dragFrom = index; dragOffset = 0f },
+                                    onDrag = { change, amount ->
+                                        change.consume()
+                                        dragOffset += amount.y
+                                    },
+                                    onDragEnd = {
+                                        val moved = (dragOffset / rowHeightPx).roundToInt()
+                                        val target = (index + moved).coerceIn(0, queue.lastIndex)
+                                        if (target != index) viewModel.moveInQueue(index, target)
+                                        dragFrom = -1
+                                        dragOffset = 0f
+                                    },
+                                    onDragCancel = { dragFrom = -1; dragOffset = 0f },
+                                )
+                            }
                             .clickable { viewModel.play(track, queue) }
                             .padding(horizontal = spacing.l, vertical = spacing.s),
                         verticalAlignment = Alignment.CenterVertically,

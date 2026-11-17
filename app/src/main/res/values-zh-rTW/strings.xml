@@ -128,8 +128,9 @@
     <string name="sources_scan_lan">掃描區域網裝置</string>
     <string name="sources_empty_server">還沒有新增伺服器</string>
     <string name="sources_discovering">正在搜尋區域網裝置…</string>
-    <string name="sources_no_device">沒有發現裝置，可手動新增伺服器</string>
-    <string name="sources_discovery_hint">自動搜尋當前 Wi-Fi 網段裡的電腦共享、WebDAV、DLNA 和 Jellyfin 媒體伺服器。掃描只在本機區域網內進行。</string>
+    <string name="sources_no_device">還沒搜尋過裝置，點右上角「＋」裡的掃描，或本區的「重新整理」開始搜尋</string>
+    <string name="sources_discovery_hint">只有你點「重新整理」時才會搜尋當前 Wi-Fi 網段裡的電腦共享、WebDAV、DLNA 和 Jellyfin，平時不會自動掃描網路。掃描只在本機區域網內進行。</string>
+    <string name="sources_scan_lan_short">搜尋裝置</string>
     <string name="sources_scan_range">掃描範圍：%1$s</string>
     <string name="sources_device_smb">檔案共享 · 埠 %1$s</string>
     <string name="sources_device_webdav">WebDAV · 埠 %1$s</string>
@@ -484,4 +485,18 @@
 
     <!-- 其它 -->
     <string name="browser_size_kb">%1$d KB</string>
+
+    <!-- v2.1.2：佇列拖拽排序 / 播放頁滑動切歌 / 搜尋多選 -->
+    <string name="queue_drag_hint">長按歌曲上下拖動，可調整播放順序</string>
+    <string name="search_select_mode">多選</string>
+    <string name="search_exit_select">退出多選</string>
+    <string name="search_select_all">全選</string>
+    <string name="search_deselect_all">取消全選</string>
+    <string name="search_selected_count">已選 %1$d 首</string>
+    <string name="search_add_selected">加入歌單</string>
+    <string name="search_select_hint">點按歌曲可選擇，長按可連續選擇；選好後點「加入歌單」</string>
+    <string name="queue_next_one">接下來播放</string>
+    <string name="queue_next_empty">佇列裡暫時沒有下一首</string>
+    <string name="queue_view_all">檢視佇列</string>
+    <string name="search_added_to_playlist">已加入「%1$s」%2$d 首</string>
 </resources>

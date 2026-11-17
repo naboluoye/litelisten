@@ -130,6 +130,7 @@
     <string name="sources_discovering">Searching for LAN devices…</string>
     <string name="sources_no_device">No devices found. You can add a server manually</string>
     <string name="sources_discovery_hint">Searches this Wi-Fi network for computer shares, WebDAV, DLNA, and Jellyfin servers. Scanning stays on your local network only.</string>
+    <string name="sources_scan_lan_short">Scan devices</string>
     <string name="sources_scan_range">Scan range: %1$s</string>
     <string name="sources_device_smb">File share · port %1$s</string>
     <string name="sources_device_webdav">WebDAV · port %1$s</string>
@@ -487,4 +488,18 @@
 
     <!-- 其它 -->
     <string name="browser_size_kb">%1$d KB</string>
+
+    <!-- v2.1.2：队列拖拽排序 / 播放页滑动切歌 / 搜索多选 -->
+    <string name="queue_drag_hint">Long-press a song and drag up or down to reorder</string>
+    <string name="search_select_mode">Select</string>
+    <string name="search_exit_select">Done</string>
+    <string name="search_select_all">Select all</string>
+    <string name="search_deselect_all">Deselect all</string>
+    <string name="search_selected_count">%1$d selected</string>
+    <string name="search_add_selected">Add to playlist</string>
+    <string name="search_select_hint">Tap a song to select it. Tap again to deselect. Then choose Add to playlist.</string>
+    <string name="queue_next_one">Up next</string>
+    <string name="queue_next_empty">Nothing else in the queue</string>
+    <string name="queue_view_all">View queue</string>
+    <string name="search_added_to_playlist">"%1$s": added %2$d songs</string>
 </resources>

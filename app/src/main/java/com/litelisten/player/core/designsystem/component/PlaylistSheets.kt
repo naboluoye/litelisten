@@ -13,8 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -153,7 +153,7 @@ fun PlaylistPickerDialog(
                                 Text(stringResource(R.string.track_count, playlist.trackCount))
                             },
                             leadingContent = {
-                                Icon(Icons.Filled.PlaylistPlay, contentDescription = null)
+                                Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null)
                             },
                             modifier = Modifier.clickable { onPick(playlist) },
                         )

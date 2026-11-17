@@ -128,8 +128,9 @@
     <string name="sources_scan_lan">扫描局域网设备</string>
     <string name="sources_empty_server">还没有添加服务器</string>
     <string name="sources_discovering">正在搜索局域网设备…</string>
-    <string name="sources_no_device">没有发现设备，可手动添加服务器</string>
-    <string name="sources_discovery_hint">自动搜索当前 Wi-Fi 网段里的电脑共享、WebDAV、DLNA 和 Jellyfin 媒体服务器。扫描只在本机局域网内进行。</string>
+    <string name="sources_no_device">还没搜索过设备，点右上角「＋」里的扫描，或本区的「刷新」开始搜索</string>
+    <string name="sources_discovery_hint">只有你点「刷新」时才会搜索当前 Wi-Fi 网段里的电脑共享、WebDAV、DLNA 和 Jellyfin，平时不会自动扫描网络。扫描只在本机局域网内进行。</string>
+    <string name="sources_scan_lan_short">搜索设备</string>
     <string name="sources_scan_range">扫描范围：%1$s</string>
     <string name="sources_device_smb">文件共享 · 端口 %1$s</string>
     <string name="sources_device_webdav">WebDAV · 端口 %1$s</string>
@@ -484,4 +485,18 @@
 
     <!-- 其它 -->
     <string name="browser_size_kb">%1$d KB</string>
+
+    <!-- v2.1.2：队列拖拽排序 / 播放页滑动切歌 / 搜索多选 -->
+    <string name="queue_drag_hint">长按歌曲上下拖动，可调整播放顺序</string>
+    <string name="search_select_mode">多选</string>
+    <string name="search_exit_select">退出多选</string>
+    <string name="search_select_all">全选</string>
+    <string name="search_deselect_all">取消全选</string>
+    <string name="search_selected_count">已选 %1$d 首</string>
+    <string name="search_add_selected">加入歌单</string>
+    <string name="search_select_hint">点按歌曲可选择，长按可连续选择；选好后点「加入歌单」</string>
+    <string name="queue_next_one">接下来播放</string>
+    <string name="queue_next_empty">队列里暂时没有下一首</string>
+    <string name="queue_view_all">查看队列</string>
+    <string name="search_added_to_playlist">已加入「%1$s」%2$d 首</string>
 </resources>

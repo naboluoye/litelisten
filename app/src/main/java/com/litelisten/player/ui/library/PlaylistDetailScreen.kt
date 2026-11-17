@@ -5,13 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -36,16 +37,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.litelisten.player.R
 import com.litelisten.player.core.designsystem.component.EmptyState
 import com.litelisten.player.core.designsystem.component.LiteListenTopBar
+import com.litelisten.player.core.designsystem.component.MiniPlayer
 import com.litelisten.player.core.designsystem.component.TrackActionSheet
 import com.litelisten.player.core.designsystem.component.TrackRow
 import com.litelisten.player.core.designsystem.theme.LocalSpacing
 import com.litelisten.player.core.model.Track
+import com.litelisten.player.ui.navigation.Routes
 
 /** 自建歌单详情：按自己的顺序播放，也能把某首歌移出歌单。 */
 @Composable
 fun PlaylistDetailScreen(
     onBack: () -> Unit,
     onMessage: (String) -> Unit,
+    onNavigate: (String) -> Unit,
     viewModel: PlaylistDetailViewModel = hiltViewModel(),
 ) {
     val spacing = LocalSpacing.current
@@ -89,9 +93,10 @@ fun PlaylistDetailScreen(
                 }
             },
         )
+        Column(modifier = Modifier.weight(1f)) {
         if (tracks.isEmpty()) {
             EmptyState(
-                icon = Icons.Filled.PlaylistPlay,
+                icon = Icons.AutoMirrored.Filled.PlaylistPlay,
                 title = stringResource(R.string.playlist_empty),
                 description = stringResource(R.string.playlist_empty_desc),
             )
@@ -131,6 +136,10 @@ fun PlaylistDetailScreen(
                     )
                 }
             }
+        }
+        }
+        Column(modifier = Modifier.navigationBarsPadding()) {
+            MiniPlayer(onClick = { onNavigate(Routes.NOW_PLAYING) })
         }
     }
 

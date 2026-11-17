@@ -52,10 +52,8 @@ class SourcesViewModel @Inject constructor(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
-    init {
-        // 进页面即扫一次；否则用户要自己找到菜单里的「扫描」才知道有发现功能。
-        discover()
-    }
+    // 不再进页面自动扫描内网：只有用户手动点「扫描局域网设备」或「刷新」时才 discover()。
+    // 自动扫描会在 Wi-Fi 无互联网 + 开着蜂窝时把探测包发到蜂窝网络，既慢又会误报。
 
     fun discover() {
         viewModelScope.launch {

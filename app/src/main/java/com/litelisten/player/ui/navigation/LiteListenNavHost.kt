@@ -139,7 +139,7 @@ fun LiteListenNavHost(
             route = Routes.PLAYLIST,
             arguments = listOf(navArgument("id") { type = NavType.StringType }),
         ) {
-            PlaylistDetailScreen(onBack = onBack, onMessage = onMessage)
+            PlaylistDetailScreen(onBack = onBack, onMessage = onMessage, onNavigate = onNavigate)
         }
         composable(Routes.LYRICS) { LyricsScreen(onBack = onBack, onMessage = onMessage) }
         composable(Routes.EQUALIZER) { EqualizerScreen(onBack = onBack) }

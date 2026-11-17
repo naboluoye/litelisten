@@ -56,6 +56,7 @@ fun AddSourceScreen(
         mutableStateOf(ServerFormFactory.initial(type, initialHost, initialUrl, initialPort))
     }
     var showPassword by remember { mutableStateOf(false) }
+    var showAdvanced by remember { mutableStateOf(false) }
     var validation by remember { mutableStateOf<Int?>(null) }
     // id 在页面生命周期内固定，避免测试与保存生成两套凭据。
     val stableId = remember { viewModel.newConfig(type, ServerForm()).id }
@@ -96,7 +97,6 @@ fun AddSourceScreen(
 
         if (type == SourceType.SMB || type == SourceType.JELLYFIN) {
             Field(stringResource(R.string.field_host), form.host) { form = form.copy(host = it) }
-            Field(stringResource(R.string.field_port), form.port) { form = form.copy(port = it) }
         } else {
             Field(stringResource(R.string.field_url), form.url) { form = form.copy(url = it) }
             if (type == SourceType.WEBDAV) {
@@ -191,10 +191,25 @@ fun AddSourceScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Field(stringResource(R.string.field_base_path), form.basePath) {
-                form = form.copy(basePath = it)
+        }
+
+        // 端口 / 起始路径 / 域fold进「高级选项」，默认收起，普通用户只看到必填项。
+        val hasAdvanced = type == SourceType.SMB || type == SourceType.JELLYFIN
+        if (hasAdvanced) {
+            TextButton(onClick = { showAdvanced = !showAdvanced }) {
+                Text(stringResource(R.string.field_advanced))
             }
-            Field(stringResource(R.string.field_domain), form.domain) { form = form.copy(domain = it) }
+            if (showAdvanced) {
+                if (type == SourceType.SMB || type == SourceType.JELLYFIN) {
+                    Field(stringResource(R.string.field_port), form.port) { form = form.copy(port = it) }
+                }
+                if (type == SourceType.SMB) {
+                    Field(stringResource(R.string.field_base_path), form.basePath) {
+                        form = form.copy(basePath = it)
+                    }
+                    Field(stringResource(R.string.field_domain), form.domain) { form = form.copy(domain = it) }
+                }
+            }
         }
 
         validation?.let { res ->
